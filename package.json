@@ -1,0 +1,11 @@
+{
+	"name": "wpidentity",
+	"description": "Implements OAuth identity with wordpress.com for Node.js apps.",
+	"version": "0.4.0",
+	"main": "wpidentity.js",
+	"dependencies" : {
+		"request": "*",
+		"daveutils": "*",
+		"davehttp": "*"
+		}
+	}
