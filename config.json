@@ -1,5 +1,5 @@
 {
 	"clientId": 12345,
 	"clientSecret": "xxx",
-	"urlRedirect": "http://localhost:1408/callbackFromWordpress"
+	"urlRedirect": "https://mypublicserver.org/callbackFromWordpress"
 	}
