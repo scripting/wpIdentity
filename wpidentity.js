@@ -1,4 +1,4 @@
-var myProductName = "wpserver", myVersion = "0.4.0";
+var myProductName = "wpidentity", myVersion = "0.4.0";
 
 const fs = require ("fs");
 const utils = require ("daveutils"); 
