@@ -11,7 +11,7 @@ var config = {
 	flAllowAccessFromAnywhere: true, //for davehttp
 	
 	myRandomNumber: utils.random (1, 1000000000),
-	urlMyHomePage: "http://scripting.com/code/wpidentity/",
+	urlMyHomePage: "http://scripting.com/code/wpidentity/client/",
 	
 	urlRequestToken: "https://public-api.wordpress.com/oauth2/token",
 	urlAuthorize: "https://public-api.wordpress.com/oauth2/authorize",
@@ -49,7 +49,6 @@ function connectWithWordpress (callback) {
 			callback (err);
 			}
 		else {
-			console.log ("connectWithWordpress: body == " + body);
 			callback (undefined, body);
 			}
 		});
@@ -142,7 +141,9 @@ function handleHttpRequest (theRequest) {
 						}
 					else {
 						console.log ("tokenData == " + utils.jsonStringify (tokenData));
-						returnRedirect (config.urlMyHomePage + "?accesstoken=" + encodeURIComponent (tokenData.access_token));
+						const urlRedirect = config.urlMyHomePage + "?accesstoken=" + encodeURIComponent (tokenData.access_token);
+						console.log ("urlRedirect == " + urlRedirect);
+						returnRedirect (urlRedirect);
 						}
 					});
 				}
