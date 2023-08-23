@@ -1,6 +1,6 @@
 # wordpressIdentity
 
-Implements OAuth identity with wordpress.com for Node.js apps.
+Implements <a href="https://developer.wordpress.com/docs/wpcc/">OAuth identity</a> with wordpress.com for Node.js apps.
 
 ### It works
 
