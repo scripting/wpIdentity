@@ -10,3 +10,9 @@ body {
 	margin-right: auto;
 	margin-bottom: 400px;
 	}
+.divLogonButton {
+	display: none;
+	}
+.divLoggedInMessage {
+	display: none;
+	}

@@ -4,6 +4,7 @@ const fs = require ("fs");
 const utils = require ("daveutils"); 
 const request = require ("request");
 const davehttp = require ("davehttp");
+const wpcom = require ("wpcom"); //8/26/23 by DW
 
 var config = { 
 	port: process.env.PORT || 1408,
@@ -18,6 +19,20 @@ var config = {
 	urlAuthenticate: "https://public-api.wordpress.com/oauth2/authenticate",
 	urlRedirect: "http://localhost:1408/callbackFromWordpress"
 	};
+
+
+function base64UrlEncode (theData) {
+	var base64 = Buffer.from (theData).toString ('base64');
+	return (base64.replace ('+', '-').replace ('/', '_').replace (/=+$/, ''));
+	}
+function base64UrlDecode (theData) {
+	theData = theData.replace ('-', '+').replace ('_', '/');
+	while (theData.length % 4) {
+		theData += '=';
+		}
+	return (Buffer.from (theData, 'base64').toString ('utf-8'));
+	}
+
 
 function readConfig (f, config, callback) {
 	fs.readFile (f, function (err, jsontext) {
@@ -35,6 +50,7 @@ function readConfig (f, config, callback) {
 		callback ();
 		});
 	}
+
 function connectWithWordpress (callback) {
 	var params = {
 		response_type: "code",
@@ -87,6 +103,13 @@ function requestTokenFromWordpress (theCode, callback) {
 			}
 		});
 	}
+
+function getUserInfo (accessToken, callback) { //8/26/23 by DW
+	console.log ("getUserInfo: accessToken == " + accessToken);
+	const wp = wpcom (accessToken);
+	wp.me ().get (callback);
+	}
+
 function handleHttpRequest (theRequest) {
 	const params = theRequest.params;
 	function returnRedirect (url, code) { //9/30/20 by DW
@@ -141,12 +164,15 @@ function handleHttpRequest (theRequest) {
 						}
 					else {
 						console.log ("tokenData == " + utils.jsonStringify (tokenData));
-						const urlRedirect = config.urlMyHomePage + "?accesstoken=" + encodeURIComponent (tokenData.access_token);
+						const urlRedirect = config.urlMyHomePage + "?accesstoken=" + base64UrlEncode (tokenData.access_token);
 						console.log ("urlRedirect == " + urlRedirect);
 						returnRedirect (urlRedirect);
 						}
 					});
 				}
+			return;
+		case "/getuserinfo": //8/26/23 by DW
+			getUserInfo (base64UrlDecode (params.token), httpReturn);
 			return;
 		case "/now":
 			theRequest.httpReturn (200, "text/plain", new Date ().toUTCString ());
