@@ -10,7 +10,7 @@ After some thought and working it out with ChatGPT (my virtual programming partn
 
 Next session I'm going to try getting a list of my blogs, and then a list of posts, etc. The model here is the davetwitter package I build all my apps on. Not going to go nearly as far, at least not at first, but enough so that I can do a nice little editor for WordPress writing. 
 
-To test, go to the client test page. Sign in if you aren't already, then open the JavaScript console and type: 
+To test, go to the <a href="http://scripting.com/code/wpidentity/client/">client test page</a>. Sign in, then open the JavaScript console and type: 
 
 <code>testGetUserInfo ()</code>
 
