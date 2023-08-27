@@ -8,6 +8,8 @@ And then I found these docs, which were *exactly* what I needed.
 
 https://developer.wordpress.com/docs/oauth2/
 
+https://github.com/Automattic/wp-calypso/tree/trunk/packages/wpcom.js/docs
+
 If you're trying to figure out how the wordpress.com api works, this is the place to start. 
 
 Added a new config value -- config.scopes, defaults to "global". With that I was able to define the /getusersites endpoint. And it works. This is a big part of what I was trying to get to.
