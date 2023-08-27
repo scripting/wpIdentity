@@ -2,17 +2,21 @@
 
 Now I <i>really really</i> have it working. :smile: 
 
-After getting getUserInfo (token) to work, I thought let's quickly test getting a list of user sites, but that didn't work because i didn't get a powerful enough token. That led me back to the authentication docs, and i don't see anything there about scopes. So now I'm back to zero, I have to find docs. I consulted ChatGPT of course. 
+After getting getUserInfo to work, I thought let's quickly test getting a list of user sites, but that didn't work because i didn't get a powerful enough token. That led me back to the authentication docs, and i don't see anything there about scopes. So now I'm back to zero, I have to find docs. I consulted ChatGPT of course. 
 
-And then I found these docs, which were *exactly* what I needed. If you're trying to figure out how the wordpress.com api works, this is the place to start. 
+And then I found these docs, which were *exactly* what I needed. 
 
 https://developer.wordpress.com/docs/oauth2/
 
+If you're trying to figure out how the wordpress.com api works, this is the place to start. 
+
 Added a new config value -- config.scopes, defaults to "global". With that I was able to define the /getusersites endpoint. And it works. This is a big part of what I was trying to get to.
 
-Run the example client and in the console enter: 
+Run the <a href="http://scripting.com/code/wpidentity/client/">example client</a> and if you're already signed in, sign out and in again to get the more powerful token and in the JavaScript console enter: 
 
 <code>testGetUserSites ()</code>
+
+You get a lot of data for that request. In the next iteration I hope to provide a way to browse it. 
 
 #### 8/26/23; 12:14:10 PM by DW
 
