@@ -22,7 +22,6 @@ var config = {
 	scope: "global" //default -- 8/27/23 by DW
 	};
 
-
 function base64UrlEncode (theData) {
 	var base64 = Buffer.from (theData).toString ('base64');
 	return (base64.replace ('+', '-').replace ('/', '_').replace (/=+$/, ''));
@@ -34,7 +33,6 @@ function base64UrlDecode (theData) {
 		}
 	return (Buffer.from (theData, 'base64').toString ('utf-8'));
 	}
-
 
 function readConfig (f, config, callback) {
 	fs.readFile (f, function (err, jsontext) {
@@ -169,9 +167,7 @@ function handleHttpRequest (theRequest) {
 						returnError (err);
 						}
 					else {
-						console.log ("tokenData == " + utils.jsonStringify (tokenData));
 						const urlRedirect = config.urlMyHomePage + "?accesstoken=" + base64UrlEncode (tokenData.access_token);
-						console.log ("urlRedirect == " + urlRedirect);
 						returnRedirect (urlRedirect);
 						}
 					});
