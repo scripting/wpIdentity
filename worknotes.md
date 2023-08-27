@@ -1,3 +1,11 @@
+#### 8/27/23; 10:17:33 AM by DW
+
+After getting getUserInfo (token) to work, I thought let's quickly test getting a list of user sites, but that didn't work because i didn't get a powerful enough token. That led me back to the authentication docs, and i don't see anything there about scopes. So now I'm back to zero, I have to find docs. I consulted ChatGPT of course. 
+
+And then I found these docs, which were much closer to what I needed. 
+
+https://developer.wordpress.com/docs/oauth2/
+
 #### 8/26/23; 12:14:10 PM by DW
 
 Now I <i>really</i> have it working. :smile: 
@@ -27,6 +35,10 @@ https://developer.wordpress.com/docs/wpcc/
 A8C examples --
 
 https://github.com/Automattic/wpcom-connect-examples
+
+WPCOM docs --
+
+https://github.com/Automattic/wp-calypso/tree/trunk/packages/wpcom.js
 
 Repo is here --
 

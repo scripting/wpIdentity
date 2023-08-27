@@ -17,7 +17,9 @@ var config = {
 	urlRequestToken: "https://public-api.wordpress.com/oauth2/token",
 	urlAuthorize: "https://public-api.wordpress.com/oauth2/authorize",
 	urlAuthenticate: "https://public-api.wordpress.com/oauth2/authenticate",
-	urlRedirect: "http://localhost:1408/callbackFromWordpress"
+	urlRedirect: "http://localhost:1408/callbackFromWordpress",
+	
+	scope: "global" //default -- 8/27/23 by DW
 	};
 
 
@@ -51,35 +53,21 @@ function readConfig (f, config, callback) {
 		});
 	}
 
-function connectWithWordpress (callback) {
+function getWordpressAuthorizeUrl () {
 	var params = {
-		response_type: "code",
 		client_id: config.clientId,
-		state: config.myRandomNumber,
-		redirect_uri: config.urlRedirect
+		redirect_uri: config.urlRedirect,
+		response_type: "code",
+		scope: config.scope,
+		state: config.myRandomNumber
 		};
-	var apiUrl = config.urlAuthenticate + "?" + utils.buildParamList (params);
-	request (apiUrl, function (err, response, body) {
-		if (err) {
-			console.log ("connectWithWordpress: err.message == " + err.message);
-			callback (err);
-			}
-		else {
-			callback (undefined, body);
-			}
-		});
+	const url = config.urlAuthorize + "?" + utils.buildParamList (params);
+	return (url);
 	}
 function requestTokenFromWordpress (theCode, callback) {
-	var params = {
-		client_id: config.clientId,
-		client_secret: config.clientSecret,
-		redirect_uri: config.urlRedirect,
-		code: theCode,
-		grant_type: "authorization_code",
-		};
 	var theRequest = {
 		method: "POST",
-		url: config.urlRequestToken + "?" + utils.buildParamList (params),
+		url: config.urlRequestToken,
 		form: {
 			client_id: config.clientId,
 			client_secret: config.clientSecret,
@@ -109,9 +97,15 @@ function getUserInfo (accessToken, callback) { //8/26/23 by DW
 	const wp = wpcom (accessToken);
 	wp.me ().get (callback);
 	}
+function getUserSites (accessToken, callback) { //8/26/23 by DW
+	console.log ("getUserSites: accessToken == " + accessToken);
+	const wp = wpcom (accessToken);
+	wp.me ().sites (callback);
+	}
 
 function handleHttpRequest (theRequest) {
 	const params = theRequest.params;
+	const token = (params.token === undefined) ? undefined : base64UrlDecode (params.token);
 	function returnRedirect (url, code) { //9/30/20 by DW
 		var headers = {
 			location: url
@@ -147,9 +141,21 @@ function handleHttpRequest (theRequest) {
 			theRequest.httpReturn (200, "text/html", htmltext);
 			}
 		}
+	function tokenRequired (callback) {
+		if (token === undefined) {
+			const message = "Can't get the info because the user must be logged in.";
+			returnError ({message});
+			}
+		else {
+			callback ();
+			}
+		}
 	switch (theRequest.lowerpath) {
+		case "/now":
+			theRequest.httpReturn (200, "text/plain", new Date ().toUTCString ());
+			return;
 		case "/connect": 
-			connectWithWordpress (returnHtml);
+			returnRedirect (getWordpressAuthorizeUrl ());
 			return;
 		case "/callbackfromwordpress":
 			if (params.state != config.myRandomNumber) {
@@ -172,10 +178,14 @@ function handleHttpRequest (theRequest) {
 				}
 			return;
 		case "/getuserinfo": //8/26/23 by DW
-			getUserInfo (base64UrlDecode (params.token), httpReturn);
+			tokenRequired (function () {
+				getUserInfo (token, httpReturn);
+				});
 			return;
-		case "/now":
-			theRequest.httpReturn (200, "text/plain", new Date ().toUTCString ());
+		case "/getusersites": //8/26/23 by DW
+			tokenRequired (function () {
+				getUserSites (token, httpReturn);
+				});
 			return;
 		default:
 			theRequest.httpReturn (404, "text/plain", "Not found.");

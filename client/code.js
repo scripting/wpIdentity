@@ -3,8 +3,15 @@ var wordpressMemory = {
 	accessToken: undefined
 	};
 
+const flUseLocalServer = false;
+
 function getServerAddress () {
-	return ("https://wpidentity.scripting.com/");
+	if (flUseLocalServer) {
+		return ("http://localhost:1408/");
+		}
+	else {
+		return ("https://wpidentity.scripting.com/");
+		}
 	}
 
 function base64UrlEncode (data) {
@@ -71,8 +78,21 @@ function servercall (path, params, flAuthenticated, callback, urlServer=getServe
 function getUserInfo (callback) { //8/26/23 by DW
 	servercall ("getuserinfo", undefined, true, callback);
 	}
+function getUserSites (callback) { //8/26/23 by DW
+	servercall ("getusersites", undefined, true, callback);
+	}
 function testGetUserInfo () {
 	getUserInfo (function (err, data) {
+		if (err) {
+			console.log (err.message);
+			}
+		else {
+			console.log (jsonStringify (data));
+			}
+		});
+	}
+function testGetUserSites () {
+	getUserSites (function (err, data) {
 		if (err) {
 			console.log (err.message);
 			}
