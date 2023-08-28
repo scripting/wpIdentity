@@ -1,3 +1,7 @@
+#### 8/28/23; 10:59:21 AM by DW
+
+No server changes. On the client, we now <a href="https://imgs.scripting.com/2023/08/28/sitelist.png">display a list</a> of your sites with creation and modification dates after you sign on. 
+
 #### 8/27/23; 10:17:33 AM by DW
 
 Now I <i>really really</i> have it working. :smile: 

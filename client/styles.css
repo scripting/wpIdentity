@@ -5,7 +5,7 @@ body {
 	}
 .divPageBody {
 	width: 60%;
-	margin-top: 150px;
+	margin-top: 50px;
 	margin-left: auto;
 	margin-right: auto;
 	margin-bottom: 400px;
@@ -14,5 +14,20 @@ body {
 	display: none;
 	}
 .divLoggedInMessage {
-	display: none;
+	margin-top: 50px;
+	border-top: 1px solid silver;
+	font-size: 14px;
+	padding-top: 10px;
 	}
+
+.divSitelist {
+	font-size: 16px;
+	}
+.spSitename {
+	cursor: pointer;
+	margin-right: 1em;
+	}
+.spSitedate {
+	margin-right: 1em;
+	}
+

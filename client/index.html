@@ -16,16 +16,20 @@
 		</head>
 	<body>
 		<div class="divPageBody">
-			<div class="divLoggedOnStatus">
-				<div class="divLogonButton">
-					<center>
-						<img alt="" src="//s0.wp.com/i/wpcc-button.png" width="231" scale="0" onclick="connectWithWordpress ()">
-						</center>
+			<div class="divSignedOn" id="idSignedOn" style="display: none;">
+				<div class="divSitelistContainer" id="idSitelistContainer">
 					</div>
 				<div class="divLoggedInMessage">
 					<center>
 						<p>You are now logged on with wordpress.com.</p>
 						<p>Click <a onclick="logOffWordpress ()" style="cursor: pointer">here</a> to log off wordpress.com.</p>
+						</center>
+					</div>
+				</div>
+			<div class="divSignedOff" id="idSignedOff" style="display: none;">
+				<div class="divLogonButton">
+					<center>
+						<img alt="" src="//s0.wp.com/i/wpcc-button.png" width="231" scale="0" onclick="connectWithWordpress ()">
 						</center>
 					</div>
 				</div>
