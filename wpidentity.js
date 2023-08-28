@@ -100,10 +100,25 @@ function getUserSites (accessToken, callback) { //8/26/23 by DW
 	const wp = wpcom (accessToken);
 	wp.me ().sites (callback);
 	}
+function getSitePosts (accessToken, idSite, callback) { //8/28/23 by DW
+	const wp = wpcom (accessToken);
+	const site = wp.site (idSite);
+	site.postsList (callback);
+	}
+function getSiteUsers (accessToken, idSite, callback) { //8/28/23 by DW
+	const wp = wpcom (accessToken);
+	const site = wp.site (idSite);
+	site.usersList (callback);
+	}
+function getSitePost (accessToken, idSite, idPost, callback) { //8/28/23 by DW
+	const wp = wpcom (accessToken);
+	const site = wp.site (idSite);
+	const post = site.post (idPost);
+	post.get (callback);
+	}
 
 function handleHttpRequest (theRequest) {
 	const params = theRequest.params;
-	const token = (params.token === undefined) ? undefined : base64UrlDecode (params.token);
 	function returnRedirect (url, code) { //9/30/20 by DW
 		var headers = {
 			location: url
@@ -140,12 +155,13 @@ function handleHttpRequest (theRequest) {
 			}
 		}
 	function tokenRequired (callback) {
+		const token = (params.token === undefined) ? undefined : base64UrlDecode (params.token);
 		if (token === undefined) {
 			const message = "Can't get the info because the user must be logged in.";
 			returnError ({message});
 			}
 		else {
-			callback ();
+			callback (token);
 			}
 		}
 	switch (theRequest.lowerpath) {
@@ -174,13 +190,28 @@ function handleHttpRequest (theRequest) {
 				}
 			return;
 		case "/getuserinfo": //8/26/23 by DW
-			tokenRequired (function () {
+			tokenRequired (function (token) {
 				getUserInfo (token, httpReturn);
 				});
 			return;
 		case "/getusersites": //8/26/23 by DW
-			tokenRequired (function () {
+			tokenRequired (function (token) {
 				getUserSites (token, httpReturn);
+				});
+			return;
+		case "/getsiteposts": //8/28/23 by DW
+			tokenRequired (function (token) {
+				getSitePosts (token, params.idsite, httpReturn);
+				});
+			return;
+		case "/getsiteusers": //8/28/23 by DW
+			tokenRequired (function (token) {
+				getSiteUsers (token, params.idsite, httpReturn);
+				});
+			return;
+		case "/getsitepost": //8/28/23 by DW
+			tokenRequired (function (token) {
+				getSitePost (token, params.idsite, params.idpost, httpReturn);
 				});
 			return;
 		default:

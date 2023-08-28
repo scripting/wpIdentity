@@ -107,6 +107,15 @@ function getServerAddress () {
 	function getUserSites (callback) { //8/26/23 by DW
 		servercall ("getusersites", undefined, true, callback);
 		}
+	function getSitePosts (idsite, callback) { //8/28/23 by DW
+		servercall ("getsiteposts", {idsite}, true, callback);
+		}
+	function getSiteUsers (idsite, callback) { //8/28/23 by DW
+		servercall ("getsiteusers", {idsite}, true, callback);
+		}
+	function getSitePost (idsite, idpost, callback) { //8/28/23 by DW
+		servercall ("getsitepost", {idsite, idpost}, true, callback);
+		}
 	function testGetUserInfo () {
 		getUserInfo (function (err, data) {
 			if (err) {
@@ -119,6 +128,36 @@ function getServerAddress () {
 		}
 	function testGetUserSites () {
 		getUserSites (function (err, data) {
+			if (err) {
+				console.log (err.message);
+				}
+			else {
+				console.log (jsonStringify (data));
+				}
+			});
+		}
+	function testGetSitePosts (idsite) {
+		getSitePosts (idsite, function (err, data) {
+			if (err) {
+				console.log (err.message);
+				}
+			else {
+				console.log (jsonStringify (data));
+				}
+			});
+		}
+	function testGetSiteUsers (idsite) {
+		getSiteUsers (idsite, function (err, data) {
+			if (err) {
+				console.log (err.message);
+				}
+			else {
+				console.log (jsonStringify (data));
+				}
+			});
+		}
+	function testGetSitePost (idsite, idpost) {
+		getSitePost (idsite, idpost, function (err, data) {
 			if (err) {
 				console.log (err.message);
 				}
@@ -151,7 +190,6 @@ function viewSitelist (whereToAppend) {
 			}
 		}
 	function getRow (item) {
-		console.log ("getRow: item == " + jsonStringify (item));
 		const theRow = $("<tr></tr>");
 		function getSiteName () {
 			const theCell = $("<td></td>");

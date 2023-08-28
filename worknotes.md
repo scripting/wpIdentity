@@ -1,3 +1,23 @@
+#### 8/28/23; 7:45:13 PM by DW
+
+Let's add some verbs.
+
+The docs we need are here.
+
+https://github.com/Automattic/wp-calypso/tree/trunk/packages/wpcom.js
+
+This is how you get the info about a post. Type this into the client console..
+
+testGetSitePost (9969399, 4588)
+
+The verbs I just implemented --
+
+getSitePosts (token, params.idsite, httpReturn);
+
+getSiteUsers (token, params.idsite, httpReturn);
+
+getSitePost (token, params.idsite, params.idpost, httpReturn);
+
 #### 8/28/23; 10:59:21 AM by DW
 
 No server changes. On the client, we now <a href="https://imgs.scripting.com/2023/08/28/sitelist.png">display a list</a> of your sites with creation and modification dates after you sign on. 
