@@ -1,3 +1,5 @@
+const flUseLocalServer = false;
+
 var wordpressMemory = {
 	accessToken: undefined,
 	sitelist: undefined
@@ -7,7 +9,6 @@ function saveWordpressmemory () {
 	localStorage.wordpressMemory = jsonStringify (wordpressMemory);
 	}
 
-const flUseLocalServer = false;
 function getServerAddress () {
 	if (flUseLocalServer) {
 		return ("http://localhost:1408/");
@@ -113,8 +114,22 @@ function getServerAddress () {
 	function getSiteUsers (idsite, callback) { //8/28/23 by DW
 		servercall ("getsiteusers", {idsite}, true, callback);
 		}
-	function getSitePost (idsite, idpost, callback) { //8/28/23 by DW
-		servercall ("getsitepost", {idsite, idpost}, true, callback);
+	function getPost (idsite, idpost, callback) { //8/28/23 by DW
+		servercall ("getpost", {idsite, idpost}, true, callback);
+		}
+	function getSiteInfo (idsite, callback) { //8/29/23 by DW
+		servercall ("getsiteinfo", {idsite}, true, callback);
+		}
+	function getSiteMedialist (idsite, callback) { //8/29/23 by DW
+		servercall ("getsitemedialist", {idsite}, true, callback);
+		}
+	function addPost (idsite, thepost, callback) { //8/29/23 by DW
+		const jsontext = JSON.stringify (thepost);
+		servercall ("addpost", {idsite, jsontext}, true, callback);
+		}
+	function updatePost (idsite, idpost, thepost, callback) { //8/29/23 by DW
+		const jsontext = JSON.stringify (thepost);
+		servercall ("updatepost", {idsite, idpost, jsontext}, true, callback);
 		}
 	function testGetUserInfo () {
 		getUserInfo (function (err, data) {
@@ -156,8 +171,68 @@ function getServerAddress () {
 				}
 			});
 		}
-	function testGetSitePost (idsite, idpost) {
-		getSitePost (idsite, idpost, function (err, data) {
+	function testGetPost (idsite, idpost) {
+		getPost (idsite, idpost, function (err, data) {
+			if (err) {
+				console.log (err.message);
+				}
+			else {
+				console.log (jsonStringify (data));
+				}
+			});
+		}
+	function testGetSiteInfo (idsite, idpost) {
+		getSiteInfo (idsite, function (err, data) {
+			if (err) {
+				console.log (err.message);
+				}
+			else {
+				console.log (jsonStringify (data));
+				}
+			});
+		}
+	function testGetSiteMedialist (idsite, idpost) {
+		getSiteMedialist (idsite, function (err, data) {
+			if (err) {
+				console.log (err.message);
+				}
+			else {
+				console.log (jsonStringify (data));
+				}
+			});
+		}
+	function getRandomContent () {
+		var theContent = "";
+		for (var i = 1; i <= 10; i++) {
+			theContent += getRandomSnarkySlogan () + "\n";
+			}
+		return (theContent);
+		}
+	function testAddPost (idsite) {
+		const thePost = {
+			title: "Some random snarky slogans",
+			content: getRandomContent (),
+			status: "publish",
+			date: new Date ().toGMTString (),
+			format: "standard",
+			categories: ["Testing", "Nonsense", "Snark", "Slogans"],
+			comment_status: "open"
+			};
+		addPost (idsite, thePost, function (err, data) {
+			if (err) {
+				console.log (err.message);
+				}
+			else {
+				console.log (jsonStringify (data));
+				}
+			});
+		}
+	function testUpdatePost (idsite, idpost) {
+		const thePost = {
+			content: getRandomContent (),
+			status: "publish",
+			};
+		updatePost (idsite, idpost, thePost, function (err, data) {
 			if (err) {
 				console.log (err.message);
 				}

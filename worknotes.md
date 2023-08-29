@@ -1,3 +1,15 @@
+#### 8/29/23; 12:14:59 PM by DW
+
+More verbs
+
+testGetSiteInfo (9969399)
+
+testGetSiteMedialist (9969399)
+
+testAddPost (9969399) -- this is the biggie of course, and it <a href="https://unberkeley.wordpress.com/2023/08/29/so-youd-like-a-test-post-2/">worked</a> the first time. ;-)
+
+testUpdatePost (9969399, 4594) -- and this works too, changes the content without touching the title and other properties.
+
 #### 8/28/23; 7:45:13 PM by DW
 
 Let's add some verbs.
@@ -8,7 +20,7 @@ https://github.com/Automattic/wp-calypso/tree/trunk/packages/wpcom.js
 
 This is how you get the info about a post. Type this into the client console..
 
-testGetSitePost (9969399, 4588)
+testGetPost (9969399, 4588)
 
 The verbs I just implemented --
 
@@ -16,7 +28,7 @@ getSitePosts (token, params.idsite, httpReturn);
 
 getSiteUsers (token, params.idsite, httpReturn);
 
-getSitePost (token, params.idsite, params.idpost, httpReturn);
+getPost (token, params.idsite, params.idpost, httpReturn);
 
 #### 8/28/23; 10:59:21 AM by DW
 

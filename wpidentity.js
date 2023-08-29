@@ -110,11 +110,56 @@ function getSiteUsers (accessToken, idSite, callback) { //8/28/23 by DW
 	const site = wp.site (idSite);
 	site.usersList (callback);
 	}
-function getSitePost (accessToken, idSite, idPost, callback) { //8/28/23 by DW
+function getSiteInfo (accessToken, idSite, callback) { //8/29/23 by DW
+	const wp = wpcom (accessToken);
+	const site = wp.site (idSite);
+	site.get (callback);
+	}
+function getSiteMedialist (accessToken, idSite, callback) { //8/29/23 by DW
+	const wp = wpcom (accessToken);
+	const site = wp.site (idSite);
+	site.mediaList (callback);
+	}
+function getObjectFromJsontext (jsontext, callback) {
+	var theObject;
+	try {
+		theObject = JSON.parse (jsontext);
+		}
+	catch (err) {
+		const message = "Can't add or update the post because the JSON text is not valid.";
+		callback ({message});
+		return (undefined);
+		}
+	return (theObject);
+	}
+function addPost (accessToken, idSite, jsontext, callback) { //8/29/23 by DW
+	
+	const thePost = getObjectFromJsontext (jsontext, callback);
+	if (thePost === undefined) {
+		return;
+		}
+	
+	
+	const wp = wpcom (accessToken);
+	const site = wp.site (idSite);
+	site.addPost (thePost, callback);
+	}
+function getPost (accessToken, idSite, idPost, callback) { //8/28/23 by DW
 	const wp = wpcom (accessToken);
 	const site = wp.site (idSite);
 	const post = site.post (idPost);
 	post.get (callback);
+	}
+function updatePost (accessToken, idSite, idPost, jsontext, callback) { //8/29/23 by DW
+	const thePost = getObjectFromJsontext (jsontext, callback);
+	if (thePost === undefined) {
+		return;
+		}
+	
+	const wp = wpcom (accessToken);
+	const site = wp.site (idSite);
+	const post = site.post (idPost);
+	post.update (thePost, callback);
 	}
 
 function handleHttpRequest (theRequest) {
@@ -209,9 +254,29 @@ function handleHttpRequest (theRequest) {
 				getSiteUsers (token, params.idsite, httpReturn);
 				});
 			return;
-		case "/getsitepost": //8/28/23 by DW
+		case "/getsiteinfo": //8/29/23 by DW
 			tokenRequired (function (token) {
-				getSitePost (token, params.idsite, params.idpost, httpReturn);
+				getSiteInfo (token, params.idsite, httpReturn);
+				});
+			return;
+		case "/getsitemedialist": //8/29/23 by DW
+			tokenRequired (function (token) {
+				getSiteMedialist (token, params.idsite, httpReturn);
+				});
+			return;
+		case "/getpost": //8/28/23 by DW
+			tokenRequired (function (token) {
+				getPost (token, params.idsite, params.idpost, httpReturn);
+				});
+			return;
+		case "/addpost": //8/29/23 by DW
+			tokenRequired (function (token) {
+				addPost (token, params.idsite, params.jsontext, httpReturn);
+				});
+			return;
+		case "/updatepost": //8/29/23 by DW
+			tokenRequired (function (token) {
+				updatePost (token, params.idsite, params.idpost, params.jsontext, httpReturn);
 				});
 			return;
 		default:
