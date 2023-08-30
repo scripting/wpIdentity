@@ -1,6 +1,6 @@
 # wordpressIdentity
 
-Implements <a href="https://developer.wordpress.com/docs/wpcc/">OAuth identity</a> with wordpress.com for Node.js apps.
+Implements <a href="https://developer.wordpress.com/docs/wpcc/">OAuth identity</a> and a simple verb set with wordpress.com for Node.js apps.
 
 ### It works
 
@@ -25,6 +25,12 @@ These docs proved useful at different points in this project.
 * https://github.com/Automattic/wp-calypso/tree/trunk/packages/wpcom.js/docs
 
 * https://github.com/Automattic/wpcom-connect-examples
+
+* https://github.com/Automattic/wp-calypso
+
+### Other pointers
+
+I am using this site for testing. https://wordpress.com/view/unberkeley.wordpress.com
 
 ### Still to do
 
