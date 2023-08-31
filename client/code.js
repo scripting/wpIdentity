@@ -2,7 +2,8 @@ const flUseLocalServer = false;
 
 var wordpressMemory = {
 	accessToken: undefined,
-	sitelist: undefined
+	sitelist: undefined, 
+	savedOpmlText: undefined
 	};
 
 var appPrefs = { //needed for the outline routines
@@ -12,6 +13,7 @@ var appPrefs = { //needed for the outline routines
 var whenLastUserAction = new Date ();
 
 function saveWordpressmemory () {
+	console.log ("saveWordpressmemory");
 	localStorage.wordpressMemory = jsonStringify (wordpressMemory);
 	}
 function getServerAddress () {
@@ -152,14 +154,14 @@ function getServerAddress () {
 	function getSiteUsers (idsite, callback) { //8/28/23 by DW
 		servercall ("getsiteusers", {idsite}, true, callback);
 		}
-	function getPost (idsite, idpost, callback) { //8/28/23 by DW
-		servercall ("getpost", {idsite, idpost}, true, callback);
-		}
 	function getSiteInfo (idsite, callback) { //8/29/23 by DW
 		servercall ("getsiteinfo", {idsite}, true, callback);
 		}
 	function getSiteMedialist (idsite, callback) { //8/29/23 by DW
 		servercall ("getsitemedialist", {idsite}, true, callback);
+		}
+	function getPost (idsite, idpost, callback) { //8/28/23 by DW
+		servercall ("getpost", {idsite, idpost}, true, callback);
 		}
 	function addPost (idsite, thepost, callback) { //8/29/23 by DW
 		const jsontext = JSON.stringify (thepost);
@@ -407,8 +409,33 @@ function viewSitelist (whereToAppend) {
 			}
 		});
 	}
+function viewPost (title, body) {
+	var htmltext = "";
+	function add (s) {
+		htmltext += s + "\n";
+		}
+	add ("<h3>" + title + "</h3>");
+	add ("<div class=\"divBody\">" + body + "</div>");
+	$(".divEditorColumn").html (htmltext);
+	}
 
 function addOutlinerCallbacks () {
+	function updateEditor () {
+		var atts = opGetAtts ();
+		switch (atts.type) {
+			case "wppost":
+				getPost (atts.idsite, atts.id, function (err, thePost) {
+					if (err) {
+						console.log (err.message);
+						}
+					else {
+						console.log (jsonStringify (thePost));
+						viewPost (thePost.title, thePost.content);
+						}
+					});
+				break;
+			}
+		}
 	function myExpandCallback () { //6/29/16 by DW
 		try {
 			var atts = opGetAtts (), type = atts.type, url = atts.url;
@@ -427,6 +454,7 @@ function addOutlinerCallbacks () {
 								opInsert (linetext, dir); dir = down;
 								opSetOneAtt ("type", "wppost");
 								opSetOneAtt ("id", item.ID);
+								opSetOneAtt ("idsite", item.site_ID);
 								opSetOneAtt ("created", new Date (item.date).toLocaleString ());
 								opSetOneAtt ("url", item.URL);
 								opSetOneAtt ("icon", "file-alt");
@@ -451,6 +479,7 @@ function addOutlinerCallbacks () {
 				console.log ("cursor moved");
 				userInteracted (); 
 				updateAttsDisplay ();
+				updateEditor ();
 				
 				
 				if (opGetOneAtt ("created") === undefined) { //no <i>created</i> att, add one -- 1/22/17 by DW
@@ -463,7 +492,14 @@ function addOutlinerCallbacks () {
 				myExpandCallback (); 
 				},
 			"opCollapse": function () {
+				opDeleteSubs ();
 				opCollapseCallback (); 
+				switch (opGetOneAtt ("type")) {
+					case "include": case "wpsite":
+						opDeleteSubs ();
+						console.log ("deleted the subs.");
+						break;
+					}
 				}
 			}
 		});
@@ -471,28 +507,38 @@ function addOutlinerCallbacks () {
 
 function viewSitelistAsOutline (urlOpml, callback) {
 	var whenstart = new Date ();
-	opInitOutliner (initialOpmltext, true, true);
-	addOutlinerCallbacks ();
-	getSitelist (function (err, theList) {
-		if (err) {
-			alertDialog (err.message);
-			}
-		else {
-			sortSiteList (theList.sites, "name", false);
-			theList.sites.forEach (function (item) {
-				opInsert (item.name, down);
-				opSetOneAtt ("created", new Date (item.options.created_at).toLocaleString ());
-				opSetOneAtt ("type", "wpsite");
-				opSetOneAtt ("icon", "wordpress-simple");
-				opSetOneAtt ("id", item.ID);
-				});
-			opFirstSummit ();
-			opDeleteLine ();
-			$(".node-icon").removeClass ("far")
-			$(".node-icon").addClass ("fab")
-			}
-		});
-	
+	function fixIcons () {
+		$(".concord-level-1 .node-icon").removeClass ("far")
+		$(".concord-level-1 .node-icon").addClass ("fab")
+		$(".concord-level-2 .node-icon").addClass ("far")
+		}
+	if (wordpressMemory.savedOpmlText !== undefined) {
+		opInitOutliner (wordpressMemory.savedOpmlText, true, true);
+		addOutlinerCallbacks ();
+		fixIcons ();
+		}
+	else {
+		opInitOutliner (initialOpmltext, true, true);
+		addOutlinerCallbacks ();
+		getSitelist (function (err, theList) {
+			if (err) {
+				alertDialog (err.message);
+				}
+			else {
+				sortSiteList (theList.sites, "name", false);
+				theList.sites.forEach (function (item) {
+					opInsert (item.name, down);
+					opSetOneAtt ("created", new Date (item.options.created_at).toLocaleString ());
+					opSetOneAtt ("type", "wpsite");
+					opSetOneAtt ("icon", "wordpress-simple");
+					opSetOneAtt ("id", item.ID);
+					});
+				opFirstSummit ();
+				opDeleteLine ();
+				fixIcons ();
+				}
+			});
+		}
 	}
 
 function userIsSignedIn () {
@@ -527,20 +573,24 @@ function updateForLogin (flConnected=userIsSignedIn ()) {
 
 function everySecond () {
 	updateForLogin ();
+	if (opHasChanged ()) {
+		if (secondsSince (whenLastUserAction) > 3) {
+			wordpressMemory.savedOpmlText = opOutlineToXml ();
+			saveWordpressmemory ();
+			opClearChanged ();
+			}
+		}
 	}
 
 function startup () {
 	console.log ("startup");
-	
 	const accessToken = getURLParameter ("accesstoken");
-	
 	if (accessToken != "null") {
 		wordpressMemory.accessToken = base64UrlDecode (accessToken);
 		saveWordpressmemory ();
 		const newHref = stringNthField (location.href, "?", 1);
 		location.href = newHref;
 		}
-	
 	if (localStorage.wordpressMemory !== undefined) {
 		wordpressMemory = JSON.parse (localStorage.wordpressMemory);
 		}
@@ -549,7 +599,6 @@ function startup () {
 	if (userIsSignedIn ()) {
 		viewSitelist ();
 		viewSitelistAsOutline ("http://scripting.com/code/sallyreader/hellosally.opml");
-		
 		activateToolTips ();
 		}
 	

@@ -31,14 +31,30 @@ body {
 	margin-right: 1em;
 	}
 
-.divHappyOutline {
+.divOutlineColumn {
+	display: table-cell;
+	width: 50%;
 	border: 1px solid silver;
 	padding: 5px;
 	min-height: 400px;
 	background-color: white;
 	}
+.divEditorColumn {
+	display: table-cell;
+	width: 50%;
+	border: 1px solid silver;
+	}
 
 .divAttsDisplay {
 	font-size: 14px;
 	margin-bottom: 2px;
+	}
+.divBody {
+	background-color: white;
+	padding-left: 5px;
+	padding-right: 5px;
+	}
+.divBody p {
+	font-size: 18px;
+	line-spacing: 140%;
 	}
