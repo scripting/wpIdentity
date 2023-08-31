@@ -242,27 +242,27 @@ function getServerAddress () {
 			});
 		}
 
+function getSitelist (callback) {
+	if (wordpressMemory.sitelist === undefined) {
+		getUserSites (function (err, theSitelist) {
+			if (err) {
+				callback (err);
+				}
+			else {
+				wordpressMemory.sitelist = theSitelist;
+				saveWordpressmemory ();
+				callback (undefined, theSitelist);
+				}
+			});
+		}
+	else {
+		callback (undefined, wordpressMemory.sitelist);
+		}
+	}
 function viewSitelist (whereToAppend) {
 	var options = {
 		sortBy: "name",
 		flReverseSort: false
-		}
-	function getSitelist (callback) {
-		if (wordpressMemory.sitelist === undefined) {
-			getUserSites (function (err, theSitelist) {
-				if (err) {
-					callback (err);
-					}
-				else {
-					wordpressMemory.sitelist = theSitelist;
-					saveWordpressmemory ();
-					callback (undefined, theSitelist);
-					}
-				});
-			}
-		else {
-			callback (undefined, wordpressMemory.sitelist);
-			}
 		}
 	function getRow (item) {
 		const theRow = $("<tr></tr>");
@@ -338,6 +338,32 @@ function viewSitelist (whereToAppend) {
 		});
 	}
 
+
+var appPrefs = { //needed for the outline routines
+	};
+
+function viewSitelistAsOutline (urlOpml, callback) {
+	var whenstart = new Date ();
+	opInitOutliner (initialOpmltext, true, true);
+	getSitelist (function (err, theList) {
+		if (err) {
+			alertDialog (err.message);
+			}
+		else {
+			theList.sites.forEach (function (item) {
+				opInsert (item.name, down);
+				opSetOneAtt ("type", "wpsite");
+				opSetOneAtt ("icon", "wordpress-simple");
+				});
+			opFirstSummit ();
+			opDeleteLine ();
+			$(".node-icon").removeClass ("far")
+			$(".node-icon").addClass ("fab")
+			}
+		});
+	
+	}
+
 function userIsSignedIn () {
 	return (wordpressMemory.accessToken !== undefined);
 	}
@@ -391,6 +417,8 @@ function startup () {
 	updateForLogin ();
 	if (userIsSignedIn ()) {
 		viewSitelist ();
+		viewSitelistAsOutline ("http://scripting.com/code/sallyreader/hellosally.opml");
+		
 		activateToolTips ();
 		}
 	

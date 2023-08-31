@@ -31,3 +31,9 @@ body {
 	margin-right: 1em;
 	}
 
+.divHappyOutline {
+	border: 1px solid silver;
+	padding: 5px;
+	min-height: 400px;
+	background-color: white;
+	}
