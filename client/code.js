@@ -5,10 +5,15 @@ var wordpressMemory = {
 	sitelist: undefined
 	};
 
+var appPrefs = { //needed for the outline routines
+	flTruncateAttValues: false, maxAttValueLength: 15,
+	};
+
+var whenLastUserAction = new Date ();
+
 function saveWordpressmemory () {
 	localStorage.wordpressMemory = jsonStringify (wordpressMemory);
 	}
-
 function getServerAddress () {
 	if (flUseLocalServer) {
 		return ("http://localhost:1408/");
@@ -39,6 +44,39 @@ function getServerAddress () {
 			};
 		var s = getFacebookTimeString (when, flLongStrings, options);
 		return (s);
+		}
+	function userInteracted () { //5/17/21 by DW
+		whenLastUserAction = new Date ();
+		}
+	function updateAttsDisplay (whereToDisplay) {
+		if (whereToDisplay === undefined) {
+			whereToDisplay = $(".divAttsDisplay");
+			}
+		
+		function formatDateTime (d) {
+			return (getFeedlandTimeString (d));
+			}
+		try {
+			var when = opGetOneAtt ("created"), whenstring = "";
+			if (when !== undefined) {
+				whenstring = " <span class=\"spCreatedAttDisplay\">Created: " + formatDateTime (when) + ". </span>";
+				}
+			var attsstring = opGetAttsDisplayString ()
+			if (attsstring.length > 0) {
+				attsstring = " Atts: " + attsstring;
+				}
+			
+			var charsstring = " length=" + opGetLineText ().length + ".";
+			setObjectHtml (whereToDisplay, attsstring + charsstring + whenstring);
+			}
+		catch (err) {
+			setObjectHtml (whereToDisplay, "");
+			}
+		}
+	function decodeHtmlEntities (htmltext) {
+		var textarea = document.createElement ("textarea");
+		textarea.innerHTML = htmltext;
+		return (textarea.value);
 		}
 //api glue
 	function base64UrlEncode (data) {
@@ -259,6 +297,38 @@ function getSitelist (callback) {
 		callback (undefined, wordpressMemory.sitelist);
 		}
 	}
+function sortSiteList (theSites, sortBy="name", flReverseSort=false) {
+	theSites.sort (function (a, b) {
+		switch (sortBy) {
+			case "name":
+				var alower = a.name.toLowerCase (), val;
+				var blower = b.name.toLowerCase ();
+				if (flReverseSort) { //7/11/22 by DW
+					let tmp = alower;
+					alower = blower;
+					blower = tmp;
+					}
+				if (alower.length == 0) {
+					return (1);
+					}
+				if (blower.length == 0) {
+					return (-1);
+					}
+				if (alower == blower) {
+					val = 0;
+					}
+				else {
+					if (blower > alower) {
+						val = -1;
+						}
+					else {
+						val = 1;
+						}
+					}
+				return (val);
+			}
+		});
+	}
 function viewSitelist (whereToAppend) {
 	var options = {
 		sortBy: "name",
@@ -329,7 +399,7 @@ function viewSitelist (whereToAppend) {
 			}
 		else {
 			const divSitelist = $("<div class=\"divSitelist\"></div>");
-			sortTheList ();
+			sortSiteList (theList.sites, options.sortBy, options.flReverseSort);
 			theList.sites.forEach (function (item) {
 				divSitelist.append (getRow (item));
 				});
@@ -338,22 +408,83 @@ function viewSitelist (whereToAppend) {
 		});
 	}
 
-
-var appPrefs = { //needed for the outline routines
-	};
+function addOutlinerCallbacks () {
+	function myExpandCallback () { //6/29/16 by DW
+		try {
+			var atts = opGetAtts (), type = atts.type, url = atts.url;
+			console.log ("myExpandCallback: type == " + type);
+			switch (type) {
+				case "wpsite":
+					console.log ("expand wordpress site, atts.id == " + atts.id);
+					getSitePosts (atts.id, function (err, theSite) {
+						if (err) {
+							alertDialog (err.message);
+							}
+						else {
+							var dir = "right";
+							theSite.posts.forEach (function (item) {
+								const linetext = decodeHtmlEntities (item.title);
+								opInsert (linetext, dir); dir = down;
+								opSetOneAtt ("type", "wppost");
+								opSetOneAtt ("id", item.ID);
+								opSetOneAtt ("created", new Date (item.date).toLocaleString ());
+								opSetOneAtt ("url", item.URL);
+								opSetOneAtt ("icon", "file-alt");
+								});
+							if (dir == "down") {
+								opGo ("left", 1);
+								}
+							}
+						});
+					
+					
+					break;
+				}
+			}
+		catch (err) {
+			console.log ("opExpandCallback: error == " + err.message);    
+			}
+		}
+	$(opGetActiveOutliner ()).concord ({
+		callbacks: {
+			"opCursorMoved": function (op) {
+				console.log ("cursor moved");
+				userInteracted (); 
+				updateAttsDisplay ();
+				
+				
+				if (opGetOneAtt ("created") === undefined) { //no <i>created</i> att, add one -- 1/22/17 by DW
+					opSetOneAtt ("created", new Date ().toUTCString ());
+					}
+				
+				opMarkChanged (); //1/30/15 by DW
+				},
+			"opExpand": function () {
+				myExpandCallback (); 
+				},
+			"opCollapse": function () {
+				opCollapseCallback (); 
+				}
+			}
+		});
+	}
 
 function viewSitelistAsOutline (urlOpml, callback) {
 	var whenstart = new Date ();
 	opInitOutliner (initialOpmltext, true, true);
+	addOutlinerCallbacks ();
 	getSitelist (function (err, theList) {
 		if (err) {
 			alertDialog (err.message);
 			}
 		else {
+			sortSiteList (theList.sites, "name", false);
 			theList.sites.forEach (function (item) {
 				opInsert (item.name, down);
+				opSetOneAtt ("created", new Date (item.options.created_at).toLocaleString ());
 				opSetOneAtt ("type", "wpsite");
 				opSetOneAtt ("icon", "wordpress-simple");
+				opSetOneAtt ("id", item.ID);
 				});
 			opFirstSummit ();
 			opDeleteLine ();

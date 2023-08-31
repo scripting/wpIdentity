@@ -37,3 +37,8 @@ body {
 	min-height: 400px;
 	background-color: white;
 	}
+
+.divAttsDisplay {
+	font-size: 14px;
+	margin-bottom: 2px;
+	}
