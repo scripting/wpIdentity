@@ -7,6 +7,7 @@ var wordpressMemory = {
 	};
 
 var appPrefs = { //needed for the outline routines
+	outlineFont: "Ubuntu", outlineFontSize: 16, outlineLineHeight: 27,
 	flTruncateAttValues: false, maxAttValueLength: 15,
 	};
 
@@ -409,7 +410,7 @@ function viewSitelist (whereToAppend) {
 			}
 		});
 	}
-function viewPost (title, body) {
+function viewPost (title, body) { //todo
 	var htmltext = "";
 	function add (s) {
 		htmltext += s + "\n";
@@ -419,126 +420,172 @@ function viewPost (title, body) {
 	$(".divEditorColumn").html (htmltext);
 	}
 
-function addOutlinerCallbacks () {
-	function updateEditor () {
-		var atts = opGetAtts ();
-		switch (atts.type) {
-			case "wppost":
-				getPost (atts.idsite, atts.id, function (err, thePost) {
-					if (err) {
-						console.log (err.message);
-						}
-					else {
-						console.log (jsonStringify (thePost));
-						viewPost (thePost.title, thePost.content);
-						}
-					});
-				break;
-			}
-		}
-	function myExpandCallback () { //6/29/16 by DW
-		try {
-			var atts = opGetAtts (), type = atts.type, url = atts.url;
-			console.log ("myExpandCallback: type == " + type);
-			switch (type) {
-				case "wpsite":
-					console.log ("expand wordpress site, atts.id == " + atts.id);
-					getSitePosts (atts.id, function (err, theSite) {
-						if (err) {
-							alertDialog (err.message);
-							}
-						else {
-							var dir = "right";
-							theSite.posts.forEach (function (item) {
-								const linetext = decodeHtmlEntities (item.title);
-								opInsert (linetext, dir); dir = down;
-								opSetOneAtt ("type", "wppost");
-								opSetOneAtt ("id", item.ID);
-								opSetOneAtt ("idsite", item.site_ID);
-								opSetOneAtt ("created", new Date (item.date).toLocaleString ());
-								opSetOneAtt ("url", item.URL);
-								opSetOneAtt ("icon", "file-alt");
-								});
-							if (dir == "down") {
-								opGo ("left", 1);
-								}
-							}
-						});
-					
-					
-					break;
+
+function viewWordpressPost (callback) { //if cursor points to a wordpress post, view it in the editor panel
+	var atts = opGetAtts ();
+	if (atts.type == "wppost") {
+		getPost (atts.idsite, atts.id, function (err, thePost) {
+			if (err) {
+				console.log (err.message);
 				}
-			}
-		catch (err) {
-			console.log ("opExpandCallback: error == " + err.message);    
-			}
+			else {
+				viewPost (thePost.title, thePost.content);
+				if (callback !== undefined) {
+					callback ();
+					}
+				}
+			});
 		}
-	$(opGetActiveOutliner ()).concord ({
-		callbacks: {
-			"opCursorMoved": function (op) {
-				console.log ("cursor moved");
-				userInteracted (); 
-				updateAttsDisplay ();
-				updateEditor ();
-				
-				
-				if (opGetOneAtt ("created") === undefined) { //no <i>created</i> att, add one -- 1/22/17 by DW
-					opSetOneAtt ("created", new Date ().toUTCString ());
-					}
-				
-				opMarkChanged (); //1/30/15 by DW
-				},
-			"opExpand": function () {
-				myExpandCallback (); 
-				},
-			"opCollapse": function () {
-				opDeleteSubs ();
-				opCollapseCallback (); 
-				switch (opGetOneAtt ("type")) {
-					case "include": case "wpsite":
-						opDeleteSubs ();
-						console.log ("deleted the subs.");
-						break;
-					}
+	}
+function expandWordpressSite (callback) { //cursor points to a wordpress website, when we expand, we reveal a list of the posts
+	console.log ("expandWordpressSite: site name == " + opGetLineText ());
+	function getLineText (item) {
+		var lt;
+		if (item.title === undefined) {
+			lt = stripMarkup (item.content);
+			}
+		else {
+			lt = item.title;
+			}
+		lt = decodeHtmlEntities (lt);
+		lt = trimWhitespace (lt);
+		lt = maxStringLength (lt, 35, true, false); //whole word, no elipses
+		return (lt);
+		}
+	getSitePosts (opGetAtts ().id, function (err, thePosts) {
+		if (err) {
+			alertDialog (err.message);
+			}
+		else {
+			var dir = "right";
+			thePosts.posts.forEach (function (item) {
+				const linetext = getLineText (item);
+				opInsert (linetext, dir); dir = down;
+				opSetAtts ({
+					type: "wppost",
+					id: item.ID,
+					idsite: item.site_ID,
+					created: new Date (item.date).toLocaleString (),
+					url: item.URL,
+					icon: "file-alt"
+					});
+				});
+			if (dir == "down") {
+				opGo ("left", 1);
 				}
 			}
 		});
 	}
 
-function viewSitelistAsOutline (urlOpml, callback) {
+function viewSitelistAsOutline (callback) {
 	var whenstart = new Date ();
+	function addOutlinerCallbacks () {
+		function expandCallback () { 
+			var atts = opGetAtts ();
+			switch (atts.type) {
+				case "wpsite":
+					expandWordpressSite ();
+					break;
+				case "wppost":
+					window.open (atts.url);
+					break;
+				}
+			}
+		$(opGetActiveOutliner ()).concord ({
+			callbacks: {
+				opCursorMoved: function (op) {
+					viewWordpressPost ();
+					updateAttsDisplay ();
+					opMarkChanged (); 
+					userInteracted (); 
+					},
+				opExpand: function () {
+					expandCallback (); 
+					opMarkChanged (); 
+					userInteracted (); 
+					},
+				opCollapse: function () {
+					opDeleteSubs ();
+					opMarkChanged (); 
+					userInteracted (); 
+					}
+				}
+			});
+		}
+	function getTheList (callback) {
+		if (wordpressMemory.savedOpmlText !== undefined) {
+			opInitOutliner (wordpressMemory.savedOpmlText, true, true);
+			callback ();
+			}
+		else {
+			getSitelist (function (err, theList) {
+				if (err) {
+					alertDialog (err.message);
+					}
+				else {
+					sortSiteList (theList.sites, "name", false);
+					theList.sites.forEach (function (item) {
+						opInsert (item.name, down);
+						opSetOneAtt ("created", new Date (item.options.created_at).toLocaleString ());
+						opSetOneAtt ("type", "wpsite");
+						opSetOneAtt ("icon", "wordpress-simple");
+						opSetOneAtt ("id", item.ID);
+						});
+					opFirstSummit ();
+					opDeleteLine ();
+					callback ();
+					}
+				});
+			}
+		}
 	function fixIcons () {
 		$(".concord-level-1 .node-icon").removeClass ("far")
 		$(".concord-level-1 .node-icon").addClass ("fab")
 		$(".concord-level-2 .node-icon").addClass ("far")
 		}
-	if (wordpressMemory.savedOpmlText !== undefined) {
-		opInitOutliner (wordpressMemory.savedOpmlText, true, true);
+	getTheList (function () {
 		addOutlinerCallbacks ();
 		fixIcons ();
+		viewWordpressPost ();
+		});
+	}
+function viewUserInfo (whereToAppend, callback) {
+	console.log ("viewUserInfo");
+	if (whereToAppend === undefined) {
+		whereToAppend = $(".divUserInfo");
 		}
-	else {
-		opInitOutliner (initialOpmltext, true, true);
-		addOutlinerCallbacks ();
-		getSitelist (function (err, theList) {
-			if (err) {
-				alertDialog (err.message);
+	getUserInfo (function (err, theUserInfo) {
+		if (err) {
+			alertDialog (err.message);
+			}
+		else {
+			const divInfo = $("<div></div>");
+			function getHeadline () {
+				const divUsername = $("<div class=\"divUserInfoHeadline\">MyBlogReader</div>");
+				return (divUsername);
 				}
-			else {
-				sortSiteList (theList.sites, "name", false);
-				theList.sites.forEach (function (item) {
-					opInsert (item.name, down);
-					opSetOneAtt ("created", new Date (item.options.created_at).toLocaleString ());
-					opSetOneAtt ("type", "wpsite");
-					opSetOneAtt ("icon", "wordpress-simple");
-					opSetOneAtt ("id", item.ID);
-					});
-				opFirstSummit ();
-				opDeleteLine ();
-				fixIcons ();
+			function getUsername () {
+				const divUsername = $("<div>Username: " + theUserInfo.username + "</div>");
+				return (divUsername);
 				}
-			});
-		}
+			function getDisplayname () {
+				const divDisplayname = $("<div>Human name: " + theUserInfo.display_name + "</div>");
+				return (divDisplayname);
+				}
+			function getHowLong () {
+				const whenstring = new Date (theUserInfo.date).toLocaleString ();
+				const divHowLong = $("<div>User since: " + whenstring + "</div>");
+				return (divHowLong);
+				}
+			divInfo.append (getHeadline ());
+			divInfo.append (getUsername ());
+			divInfo.append (getDisplayname ());
+			divInfo.append (getHowLong ());
+			if (callback !== undefined) {
+				callback ();
+				}
+			}
+		});
 	}
 
 function userIsSignedIn () {
@@ -597,10 +644,11 @@ function startup () {
 	
 	updateForLogin ();
 	if (userIsSignedIn ()) {
-		viewSitelist ();
-		viewSitelistAsOutline ("http://scripting.com/code/sallyreader/hellosally.opml");
-		activateToolTips ();
+		viewUserInfo (undefined, function () {
+			viewSitelistAsOutline ();
+			activateToolTips ();
+			self.setInterval (everySecond, 1000); 
+			});
 		}
 	
-	self.setInterval (everySecond, 1000); 
 	}

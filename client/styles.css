@@ -31,19 +31,25 @@ body {
 	margin-right: 1em;
 	}
 
+.divColumnWrapper {
+	display: table;
+	width: 100%; /* Take the full width of its container. */
+	border-collapse: separate; /* Needed for spacing between cells. */
+	border-spacing: 5px 0; /* 5px horizontal spacing, 0px vertical spacing. */
+	}
 .divOutlineColumn {
 	display: table-cell;
-	width: 35%;
+	width: 350px;
 	border: 1px solid silver;
 	padding: 5px;
 	min-height: 400px;
 	background-color: white;
+	margin-right: 5px;
 	}
 .divEditorColumn {
-	background-color: white;
 	display: table-cell;
-	width: 65%;
 	border: 1px solid silver;
+	background-color: white;
 	}
 
 .divBody {
@@ -58,3 +64,15 @@ body {
 	font-size: 14px;
 	margin-bottom: 2px;
 	}
+.divUserInfo {
+	line-height: 140%;
+	margin-bottom: 10px;
+	}
+.divUserInfoHeadline {
+	font-size: 24px;
+	font-weight: bold;
+	margin-bottom: 3px;
+	}
+
+
+
