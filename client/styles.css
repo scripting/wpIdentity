@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css?family=Oswald:400,700');
+
 body {
 	font-family: Ubuntu;
 	font-size: 18px;
@@ -5,10 +7,21 @@ body {
 	}
 .divPageBody {
 	width: 60%;
-	margin-top: 50px;
+	margin-top: 90px;
 	margin-left: auto;
 	margin-right: auto;
 	margin-bottom: 400px;
+	}
+ #idMenuProductName {
+	font-family: Oswald;
+	font-style: italic;
+	font-size: 28px;
+	}
+
+.divSignedOff {
+	margin-top: 200px;
+	line-height: 200%;
+	text-align: center;
 	}
 .divLogonButton {
 	display: none;
@@ -41,15 +54,20 @@ body {
 	display: table-cell;
 	width: 350px;
 	border: 1px solid silver;
+	vertical-align: top;
 	padding: 5px;
 	min-height: 400px;
 	background-color: white;
 	margin-right: 5px;
 	}
+.divOutlineColumn li {
+	margin-bottom: 0;
+	}
 .divEditorColumn {
 	display: table-cell;
 	border: 1px solid silver;
 	background-color: white;
+	padding: 4px;
 	}
 
 .divBody {
@@ -74,5 +92,76 @@ body {
 	margin-bottom: 3px;
 	}
 
+
+.divBodyEditorContainer {
+	margin-top: 15px;
+	display: none;
+	}
+.divEditor {
+	border: 1px solid white;
+	}
+.divBodyEditor {
+	margin-top: 10px;
+	padding-left: 6px;
+	padding-right: 6px;
+	line-height: 140%;
+	min-height: 300px;
+	}
+.divBodyEditor p, li {
+	margin-bottom: 10px;
+	line-height: 150%;
+	}
+.divBodyEditor h3 {
+	font-size: 20px;
+	margin-top: 5px;
+	margin-bottom: 2px;
+	}
+.divBodyEditor h4 {
+	font-size: var(--normal-font-size);
+	}
+.divBodyEditor blockquote p {
+	line-height: 140%;
+	}
+.divTitleEditor {
+	font-family: "Oswald";
+	font-size: 38px;
+	
+	margin-top: 10px;
+	
+	
+	letter-spacing: -3px;
+	font-weight: bold;
+	min-height: 1em;
+	padding-top: .3em;
+	padding-bottom: .3em;
+	padding-left: 4px;
+	padding-right: 6px;
+	line-height: 100%;
+	}
+.divTitleEditor p {
+	-webkit-margin-before: 0;
+	-webkit-margin-after: 0;
+	}
+.divDescriptionEditor {
+	font-size: 22px;
+	font-style: italic;
+	min-height: 1em;
+	margin-top: 10px;
+	padding-top: .3em;
+	padding-bottom: .3em;
+	padding-left: 6px;
+	padding-right: 6px;
+	line-height: 130%;
+	}
+:focus, :visited:focus {
+	border-color: rgba(82, 168, 236, 0.8);
+	outline: 0;
+	outline: thin dotted \9;
+	box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+	background-color: white;
+	}
+.divPostedInfo {
+	margin-left: 6px;
+	}
 
 

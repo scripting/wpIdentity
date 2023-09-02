@@ -6,12 +6,27 @@ var wordpressMemory = {
 	savedOpmlText: undefined
 	};
 
+var appConsts = {
+	placeholders: {
+		title: "",
+		description: "",
+		body: ""
+		},
+	};
 var appPrefs = { //needed for the outline routines
 	outlineFont: "Ubuntu", outlineFontSize: 16, outlineLineHeight: 27,
 	flTruncateAttValues: false, maxAttValueLength: 15,
 	};
 
 var whenLastUserAction = new Date ();
+
+var editorTitle, editorDescription, editorBody;
+var editorValues = {
+	title: undefined,
+	description: undefined,
+	text: undefined
+	};
+var flEditorValuesChanged = false;
 
 function saveWordpressmemory () {
 	console.log ("saveWordpressmemory");
@@ -282,6 +297,65 @@ function getServerAddress () {
 				}
 			});
 		}
+//editor
+	function editorValuesChanged () {
+		flEditorValuesChanged = true;
+		whenLastPostChange = new Date ();
+		}
+	function markdownProcess (s) {
+		var md = new Markdown.Converter ();
+		return (md.makeHtml (s));
+		}
+	function setEditorValue (name, val) {
+		if (editorValues [name] != val) {
+			editorValues [name] = val; 
+			editorValuesChanged ();
+			}
+		}
+	function startEditor (postStruct) {
+		editorValues.title = postStruct.title;
+		editorValues.text = postStruct.text;
+		
+		$("#idTitleEditor").html (postStruct.title);
+		editorTitle = new MediumEditor (".divTitleEditor", {
+			placeholder: {
+				text: appConsts.placeholders.title
+				},
+			toolbar: {
+				buttons: appConsts.defaultEditorButtons,
+				},
+			buttonLabels: "fontawesome",
+			imageDragging: false, 
+			disableReturn: true,
+			extensions: {
+				markdown: new MeMarkdown (function (md) {
+					setEditorValue ("title", stripMarkup (md));
+					})
+				}
+			});
+		
+		
+		$("#idBodyEditor").html (markdownProcess (postStruct.text));
+		editorBody = new MediumEditor (".divBodyEditor", {
+			placeholder: {
+				text: appConsts.placeholders.body
+				},
+			toolbar: {
+				buttons: appConsts.defaultEditorButtons,
+				},
+			buttonLabels: "fontawesome",
+			imageDragging: false, 
+			autoLink: true,
+			extensions: {
+				markdown: new MeMarkdown (function (md) {
+					setEditorValue ("text", md);
+					$("#idPreview").text (md);
+					})
+				}
+			});
+		
+		
+		}
 
 function getSitelist (callback) {
 	if (wordpressMemory.sitelist === undefined) {
@@ -410,26 +484,35 @@ function viewSitelist (whereToAppend) {
 			}
 		});
 	}
-function viewPost (title, body) { //todo
-	var htmltext = "";
-	function add (s) {
-		htmltext += s + "\n";
-		}
-	add ("<h3>" + title + "</h3>");
-	add ("<div class=\"divBody\">" + body + "</div>");
-	$(".divEditorColumn").html (htmltext);
-	}
-
 
 function viewWordpressPost (callback) { //if cursor points to a wordpress post, view it in the editor panel
 	var atts = opGetAtts ();
+	function getFirstCategory (thePost) {
+		var theCategory = undefined;
+		for (var x in thePost.categories) {
+			theCategory = x;
+			}
+		return (theCategory);
+		}
+	function setPostedInfo (thePost) {
+		//Posted November 16, 2014 by Jake in News
+		const whenstring = new Date (thePost.date).toLocaleDateString ();
+		const bystring = thePost.author.nice_name;
+		const catstring = getFirstCategory (thePost);
+		const htmltext = "Posted " + whenstring + " by " + bystring + " in " + catstring + ".";
+		$(".divPostedInfo").html (htmltext);
+		}
 	if (atts.type == "wppost") {
 		getPost (atts.idsite, atts.id, function (err, thePost) {
 			if (err) {
 				console.log (err.message);
 				}
 			else {
-				viewPost (thePost.title, thePost.content);
+				setPostedInfo (thePost);
+				startEditor ({
+					title: thePost.title, 
+					text: thePost.content
+					});
 				if (callback !== undefined) {
 					callback ();
 					}
@@ -474,6 +557,21 @@ function expandWordpressSite (callback) { //cursor points to a wordpress website
 				opGo ("left", 1);
 				}
 			}
+		});
+	}
+function updateWordpressPost (callback) {
+	confirmDialog ("Update current WordPress post?", function () {
+		
+		alertDialog ("Fill in code here.");
+		
+		});
+	}
+function newWordpressPost (callback) {
+	var defaultTitle = "Hoo be gatta";
+	askDialog ("Enter title for new post:", defaultTitle, "", function (title, flcancel) {
+		
+		alertDialog ("The title you entered was " + title);
+		
 		});
 	}
 
@@ -524,6 +622,7 @@ function viewSitelistAsOutline (callback) {
 					}
 				else {
 					sortSiteList (theList.sites, "name", false);
+					opInitOutliner (initialOpmltext, true, true);
 					theList.sites.forEach (function (item) {
 						opInsert (item.name, down);
 						opSetOneAtt ("created", new Date (item.options.created_at).toLocaleString ());
@@ -595,9 +694,11 @@ function connectWithWordpress () {
 	location.href = "https://wpidentity.scripting.com/connect";
 	}
 function logOffWordpress () {
-	wordpressMemory.accessToken = undefined;
-	localStorage.wordpressMemory = jsonStringify (wordpressMemory);
-	location.href = location.href;
+	confirmDialog ("Log off WordPress.com?", function () {
+		wordpressMemory.accessToken = undefined;
+		delete localStorage.wordpressMemory;
+		location.href = location.href;
+		});
 	}
 
 function updateForLogin (flConnected=userIsSignedIn ()) {
@@ -621,7 +722,7 @@ function updateForLogin (flConnected=userIsSignedIn ()) {
 function everySecond () {
 	updateForLogin ();
 	if (opHasChanged ()) {
-		if (secondsSince (whenLastUserAction) > 3) {
+		if (secondsSince (whenLastUserAction) > 1) {
 			wordpressMemory.savedOpmlText = opOutlineToXml ();
 			saveWordpressmemory ();
 			opClearChanged ();
