@@ -1,3 +1,9 @@
+#### 9/3/23; 10:16:21 AM by DW
+
+I took a detour to build a "blog browser" based on the client app here, which was not intended to be anything so robust, it's just meant to be example code.
+
+So I split it off into its own project, and refocused the client app here to its much more humble beginnings. 
+
 #### 8/29/23; 12:14:59 PM by DW
 
 More verbs

@@ -33,30 +33,15 @@
 				<div class="navbar navbar-fixed-top" data-dropdown="dropdown">
 					<div class="navbar-inner">
 						<div class="container">
-							<a class="brand" href="/" title="Read anyone's collection of public WordPress blogs in a nice browser."><span id="idMenuProductName">My Blog Browser</span></a>
+							<a class="brand" href="/" title="This is a list of your WordPress.com sites."><span id="idMenuProductName">Your site list</span></a>
 							<ul class="nav">
 								<li class="dropdown" id="idMainMenu"> 
 									<a href="#" class="dropdown-toggle" data-toggle="dropdown">Menu&nbsp;<b class="caret"></b></a>
 									<ul class="dropdown-menu">
+										<li><a onclick="viewUserInfo ();">View user info</a></li>
+										<li><a onclick="reloadSitelist ();">Reload site list</a></li>
+										<li class="divider"></li>
 										<li><a onclick="logOffWordpress ();">Log off WordPress.com</a></li>
-										<li><a onclick="updateWordpressPost ();">Update current post</a></li>
-										<li><a onclick="newWordpressPost ();">Create new post</a></li>
-										</ul>
-									</li>
-								<li class="dropdown" id="idOutlinerMenu"> 
-									<a href="#" class="dropdown-toggle" data-toggle="dropdown">Outline&nbsp;<b class="caret"></b></a>
-									<ul class="dropdown-menu">
-										<li><a onclick="opExpand ();">Expand</a></li>
-										<li><a onclick="opExpandAllLevels ();">Expand All Subs</a></li>
-										<li><a onclick="opExpandEverything ();">Expand Everything</a></li>
-										
-										<li class="divider"></li>
-										<li><a onclick="opCollapse ();">Collapse</a></li>
-										<li><a onclick="opCollapseEverything ();">Collapse Everything</a></li>
-										
-										<li class="divider"></li>
-										<li><a onclick="opFindCommand ();"><span class="menuKeystroke">Cmd-F</span>Find...</a></li>
-										<li><a onclick="opFindAgainCommand ();"><span class="menuKeystroke">Cmd-G</span>Find again</a></li>
 										</ul>
 									</li>
 								</ul>
@@ -67,28 +52,11 @@
 			</div>
 		<div class="divPageBody">
 			<div class="divSignedOn" id="idSignedOn" style="display: none;">
-				<div class="divUserInfo">
-					</div>
-				<div class="divColumnWrapper">
-					<div class="divOutlineColumn">
-						<div id="outliner">
-							</div>
-						</div>
-					<div class="divEditorColumn">
-						<div class="divPostedInfo"></div>
-						<div class="divEditor divTitleEditor" id="idTitleEditor">
-							</div>
-						<div class="divEditor divBodyEditor" id="idBodyEditor">
-							</div>
-						</div>
-					</div>
-				<div class="divAttsDisplay" id="idAttsDisplay">
-					</div>
 				<div class="divSitelistContainer">
 					</div>
 				<div class="divLoggedInMessage">
 					<center>
-						<p>You are now logged on with wordpress.com.</p>
+						<p>You are now logged on to wordpress.com.</p>
 						<p>Click <a onclick="logOffWordpress ()" style="cursor: pointer">here</a> to log off wordpress.com.</p>
 						</center>
 					</div>
