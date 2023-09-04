@@ -1,3 +1,5 @@
+//9/4/23 by DW -- This code can be used in client apps to talk to a server.
+
 function base64UrlEncode (data) {
 	let base64 = btoa (unescape (encodeURIComponent (data)));
 	return base64.replace ('+', '-').replace ('/', '_').replace (/=+$/, '');
@@ -88,6 +90,7 @@ function updatePost (idsite, idpost, thepost, callback) { //8/29/23 by DW
 	const jsontext = JSON.stringify (thepost);
 	servercall ("updatepost", {idsite, idpost, jsontext}, true, callback);
 	}
+
 function testGetUserInfo () {
 	getUserInfo (function (err, data) {
 		if (err) {
@@ -158,14 +161,14 @@ function testGetSiteMedialist (idsite, idpost) {
 			}
 		});
 	}
-function getRandomContent () {
-	var theContent = "";
-	for (var i = 1; i <= 10; i++) {
-		theContent += getRandomSnarkySlogan () + "\n";
-		}
-	return (theContent);
-	}
 function testAddPost (idsite) {
+	function getRandomContent () {
+		var theContent = "";
+		for (var i = 1; i <= 10; i++) {
+			theContent += getRandomSnarkySlogan () + "\n";
+			}
+		return (theContent);
+		}
 	const thePost = {
 		title: "Some random snarky slogans",
 		content: getRandomContent (),
