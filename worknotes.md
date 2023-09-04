@@ -1,3 +1,9 @@
+#### 9/4/23; 5:33:32 PM by DW
+
+If you pass a <i>urlapphomepage</i> parameter to the /connect call, we'll redirect back to that url instead of the default.
+
+This means that one wpidentity server can support lots of apps. 
+
 #### 9/3/23; 10:16:21 AM by DW
 
 I took a detour to build a "blog browser" based on the client app here, which was not intended to be anything so robust, it's just meant to be example code.

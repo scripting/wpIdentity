@@ -51,13 +51,21 @@ function readConfig (f, config, callback) {
 		});
 	}
 
-function getWordpressAuthorizeUrl () {
+function getWordpressAuthorizeUrl (urlAppHomePage=config.urlMyHomePage) {
+	function getState () { //9/4/23 by DW
+		const state = {
+			url: urlAppHomePage,
+			num: config.myRandomNumber
+			};
+		const jsontext = JSON.stringify (state);
+		return (jsontext);
+		}
 	var params = {
 		client_id: config.clientId,
 		redirect_uri: config.urlRedirect,
 		response_type: "code",
 		scope: config.scope,
-		state: config.myRandomNumber
+		state: getState (), //9/4/23 by DW
 		};
 	const url = config.urlAuthorize + "?" + utils.buildParamList (params);
 	return (url);
@@ -209,30 +217,53 @@ function handleHttpRequest (theRequest) {
 			callback (token);
 			}
 		}
+	
+	function unpackState (jsontext) { //9/4/23 by DW
+		var jstruct;
+		try {
+			jstruct = JSON.parse (jsontext);
+			return (jstruct);
+			}
+		catch (err) {
+			console.log ("unpackState: Error parsing JSON text for state record. jsontext == " + jsontext);
+			return (undefined);
+			}
+		}
+	
 	switch (theRequest.lowerpath) {
 		case "/now":
 			theRequest.httpReturn (200, "text/plain", new Date ().toUTCString ());
 			return;
 		case "/connect": 
-			returnRedirect (getWordpressAuthorizeUrl ());
+			returnRedirect (getWordpressAuthorizeUrl (params.urlapphomepage));
 			return;
 		case "/callbackfromwordpress":
-			if (params.state != config.myRandomNumber) {
-				const message = "Can't connect the user because the secret code doesn't match the one we sent.";
+			const state = unpackState (params.state);
+			if (state === undefined) {
+				const message = "Can't connect the user because there was an error in the state returned from the server.";
 				returnError ({message});
 				}
 			else {
-				requestTokenFromWordpress (params.code, function (err, tokenData) {
-					if (err) {
-						console.log ("requestTokenFromWordpress: err.message == " + err.message);
-						returnError (err);
-						}
-					else {
-						const urlRedirect = config.urlMyHomePage + "?accesstoken=" + base64UrlEncode (tokenData.access_token);
-						returnRedirect (urlRedirect);
-						}
-					});
+				if (state.num != config.myRandomNumber) {
+					const message = "Can't connect the user because the secret code doesn't match the one we sent.";
+					returnError ({message});
+					}
+				else {
+					const urlAppHomePage = (state.url === undefined) ? config.urlMyHomePage : state.url; //9/4/23 by DW
+					requestTokenFromWordpress (params.code, function (err, tokenData) {
+						if (err) {
+							console.log ("requestTokenFromWordpress: err.message == " + err.message);
+							returnError (err);
+							}
+						else {
+							const urlRedirect = urlAppHomePage + "?accesstoken=" + base64UrlEncode (tokenData.access_token);
+							returnRedirect (urlRedirect);
+							}
+						});
+					}
 				}
+			
+			
 			return;
 		case "/getuserinfo": //8/26/23 by DW
 			tokenRequired (function (token) {
