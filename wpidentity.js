@@ -1,4 +1,7 @@
-var myProductName = "wpidentity", myVersion = "0.4.1";
+var myProductName = "wpidentity", myVersion = "0.4.2";
+
+exports.start = start; 
+exports.handleHttpRequest = handleHttpRequest; 
 
 const fs = require ("fs");
 const utils = require ("daveutils"); 
@@ -180,7 +183,7 @@ function getSubscriptions (accessToken, callback) { //9/5/23 by DW
 	wp.req.get ("/read/following/mine", {}, callback);
 	}
 
-function handleHttpRequest (theRequest) {
+function handleHttpRequest (theRequest) { //returns true if request was handled
 	const params = theRequest.params;
 	function returnRedirect (url, code) { //9/30/20 by DW
 		var headers = {
@@ -239,12 +242,9 @@ function handleHttpRequest (theRequest) {
 			}
 		}
 	switch (theRequest.lowerpath) {
-		case "/now":
-			theRequest.httpReturn (200, "text/plain", new Date ().toUTCString ());
-			return;
 		case "/connect": 
 			returnRedirect (getWordpressAuthorizeUrl (params.urlapphomepage));
-			return;
+			return (true);
 		case "/callbackfromwordpress":
 			const state = unpackState (params.state);
 			if (state === undefined) {
@@ -270,71 +270,72 @@ function handleHttpRequest (theRequest) {
 						});
 					}
 				}
-			
-			
-			return;
+			return (true);
 		case "/getuserinfo": //8/26/23 by DW
 			tokenRequired (function (token) {
 				getUserInfo (token, httpReturn);
 				});
-			return;
+			return (true);
 		case "/getusersites": //8/26/23 by DW
 			tokenRequired (function (token) {
 				getUserSites (token, httpReturn);
 				});
-			return;
+			return (true);
 		case "/getsiteposts": //8/28/23 by DW
 			tokenRequired (function (token) {
 				getSitePosts (token, params.idsite, httpReturn);
 				});
-			return;
+			return (true);
 		case "/getsiteusers": //8/28/23 by DW
 			tokenRequired (function (token) {
 				getSiteUsers (token, params.idsite, httpReturn);
 				});
-			return;
+			return (true);
 		case "/getsiteinfo": //8/29/23 by DW
 			tokenRequired (function (token) {
 				getSiteInfo (token, params.idsite, httpReturn);
 				});
-			return;
+			return (true);
 		case "/getsitemedialist": //8/29/23 by DW
 			tokenRequired (function (token) {
 				getSiteMedialist (token, params.idsite, httpReturn);
 				});
-			return;
+			return (true);
 		case "/getpost": //8/28/23 by DW
 			tokenRequired (function (token) {
 				getPost (token, params.idsite, params.idpost, httpReturn);
 				});
-			return;
+			return (true);
 		case "/addpost": //8/29/23 by DW
 			tokenRequired (function (token) {
 				addPost (token, params.idsite, params.jsontext, httpReturn);
 				});
-			return;
+			return (true);
 		case "/updatepost": //8/29/23 by DW
 			tokenRequired (function (token) {
 				updatePost (token, params.idsite, params.idpost, params.jsontext, httpReturn);
 				});
-			return;
+			return (true);
 		case "/deletepost": //9/4/23 by DW
 			tokenRequired (function (token) {
 				deletePost (token, params.idsite, params.idpost, httpReturn);
 				});
-			return;
+			return (true);
 		case "/getsubscriptions": //9/5/23 by DW
 			tokenRequired (function (token) {
 				getSubscriptions (token, httpReturn);
 				});
-			return;
+			return (true);
 		default:
-			theRequest.httpReturn (404, "text/plain", "Not found.");
-			return;
+			return (false);;
 		}
 	}
 
-readConfig ("config.json", config, function ()  {
-	console.log ("config == " + utils.jsonStringify (config));
-	davehttp.start (config, handleHttpRequest);
-	});
+function start (options, callback) {
+	if (options !== undefined) {
+		for (var x in options) {
+			config [x] = options [x];
+			}
+		callback ();
+		}
+	}
