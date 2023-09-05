@@ -90,6 +90,12 @@ function updatePost (idsite, idpost, thepost, callback) { //8/29/23 by DW
 	const jsontext = JSON.stringify (thepost);
 	servercall ("updatepost", {idsite, idpost, jsontext}, true, callback);
 	}
+function deletePost (idsite, idpost, callback) { //9/4/23 by DW
+	servercall ("deletepost", {idsite, idpost}, true, callback);
+	}
+function getSubscriptions (callback) { //9/5/23 by DW
+	servercall ("getsubscriptions", undefined, true, callback);
+	}
 
 function testGetUserInfo () {
 	getUserInfo (function (err, data) {
@@ -193,6 +199,26 @@ function testUpdatePost (idsite, idpost) {
 		status: "publish",
 		};
 	updatePost (idsite, idpost, thePost, function (err, data) {
+		if (err) {
+			console.log (err.message);
+			}
+		else {
+			console.log (jsonStringify (data));
+			}
+		});
+	}
+function testDeletePost (idsite, idpost) {
+	deletePost (idsite, idpost, function (err, data) {
+		if (err) {
+			console.log (err.message);
+			}
+		else {
+			console.log (jsonStringify (data));
+			}
+		});
+	}
+function testGetSubscriptions () {
+	getSubscriptions (function (err, data) {
 		if (err) {
 			console.log (err.message);
 			}

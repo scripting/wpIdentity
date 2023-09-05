@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.4.0";
+var myProductName = "wpidentity", myVersion = "0.4.1";
 
 const fs = require ("fs");
 const utils = require ("daveutils"); 
@@ -169,6 +169,16 @@ function updatePost (accessToken, idSite, idPost, jsontext, callback) { //8/29/2
 	const post = site.post (idPost);
 	post.update (thePost, callback);
 	}
+function deletePost (accessToken, idSite, idPost, callback) { //9/4/23 by DW
+	const wp = wpcom (accessToken);
+	const site = wp.site (idSite);
+	const post = site.post (idPost);
+	post.delete (callback);
+	}
+function getSubscriptions (accessToken, callback) { //9/5/23 by DW
+	const wp = wpcom (accessToken);
+	wp.req.get ("/read/following/mine", {}, callback);
+	}
 
 function handleHttpRequest (theRequest) {
 	const params = theRequest.params;
@@ -217,7 +227,6 @@ function handleHttpRequest (theRequest) {
 			callback (token);
 			}
 		}
-	
 	function unpackState (jsontext) { //9/4/23 by DW
 		var jstruct;
 		try {
@@ -229,7 +238,6 @@ function handleHttpRequest (theRequest) {
 			return (undefined);
 			}
 		}
-	
 	switch (theRequest.lowerpath) {
 		case "/now":
 			theRequest.httpReturn (200, "text/plain", new Date ().toUTCString ());
@@ -308,6 +316,16 @@ function handleHttpRequest (theRequest) {
 		case "/updatepost": //8/29/23 by DW
 			tokenRequired (function (token) {
 				updatePost (token, params.idsite, params.idpost, params.jsontext, httpReturn);
+				});
+			return;
+		case "/deletepost": //9/4/23 by DW
+			tokenRequired (function (token) {
+				deletePost (token, params.idsite, params.idpost, httpReturn);
+				});
+			return;
+		case "/getsubscriptions": //9/5/23 by DW
+			tokenRequired (function (token) {
+				getSubscriptions (token, httpReturn);
 				});
 			return;
 		default:

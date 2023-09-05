@@ -1,3 +1,7 @@
+#### 9/5/23; 9:25:58 AM by DW
+
+New functions to delete a post and get the user's subscriptions. 
+
 #### 9/4/23; 5:33:32 PM by DW
 
 If you pass a <i>urlapphomepage</i> parameter to the /connect call, we'll redirect back to that url instead of the default.
