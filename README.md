@@ -1,6 +1,6 @@
-# wordpressIdentity
+# wpIdentity
 
-Implements <a href="https://developer.wordpress.com/docs/wpcc/">OAuth identity</a> and a simple verb set with wordpress.com for Node.js apps.
+A <a href="https://www.npmjs.com/package/wpidentity">package</a> that implements <a href="https://developer.wordpress.com/docs/wpcc/">OAuth identity</a> and a simple verb set with wordpress.com for Node.js apps.
 
 ### It works
 
