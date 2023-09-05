@@ -1,0 +1,7 @@
+{
+	"clientId": 12345,
+	"clientSecret": "xxx",
+	"urlRedirect": "https://yourserverdomain/callbackFromWordpress",
+	"urlMyHomePage": "https://myclientapp.myserver.com/",
+	"scope": "global"
+	}

@@ -1,6 +1,8 @@
 #### 9/5/23; 10:26:37 AM by DW
 
-Turn into a package.
+Turned into a package so I can include it in other apps, probably FeedLand and Drummer.
+
+Rewrite the readme.md file for this repo to put the whole thing to bed and get ready for the next thing.
 
 #### 9/5/23; 9:25:58 AM by DW
 

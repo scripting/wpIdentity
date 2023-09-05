@@ -6,7 +6,23 @@ Implements <a href="https://developer.wordpress.com/docs/wpcc/">OAuth identity</
 
 You can try it out <a href="http://scripting.com/code/wpidentity/client/">here</a>.
 
-It doesn't do anything but log you on or off, for now. 
+You can log on, and see a list of your sites, when each was created and modified. 
+
+Here's a <a href="https://imgs.scripting.com/2023/09/05/wpsitelist.png">screen shot</a>. 
+
+### How to set up a server
+
+1. Download the folder.
+
+2. Throw away everything but the shell folder. In the shell folder you can throw away source.opml.
+
+3. Move the shell folder to your server.
+
+4. Edit the config.json file with the credentials you got from WordPress.com. I've included an example config.json file.
+
+4. npm install
+
+5. node wpidentity.js
 
 ### Check out worknotes
 
@@ -30,9 +46,5 @@ These docs proved useful at different points in this project.
 
 ### Other pointers
 
-I am using this site for testing. https://wordpress.com/view/unberkeley.wordpress.com
-
-### Still to do
-
-8/30/23 by DW: Make it an NPM package so it can easily be included in other apps. 
+I am using this site for testing. https://scripting4.wordpress.com/
 
