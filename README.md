@@ -18,7 +18,7 @@ Here's a <a href="https://imgs.scripting.com/2023/09/05/wpsitelist.png">screen s
 
 3. Move the shell folder to your server.
 
-4. Edit the config.json file with the credentials you got from WordPress.com. I've included an example config.json file.
+4. Edit the <a href="https://github.com/scripting/wpIdentity/blob/main/shell/config.json">config.json</a> file with the credentials you got from WordPress.com. 
 
 4. npm install
 
@@ -26,7 +26,7 @@ Here's a <a href="https://imgs.scripting.com/2023/09/05/wpsitelist.png">screen s
 
 ### Check out worknotes
 
-For now, while this is in active development, all the action is in the <a href="https://github.com/scripting/wordpressIdentity/blob/main/worknotes.md">worknotes</a>. 
+I've been narrating my work in the <a href="https://github.com/scripting/wordpressIdentity/blob/main/worknotes.md">worknotes</a>. 
 
 ### Automattic docs
 
