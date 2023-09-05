@@ -9,6 +9,9 @@
 		"url": "https://github.com/scripting/wpidentity.git"
 		},
 	"main": "wpidentity.js",
+	"files": [
+		"wpidentity.js"
+		],
 	"dependencies" : {
 		"wpcom": "*",
 		"request": "*",
