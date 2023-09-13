@@ -1,3 +1,15 @@
+#### 9/11/23; 12:05:47 PM by DW
+
+When calling back to the app, instead of calling the parameter accesstoken, call it wordpressaccesstoken, to distinguish it from other apps, such as github. 
+
+#### 9/10/23; 1:02:07 PM by DW
+
+Getting ready to include this in daveappserver. 
+
+The HTTP requests should all have "wordpress" in their names. 
+
+Should be able to get by with changes only in this project, because the api.js code is here. 
+
 #### 9/5/23; 10:26:37 AM by DW
 
 Turned into a package so I can include it in other apps, probably FeedLand and Drummer.

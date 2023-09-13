@@ -62,39 +62,39 @@ function servercall (path, params, flAuthenticated, callback, urlServer=getServe
 		});
 	}
 function getUserInfo (callback) { //8/26/23 by DW
-	servercall ("getuserinfo", undefined, true, callback);
+	servercall ("wordpressgetuserinfo", undefined, true, callback);
 	}
 function getUserSites (callback) { //8/26/23 by DW
-	servercall ("getusersites", undefined, true, callback);
+	servercall ("wordpressgetusersites", undefined, true, callback);
 	}
 function getSitePosts (idsite, callback) { //8/28/23 by DW
-	servercall ("getsiteposts", {idsite}, true, callback);
+	servercall ("wordpressgetsiteposts", {idsite}, true, callback);
 	}
 function getSiteUsers (idsite, callback) { //8/28/23 by DW
-	servercall ("getsiteusers", {idsite}, true, callback);
+	servercall ("wordpressgetsiteusers", {idsite}, true, callback);
 	}
 function getSiteInfo (idsite, callback) { //8/29/23 by DW
-	servercall ("getsiteinfo", {idsite}, true, callback);
+	servercall ("wordpressgetsiteinfo", {idsite}, true, callback);
 	}
 function getSiteMedialist (idsite, callback) { //8/29/23 by DW
-	servercall ("getsitemedialist", {idsite}, true, callback);
+	servercall ("wordpressgetsitemedialist", {idsite}, true, callback);
 	}
 function getPost (idsite, idpost, callback) { //8/28/23 by DW
-	servercall ("getpost", {idsite, idpost}, true, callback);
+	servercall ("wordpressgetpost", {idsite, idpost}, true, callback);
 	}
 function addPost (idsite, thepost, callback) { //8/29/23 by DW
 	const jsontext = JSON.stringify (thepost);
-	servercall ("addpost", {idsite, jsontext}, true, callback);
+	servercall ("wordpressaddpost", {idsite, jsontext}, true, callback);
 	}
 function updatePost (idsite, idpost, thepost, callback) { //8/29/23 by DW
 	const jsontext = JSON.stringify (thepost);
-	servercall ("updatepost", {idsite, idpost, jsontext}, true, callback);
+	servercall ("wordpressupdatepost", {idsite, idpost, jsontext}, true, callback);
 	}
 function deletePost (idsite, idpost, callback) { //9/4/23 by DW
-	servercall ("deletepost", {idsite, idpost}, true, callback);
+	servercall ("wordpressdeletepost", {idsite, idpost}, true, callback);
 	}
 function getSubscriptions (callback) { //9/5/23 by DW
-	servercall ("getsubscriptions", undefined, true, callback);
+	servercall ("wordpressgetsubscriptions", undefined, true, callback);
 	}
 
 function testGetUserInfo () {

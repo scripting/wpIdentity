@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.4.4";
+var myProductName = "wpidentity", myVersion = "0.4.9";
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -101,21 +101,113 @@ function requestTokenFromWordpress (theCode, callback) {
 		});
 	}
 
+
+function convertPost (item) { //convert a post received from WordPress to the struct defined by our API -- 9/12/23 by DW
+	function getCatArray () {
+		var catarray = new Array ();
+		for (var x in item.categories) {
+			catarray.push (x);
+			}
+		return (catarray);
+		}
+	function getCatstring () {
+		var catstring = "";
+		for (var x in item.categories) {
+			catstring += "," + x;
+			}
+		if (catstring.length > 0) {
+			catstring = utils.stringDelete (catstring, 1, 1);
+			}
+		return (catstring);
+		}
+	return ({
+		idPost: item.ID,
+		idSite: item.site_ID,
+		title: item.title,
+		guid: item.guid,
+		content: item.content,
+		type: item.type,
+		categories: getCatArray (),
+		url: item.URL,
+		urlShort: item.short_URL,
+		whenCreated: new Date (item.date),
+		author: {
+			id: item.author.ID,
+			username: item.author.login,
+			name: item.author.name
+			}
+		});
+	}
+function convertUser (theUser) {
+	return ({
+		idUser: theUser.ID,
+		name: theUser.display_name,
+		username: theUser.username,
+		email: theUser.email,
+		idPrimaryBlog: theUser.primary_blog,
+		urlPrimaryBlog: theUser.primary_blog_url,
+		whenStarted: new Date (theUser.date),
+		ctSites: theUser.site_count
+		});
+	}
+function convertSite (theSite) {
+	
+	console.log ("convertSite: theSite == " + utils.jsonStringify (theSite));
+	
+	return ({
+		idSite: theSite.ID,
+		urlSite: theSite.URL,
+		description: theSite.description,
+		name: theSite.name,
+		whenCreated: new Date (theSite.options.created_at),
+		ctPosts: theSite.options.post_count
+		});
+	}
+
 function getUserInfo (accessToken, callback) { //8/26/23 by DW
-	console.log ("getUserInfo: accessToken == " + accessToken);
 	const wp = wpcom (accessToken);
-	wp.me ().get (callback);
+	wp.me ().get (function (err, theInfo) {
+		if (err) {
+			callback (err);
+			}
+		else {
+			callback (undefined, convertUser (theInfo));
+			}
+		});
 	}
 function getUserSites (accessToken, callback) { //8/26/23 by DW
-	console.log ("getUserSites: accessToken == " + accessToken);
 	const wp = wpcom (accessToken);
-	wp.me ().sites (callback);
+	wp.me ().sites (function (err, theSiteList) {
+		if (err) {
+			callback (err);
+			}
+		else {
+			var theList = new Array ();
+			theSiteList.sites.forEach (function (item) {
+				theList.push (convertSite (item));
+				});
+			callback (undefined, theList);
+			}
+		});
 	}
-function getSitePosts (accessToken, idSite, callback) { //8/28/23 by DW
+
+function getSitePosts (accessToken, idSite, callback) { //9/12/23 by DW
 	const wp = wpcom (accessToken);
 	const site = wp.site (idSite);
-	site.postsList (callback);
+	site.postsList (function (err, thePosts) { //9/12/23 by DW
+		if (err) {
+			callback (err);
+			}
+		else {
+			var theList = new Array ();
+			thePosts.posts.forEach (function (item) {
+				theList.push (convertPost (item));
+				});
+			callback (undefined, theList);
+			}
+		});
 	}
+
 function getSiteUsers (accessToken, idSite, callback) { //8/28/23 by DW
 	const wp = wpcom (accessToken);
 	const site = wp.site (idSite);
@@ -131,6 +223,19 @@ function getSiteMedialist (accessToken, idSite, callback) { //8/29/23 by DW
 	const site = wp.site (idSite);
 	site.mediaList (callback);
 	}
+function getPost (accessToken, idSite, idPost, callback) { //9/12/23 by DW
+	const wp = wpcom (accessToken);
+	const site = wp.site (idSite);
+	const post = site.post (idPost);
+	post.get (function (err, thePost) { //9/12/23 by DW
+		if (err) {
+			callback (err);
+			}
+		else {
+			callback (undefined, convertPost (thePost));
+			}
+		});
+	}
 function getObjectFromJsontext (jsontext, callback) {
 	var theObject;
 	try {
@@ -144,33 +249,54 @@ function getObjectFromJsontext (jsontext, callback) {
 	return (theObject);
 	}
 function addPost (accessToken, idSite, jsontext, callback) { //8/29/23 by DW
-	
-	const thePost = getObjectFromJsontext (jsontext, callback);
-	if (thePost === undefined) {
+	const jstruct = getObjectFromJsontext (jsontext, callback);
+	if (jstruct === undefined) {
 		return;
 		}
 	
+	const wp = wpcom (accessToken);
+	const site = wp.site (idSite);
 	
-	const wp = wpcom (accessToken);
-	const site = wp.site (idSite);
-	site.addPost (thePost, callback);
-	}
-function getPost (accessToken, idSite, idPost, callback) { //8/28/23 by DW
-	const wp = wpcom (accessToken);
-	const site = wp.site (idSite);
-	const post = site.post (idPost);
-	post.get (callback);
+	const thePost = {
+		title: jstruct.title,
+		content: jstruct.content,
+		categories: jstruct.categories,
+		status: "publish",
+		date: new Date ().toGMTString (),
+		format: "standard",
+		comment_status: "open"
+		};
+	site.addPost (thePost, function (err, theNewPost) {
+		if (err) {
+			callback (err);
+			}
+		else {
+			callback (undefined, convertPost (theNewPost));
+			}
+		});
 	}
 function updatePost (accessToken, idSite, idPost, jsontext, callback) { //8/29/23 by DW
-	const thePost = getObjectFromJsontext (jsontext, callback);
-	if (thePost === undefined) {
+	const jstruct = getObjectFromJsontext (jsontext, callback);
+	if (jstruct === undefined) {
 		return;
 		}
-	
 	const wp = wpcom (accessToken);
 	const site = wp.site (idSite);
 	const post = site.post (idPost);
-	post.update (thePost, callback);
+	
+	const thePost = {
+		title: jstruct.title,
+		content: jstruct.content,
+		status: "publish"
+		};
+	post.update (thePost, function (err, theNewPost) {
+		if (err) {
+			callback (err);
+			}
+		else {
+			callback (undefined, convertPost (theNewPost));
+			}
+		});
 	}
 function deletePost (accessToken, idSite, idPost, callback) { //9/4/23 by DW
 	const wp = wpcom (accessToken);
@@ -195,6 +321,9 @@ function handleHttpRequest (theRequest) { //returns true if request was handled
 		theRequest.httpReturn (code, "text/plain", code + " REDIRECT", headers);
 		}
 		
+	function returnPlaintext (theText) {
+		theRequest.httpReturn (200, "text/plain", theText);
+		}
 	function returnNotFound () {
 		theRequest.httpReturn (404, "text/plain", "Not found.");
 		}
@@ -242,6 +371,9 @@ function handleHttpRequest (theRequest) { //returns true if request was handled
 			}
 		}
 	switch (theRequest.lowerpath) {
+		case "/now":
+			returnPlaintext (new Date ().toUTCString ());
+			return (true);
 		case "/connect": 
 			returnRedirect (getWordpressAuthorizeUrl (params.urlapphomepage));
 			return (true);
@@ -264,64 +396,64 @@ function handleHttpRequest (theRequest) { //returns true if request was handled
 							returnError (err);
 							}
 						else {
-							const urlRedirect = urlAppHomePage + "?accesstoken=" + base64UrlEncode (tokenData.access_token);
+							const urlRedirect = urlAppHomePage + "?wordpressaccesstoken=" + base64UrlEncode (tokenData.access_token); //9/11/23 by DW
 							returnRedirect (urlRedirect);
 							}
 						});
 					}
 				}
 			return (true);
-		case "/getuserinfo": //8/26/23 by DW
+		case "/wordpressgetuserinfo": //8/26/23 by DW
 			tokenRequired (function (token) {
 				getUserInfo (token, httpReturn);
 				});
 			return (true);
-		case "/getusersites": //8/26/23 by DW
+		case "/wordpressgetusersites": //8/26/23 by DW
 			tokenRequired (function (token) {
 				getUserSites (token, httpReturn);
 				});
 			return (true);
-		case "/getsiteposts": //8/28/23 by DW
+		case "/wordpressgetsiteposts": //8/28/23 by DW
 			tokenRequired (function (token) {
 				getSitePosts (token, params.idsite, httpReturn);
 				});
 			return (true);
-		case "/getsiteusers": //8/28/23 by DW
+		case "/wordpressgetsiteusers": //8/28/23 by DW
 			tokenRequired (function (token) {
 				getSiteUsers (token, params.idsite, httpReturn);
 				});
 			return (true);
-		case "/getsiteinfo": //8/29/23 by DW
+		case "/wordpressgetsiteinfo": //8/29/23 by DW
 			tokenRequired (function (token) {
 				getSiteInfo (token, params.idsite, httpReturn);
 				});
 			return (true);
-		case "/getsitemedialist": //8/29/23 by DW
+		case "/wordpressgetsitemedialist": //8/29/23 by DW
 			tokenRequired (function (token) {
 				getSiteMedialist (token, params.idsite, httpReturn);
 				});
 			return (true);
-		case "/getpost": //8/28/23 by DW
+		case "/wordpressgetpost": //8/28/23 by DW
 			tokenRequired (function (token) {
 				getPost (token, params.idsite, params.idpost, httpReturn);
 				});
 			return (true);
-		case "/addpost": //8/29/23 by DW
+		case "/wordpressaddpost": //8/29/23 by DW
 			tokenRequired (function (token) {
 				addPost (token, params.idsite, params.jsontext, httpReturn);
 				});
 			return (true);
-		case "/updatepost": //8/29/23 by DW
+		case "/wordpressupdatepost": //8/29/23 by DW
 			tokenRequired (function (token) {
 				updatePost (token, params.idsite, params.idpost, params.jsontext, httpReturn);
 				});
 			return (true);
-		case "/deletepost": //9/4/23 by DW
+		case "/wordpressdeletepost": //9/4/23 by DW
 			tokenRequired (function (token) {
 				deletePost (token, params.idsite, params.idpost, httpReturn);
 				});
 			return (true);
-		case "/getsubscriptions": //9/5/23 by DW
+		case "/wordpressgetsubscriptions": //9/5/23 by DW
 			tokenRequired (function (token) {
 				getSubscriptions (token, httpReturn);
 				});
@@ -336,6 +468,8 @@ function start (options, callback) {
 		for (var x in options) {
 			config [x] = options [x];
 			}
-		callback ();
+		if (callback !== undefined) {
+			callback ();
+			}
 		}
 	}
