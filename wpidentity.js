@@ -102,6 +102,29 @@ function requestTokenFromWordpress (theCode, callback) {
 	}
 
 
+function convertDate (theDate) {
+	if (theDate === undefined) {
+		return (undefined);
+		}
+	else {
+		const d = new Date (theDate);
+		if (isNaN (d)) {
+			return (undefined);
+			}
+		return (d);
+		}
+	}
+function convertString (theString) {
+	if (theString === undefined) {
+		return (undefined);
+		}
+	if (theString.length == 0) {
+		return (undefined);
+		}
+	else {
+		return (s);
+		}
+	}
 function convertPost (item) { //convert a post received from WordPress to the struct defined by our API -- 9/12/23 by DW
 	function getCatArray () {
 		var catarray = new Array ();
@@ -130,7 +153,7 @@ function convertPost (item) { //convert a post received from WordPress to the st
 		categories: getCatArray (),
 		url: item.URL,
 		urlShort: item.short_URL,
-		whenCreated: new Date (item.date),
+		whenCreated: convertDate (item.date),
 		author: {
 			id: item.author.ID,
 			username: item.author.login,
@@ -146,21 +169,41 @@ function convertUser (theUser) {
 		email: theUser.email,
 		idPrimaryBlog: theUser.primary_blog,
 		urlPrimaryBlog: theUser.primary_blog_url,
-		whenStarted: new Date (theUser.date),
+		whenStarted: convertDate (theUser.date),
 		ctSites: theUser.site_count
 		});
 	}
 function convertSite (theSite) {
-	
-	console.log ("convertSite: theSite == " + utils.jsonStringify (theSite));
-	
 	return ({
 		idSite: theSite.ID,
 		urlSite: theSite.URL,
 		description: theSite.description,
 		name: theSite.name,
-		whenCreated: new Date (theSite.options.created_at),
+		whenCreated: convertDate (theSite.options.created_at),
 		ctPosts: theSite.options.post_count
+		});
+	}
+function convertSubscription (theSubscription) {
+	return ({
+		id: theSubscription.ID,
+		idWpBlog: (theSubscription.blog_ID == "0") ? undefined : theSubscription.blog_ID,
+		feedUrl: theSubscription.URL, 
+		whenSubscribed: convertDate (theSubscription.date_subscribed)
+		});
+	}
+function convertMediaObject (theObject) {
+	return ({
+		id: theObject.ID,
+		url: theObject.URL,
+		whenCreated: theObject.date,
+		idPost: theObject.post_ID,
+		idAuthor: theObject.author_ID,
+		type: theObject.mime_type,
+		title: theObject.title,
+		description: convertString (theObject.description),
+		alt: convertString (theObject.alt),
+		height: theObject.height,
+		width: theObject.width
 		});
 	}
 
@@ -211,17 +254,46 @@ function getSitePosts (accessToken, idSite, callback) { //9/12/23 by DW
 function getSiteUsers (accessToken, idSite, callback) { //8/28/23 by DW
 	const wp = wpcom (accessToken);
 	const site = wp.site (idSite);
-	site.usersList (callback);
+	site.usersList (function (err, theUsers) {
+		if (err) {
+			callback (err);
+			}
+		else {
+			var theList = new Array ();
+			theUsers.users.forEach (function (item) {
+				theList.push (convertUser (item));
+				});
+			callback (undefined, theList);
+			}
+		});
 	}
 function getSiteInfo (accessToken, idSite, callback) { //8/29/23 by DW
 	const wp = wpcom (accessToken);
 	const site = wp.site (idSite);
-	site.get (callback);
+	site.get (function (err, theInfo) {
+		if (err) {
+			callback (err);
+			}
+		else {
+			callback (undefined, convertSite (theInfo));
+			}
+		});
 	}
 function getSiteMedialist (accessToken, idSite, callback) { //8/29/23 by DW
 	const wp = wpcom (accessToken);
 	const site = wp.site (idSite);
-	site.mediaList (callback);
+	site.mediaList (function (err, theMedialist) {
+		if (err) {
+			callback (err);
+			}
+		else {
+			var theList = new Array ();
+			theMedialist.media.forEach (function (item) {
+				theList.push (convertMediaObject (item));
+				});
+			callback (undefined, theList);
+			}
+		});
 	}
 function getPost (accessToken, idSite, idPost, callback) { //9/12/23 by DW
 	const wp = wpcom (accessToken);
@@ -306,7 +378,18 @@ function deletePost (accessToken, idSite, idPost, callback) { //9/4/23 by DW
 	}
 function getSubscriptions (accessToken, callback) { //9/5/23 by DW
 	const wp = wpcom (accessToken);
-	wp.req.get ("/read/following/mine", {}, callback);
+	wp.req.get ("/read/following/mine", {}, function (err, theSubscriptionList) {
+		if (err) {
+			callback (err);
+			}
+		else {
+			var theList = new Array ();
+			theSubscriptionList.subscriptions.forEach (function (item) {
+				theList.push (convertSubscription (item));
+				});
+			callback (undefined, theList);
+			}
+		});
 	}
 
 function handleHttpRequest (theRequest) { //returns true if request was handled
