@@ -1,3 +1,13 @@
+9/14/23; 8:28:29 AM by DW
+
+I wanted to set categories for posts via addPost and updatePost, but found the categories have to already exist before using them, it's not as low-tech as I imagined. So for now we'll have to punt on setting categories through these calls.
+
+#### 9/13/23; 12:56:32 PM by DW
+
+We now summarize the various types: site, post, user, mediaobject, etc to a simpler package as we have done with other apps.
+
+Now we have a proper foundation to build on for scripting in Drummer. 
+
 #### 9/11/23; 12:05:47 PM by DW
 
 When calling back to the app, instead of calling the parameter accesstoken, call it wordpressaccesstoken, to distinguish it from other apps, such as github. 

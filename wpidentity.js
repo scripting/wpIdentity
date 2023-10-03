@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.4.9";
+var myProductName = "wpidentity", myVersion = "0.4.10";
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -332,7 +332,6 @@ function addPost (accessToken, idSite, jsontext, callback) { //8/29/23 by DW
 	const thePost = {
 		title: jstruct.title,
 		content: jstruct.content,
-		categories: jstruct.categories,
 		status: "publish",
 		date: new Date ().toGMTString (),
 		format: "standard",
@@ -374,7 +373,14 @@ function deletePost (accessToken, idSite, idPost, callback) { //9/4/23 by DW
 	const wp = wpcom (accessToken);
 	const site = wp.site (idSite);
 	const post = site.post (idPost);
-	post.delete (callback);
+	post.delete (function (err, theDeletedPost) {
+		if (err) {
+			callback (err);
+			}
+		else {
+			callback (undefined, convertPost (theDeletedPost));
+			}
+		});
 	}
 function getSubscriptions (accessToken, callback) { //9/5/23 by DW
 	const wp = wpcom (accessToken);

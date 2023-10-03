@@ -124,8 +124,7 @@ function viewSitelist (whereToAppend) {
 			return (theCell);
 			}
 		theRow.append (getSiteName ());
-		theRow.append (getDateValue (item.options.created_at, "created"));
-		theRow.append (getDateValue (item.options.updated_at, "last updated"));
+		theRow.append (getDateValue (item.whenCreated, "created"));
 		return (theRow);
 		}
 	console.log ("viewSitelist");
@@ -170,8 +169,8 @@ function viewSitelist (whereToAppend) {
 			}
 		else {
 			const divSitelist = $("<div class=\"divSitelist\"></div>");
-			sortSiteList (theList.sites, options.sortBy, options.flReverseSort);
-			theList.sites.forEach (function (item) {
+			sortSiteList (theList, options.sortBy, options.flReverseSort);
+			theList.forEach (function (item) {
 				divSitelist.append (getRow (item));
 				});
 			whereToAppend.append (divSitelist);
