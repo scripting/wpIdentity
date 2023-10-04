@@ -190,13 +190,14 @@ function viewUserInfo (callback) { //9/3/23 by DW
 			alertDialog (err.message);
 			}
 		else {
+			console.log ("viewUserInfo: theUserInfo == " + jsonStringify (theUserInfo));
 			var htmltext = "";
 			function addLine (label, value) {
 				htmltext += "<p>" + label + " = " + value + ".</p>";
 				}
 			addLine ("Username", theUserInfo.username);
-			addLine ("Human name", theUserInfo.display_name);
-			addLine ("User since", new Date (theUserInfo.date).toLocaleString ());
+			addLine ("Human name", theUserInfo.name);
+			addLine ("User since", new Date (theUserInfo.whenStarted).toLocaleString ());
 			alertDialog (htmltext);
 			if (callback !== undefined) {
 				callback ();
