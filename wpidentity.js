@@ -398,7 +398,7 @@ function getSubscriptions (accessToken, callback) { //9/5/23 by DW
 		});
 	}
 
-function handleHttpRequest (theRequest) { //returns true if request was handled
+function handleHttpRequest (theRequest, options) { //returns true if request was handled
 	const params = theRequest.params;
 	function returnRedirect (url, code) { //9/30/20 by DW
 		var headers = {
@@ -485,8 +485,22 @@ function handleHttpRequest (theRequest) { //returns true if request was handled
 							returnError (err);
 							}
 						else {
-							const urlRedirect = urlAppHomePage + "?wordpressaccesstoken=" + base64UrlEncode (tokenData.access_token); //9/11/23 by DW
-							returnRedirect (urlRedirect);
+							if (options.useWordpressAccount !== undefined) { //10/31/23 by DW
+								let token = tokenData.access_token;
+								getUserInfo (token, function (err, theUserInfo) {
+									if (err) {
+										console.log ("getUserInfo: err.message == " + err.message);
+										returnError (err);
+										}
+									else {
+										options.useWordpressAccount (token, theUserInfo); 
+										}
+									});
+								}
+							else {
+								const urlRedirect = urlAppHomePage + "?wordpressaccesstoken=" + base64UrlEncode (tokenData.access_token); //9/11/23 by DW
+								returnRedirect (urlRedirect);
+								}
 							}
 						});
 					}
