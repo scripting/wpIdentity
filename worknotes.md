@@ -1,4 +1,8 @@
-9/14/23; 8:28:29 AM by DW
+#### 10/31/23; 10:25:25 AM by DW
+
+Allow the caller to handle wordpress login.
+
+#### 9/14/23; 8:28:29 AM by DW
 
 I wanted to set categories for posts via addPost and updatePost, but found the categories have to already exist before using them, it's not as low-tech as I imagined. So for now we'll have to punt on setting categories through these calls.
 

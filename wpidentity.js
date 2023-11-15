@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.4.10";
+var myProductName = "wpidentity", myVersion = "0.4.12";
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -54,25 +54,6 @@ function readConfig (f, config, callback) {
 		});
 	}
 
-function getWordpressAuthorizeUrl (urlAppHomePage=config.urlMyHomePage) {
-	function getState () { //9/4/23 by DW
-		const state = {
-			url: urlAppHomePage,
-			num: config.myRandomNumber
-			};
-		const jsontext = JSON.stringify (state);
-		return (jsontext);
-		}
-	var params = {
-		client_id: config.clientId,
-		redirect_uri: config.urlRedirect,
-		response_type: "code",
-		scope: config.scope,
-		state: getState (), //9/4/23 by DW
-		};
-	const url = config.urlAuthorize + "?" + utils.buildParamList (params);
-	return (url);
-	}
 function requestTokenFromWordpress (theCode, callback) {
 	var theRequest = {
 		method: "POST",
@@ -398,7 +379,7 @@ function getSubscriptions (accessToken, callback) { //9/5/23 by DW
 		});
 	}
 
-function handleHttpRequest (theRequest, options) { //returns true if request was handled
+function handleHttpRequest (theRequest, options = new Object ()) { //returns true if request was handled
 	const params = theRequest.params;
 	function returnRedirect (url, code) { //9/30/20 by DW
 		var headers = {
@@ -459,12 +440,47 @@ function handleHttpRequest (theRequest, options) { //returns true if request was
 			return (undefined);
 			}
 		}
+	function connectRedirect (urlAppHomePage=config.urlMyHomePage) {
+		function doRedirect (state) {
+			const jsontext = JSON.stringify (state);
+			const params = {
+				client_id: config.clientId,
+				redirect_uri: config.urlRedirect,
+				response_type: "code",
+				scope: config.scope,
+				state: jsontext
+				};
+			const url = config.urlAuthorize + "?" + utils.buildParamList (params);
+			returnRedirect (url);
+			}
+		if (options.createPendingConfirmation !== undefined) { //11/14/23 by DW
+			options.createPendingConfirmation (function (err, obj) {
+				if (err) {
+					returnError (err);
+					}
+				else {
+					const state = {
+						url: urlAppHomePage,
+						num: obj.magicString
+						};
+					doRedirect (state);
+					}
+				});
+			}
+		else {
+			const state = {
+				url: urlAppHomePage,
+				num: config.myRandomNumber
+				};
+			doRedirect (state);
+			}
+		}
 	switch (theRequest.lowerpath) {
 		case "/now":
 			returnPlaintext (new Date ().toUTCString ());
 			return (true);
 		case "/connect": 
-			returnRedirect (getWordpressAuthorizeUrl (params.urlapphomepage));
+			connectRedirect (params.urlapphomepage);
 			return (true);
 		case "/callbackfromwordpress":
 			const state = unpackState (params.state);
@@ -473,11 +489,7 @@ function handleHttpRequest (theRequest, options) { //returns true if request was
 				returnError ({message});
 				}
 			else {
-				if (state.num != config.myRandomNumber) {
-					const message = "Can't connect the user because the secret code doesn't match the one we sent.";
-					returnError ({message});
-					}
-				else {
+				function finishWordpressLogin () {
 					const urlAppHomePage = (state.url === undefined) ? config.urlMyHomePage : state.url; //9/4/23 by DW
 					requestTokenFromWordpress (params.code, function (err, tokenData) {
 						if (err) {
@@ -503,6 +515,25 @@ function handleHttpRequest (theRequest, options) { //returns true if request was
 								}
 							}
 						});
+					}
+				if (options.checkPendingConfirmation !== undefined) {
+					options.checkPendingConfirmation (state.num, function (err) {
+						if (err) {
+							returnError (err);
+							}
+						else {
+							finishWordpressLogin ();
+							}
+						});
+					}
+				else {
+					if (state.num != config.myRandomNumber) {
+						const message = "Can't connect the user because the secret code doesn't match the one we sent.";
+						returnError ({message});
+						}
+					else {
+						finishWordpressLogin ();
+						}
 					}
 				}
 			return (true);
