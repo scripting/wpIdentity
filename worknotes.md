@@ -1,3 +1,7 @@
+#### 3/23/24; 7:30:58 PM by DW
+
+Export getUserInfo, which takes an accessToken and calls back with user info.
+
 #### 10/31/23; 10:25:25 AM by DW
 
 Allow the caller to handle wordpress login.

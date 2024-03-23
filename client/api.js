@@ -40,7 +40,7 @@ function httpRequest (url, timeout, headers, callback) {
 		callback (err);
 		});
 	}
-function servercall (path, params, flAuthenticated, callback, urlServer=getServerAddress ()) {
+function wpServerCall (path, params, flAuthenticated, callback, urlServer=getServerAddress ()) {
 	const whenstart = new Date ();
 	var headers = undefined;
 	if (params === undefined) {
@@ -50,10 +50,10 @@ function servercall (path, params, flAuthenticated, callback, urlServer=getServe
 		params.token = base64UrlEncode (wordpressMemory.accessToken);
 		}
 	var url = urlServer + path + "?" + buildParamList (params, false);
-	console.log ("servercall: url == " + url);
+	console.log ("wpServerCall: url == " + url);
 	httpRequest (url, undefined, headers, function (err, jsontext) {
 		if (err) {
-			console.log ("servercall: url == " + url + ", err.message == " + err.message);
+			console.log ("wpServerCall: url == " + url + ", err.message == " + err.message);
 			callback (err);
 			}
 		else {
@@ -62,39 +62,39 @@ function servercall (path, params, flAuthenticated, callback, urlServer=getServe
 		});
 	}
 function getUserInfo (callback) { //8/26/23 by DW
-	servercall ("wordpressgetuserinfo", undefined, true, callback);
+	wpServerCall ("wordpressgetuserinfo", undefined, true, callback);
 	}
 function getUserSites (callback) { //8/26/23 by DW
-	servercall ("wordpressgetusersites", undefined, true, callback);
+	wpServerCall ("wordpressgetusersites", undefined, true, callback);
 	}
 function getSitePosts (idsite, callback) { //8/28/23 by DW
-	servercall ("wordpressgetsiteposts", {idsite}, true, callback);
+	wpServerCall ("wordpressgetsiteposts", {idsite}, true, callback);
 	}
 function getSiteUsers (idsite, callback) { //8/28/23 by DW
-	servercall ("wordpressgetsiteusers", {idsite}, true, callback);
+	wpServerCall ("wordpressgetsiteusers", {idsite}, true, callback);
 	}
 function getSiteInfo (idsite, callback) { //8/29/23 by DW
-	servercall ("wordpressgetsiteinfo", {idsite}, true, callback);
+	wpServerCall ("wordpressgetsiteinfo", {idsite}, true, callback);
 	}
 function getSiteMedialist (idsite, callback) { //8/29/23 by DW
-	servercall ("wordpressgetsitemedialist", {idsite}, true, callback);
+	wpServerCall ("wordpressgetsitemedialist", {idsite}, true, callback);
 	}
 function getPost (idsite, idpost, callback) { //8/28/23 by DW
-	servercall ("wordpressgetpost", {idsite, idpost}, true, callback);
+	wpServerCall ("wordpressgetpost", {idsite, idpost}, true, callback);
 	}
 function addPost (idsite, thepost, callback) { //8/29/23 by DW
 	const jsontext = JSON.stringify (thepost);
-	servercall ("wordpressaddpost", {idsite, jsontext}, true, callback);
+	wpServerCall ("wordpressaddpost", {idsite, jsontext}, true, callback);
 	}
 function updatePost (idsite, idpost, thepost, callback) { //8/29/23 by DW
 	const jsontext = JSON.stringify (thepost);
-	servercall ("wordpressupdatepost", {idsite, idpost, jsontext}, true, callback);
+	wpServerCall ("wordpressupdatepost", {idsite, idpost, jsontext}, true, callback);
 	}
 function deletePost (idsite, idpost, callback) { //9/4/23 by DW
-	servercall ("wordpressdeletepost", {idsite, idpost}, true, callback);
+	wpServerCall ("wordpressdeletepost", {idsite, idpost}, true, callback);
 	}
 function getSubscriptions (callback) { //9/5/23 by DW
-	servercall ("wordpressgetsubscriptions", undefined, true, callback);
+	wpServerCall ("wordpressgetsubscriptions", undefined, true, callback);
 	}
 
 function testGetUserInfo () {

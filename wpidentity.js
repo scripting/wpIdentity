@@ -1,7 +1,8 @@
-var myProductName = "wpidentity", myVersion = "0.4.12";
+var myProductName = "wpidentity", myVersion = "0.4.14";
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
+exports.getUserInfo = getUserInfo; //3/23/24 by DW
 
 const fs = require ("fs");
 const utils = require ("daveutils"); 
