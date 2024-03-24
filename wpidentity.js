@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.4.15";
+var myProductName = "wpidentity", myVersion = "0.4.16";
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -9,11 +9,9 @@ const utils = require ("daveutils");
 const request = require ("request");
 const davehttp = require ("davehttp");
 const wpcom = require ("wpcom"); //8/26/23 by DW
+const davesql = require ("davesql"); //3/24/24 by DW
 
 var config = { 
-	port: process.env.PORT || 1408,
-	flLogToConsole: true,
-	flAllowAccessFromAnywhere: true, //for davehttp
 	
 	myRandomNumber: utils.random (1, 1000000000),
 	urlMyHomePage: "http://scripting.com/code/wpidentity/client/",
@@ -23,7 +21,10 @@ var config = {
 	urlAuthenticate: "https://public-api.wordpress.com/oauth2/authenticate",
 	urlRedirect: "http://localhost:1408/callbackFromWordpress",
 	
-	scope: "global" //default -- 8/27/23 by DW
+	scope: "global", //default -- 8/27/23 by DW
+	
+	mysqlVersion: undefined, //3/24/24 by DW
+	flStorageEnabled: false //3/24/24 by DW
 	};
 
 function base64UrlEncode (theData) {
@@ -375,6 +376,17 @@ function getSubscriptions (accessToken, callback) { //9/5/23 by DW
 		});
 	}
 
+function getUsername (token, callback) { //3/24/24 by DW
+	getUserInfo (token, function (err, theUser) {
+		if (err) {
+			callback (err);
+			}
+		else {
+			callback (undefined, theUser.username);
+			}
+		});
+	}
+
 function startStorage (theDatabase, callback) { //3/24/24 by DW
 	function getMysqlVersion (callback) {
 		const sqltext = "select version () as version;";
@@ -383,6 +395,7 @@ function startStorage (theDatabase, callback) { //3/24/24 by DW
 			if (!err) {
 				if (result.length > 0) {
 					theVersion = result [0].version;
+					console.log ("getMysqlVersion: theVersion == " + theVersion);
 					}
 				}
 			callback (undefined, theVersion);
@@ -390,11 +403,88 @@ function startStorage (theDatabase, callback) { //3/24/24 by DW
 		}
 	davesql.start (config.database, function () {
 		getMysqlVersion (function (err, mysqlVersion) { //11/18/23 by DW, 2/1/24; 11:22:16 AM by DW
+			config.flStorageEnabled = true;
 			config.mysqlVersion = mysqlVersion;
 			if (callback !== undefined) {
 				callback (undefined, config);
 				}
 			});
+		});
+	}
+function readWholeFile (token, relpath, flprivate, callback) { //3/24/24 by DW
+	getUsername (token, function (err, username) {
+		if (err) {
+			callback (err);
+			}
+		else {
+			const privateval = (flprivate) ? 1 : 0;
+			const sqltext = "select * from wpstorage where username = " + davesql.encode (username) + " and relpath = " + davesql.encode (relpath) + " and flprivate = " + davesql.encode (privateval) + ";";
+			console.log ("readWholeFile: username == " + username + ", relpath == " + relpath); //9/21/23 by DW
+			davesql.runSqltext (sqltext, function (err, result) {
+				if (err) {
+					callback (err);
+					}
+				else {
+					if (result.length == 0) {
+						const message = "Can't find the file " + relpath + " for the user " + username + ".";
+						callback ({message});
+						}
+					else {
+						const theFileRec = result [0];
+						const theReturnedData = {
+							filedata: theFileRec.filecontents.toString (),
+							filestats: {
+								relpath: theFileRec.relpath,
+								type: theFileRec.type,
+								username: theFileRec.username,
+								flprivate: theFileRec.flprivate,
+								ctSaves: theFileRec.ctSaves,
+								whenCreated: theFileRec.whenCreated,
+								whenUpdated: theFileRec.whenUpdated
+								}
+							};
+						callback (undefined, theReturnedData);
+						}
+					}
+				});
+			}
+		});
+	}
+function writeWholeFile (token, relpath, type, flprivate, filecontents, callback) { //3/24/24 by DW 
+	const now = new Date ();
+	getUsername (token, function (err, username) {
+		if (err) {
+			callback (err);
+			}
+		else {
+			const privateval = (flprivate) ? 1 : 0;
+			const fileRec = {
+				username, 
+				relpath, 
+				type,
+				flprivate: privateval,
+				filecontents,
+				whenCreated: now,
+				whenUpdated: now,
+				ctSaves: 1
+				};
+			console.log ("writeWholeFile: username == " + username + ", relpath == " + relpath); //9/21/23 by DW
+			readWholeFile (token, relpath, flprivate, function (err, theOriginalFile) {
+				if (!err) {
+					fileRec.whenCreated = theOriginalFile.filestats.whenCreated;
+					fileRec.ctSaves = theOriginalFile.filestats.ctSaves + 1;
+					}
+				const sqltext = "replace into wpstorage " + davesql.encodeValues (fileRec) + ";";
+				davesql.runSqltext (sqltext, function (err, result) {
+					if (err) {
+						callback (err);
+						}
+					else {
+						callback (undefined, fileRec);
+						}
+					});
+				});
+			}
 		});
 	}
 
@@ -494,126 +584,143 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 			doRedirect (state);
 			}
 		}
-	switch (theRequest.lowerpath) {
-		case "/now":
-			returnPlaintext (new Date ().toUTCString ());
-			return (true);
-		case "/connect": 
-			connectRedirect (params.urlapphomepage);
-			return (true);
-		case "/callbackfromwordpress":
-			const state = unpackState (params.state);
-			if (state === undefined) {
-				const message = "Can't connect the user because there was an error in the state returned from the server.";
-				returnError ({message});
+	
+	switch (theRequest.lowermethod) {
+		case "post":
+			switch (theRequest.lowerpath) {
+				case "/writewholefile": //3/24/24 by DW
+					tokenRequired (function (token) {
+						writeWholeFile (token, params.relpath, params.type, params.flprivate, theRequest.postBody.toString (), httpReturn);
+						});
+					return (true);
+				default:
+					return (false);
 				}
-			else {
-				function finishWordpressLogin () {
-					const urlAppHomePage = (state.url === undefined) ? config.urlMyHomePage : state.url; //9/4/23 by DW
-					requestTokenFromWordpress (params.code, function (err, tokenData) {
-						if (err) {
-							console.log ("requestTokenFromWordpress: err.message == " + err.message);
-							returnError (err);
-							}
-						else {
-							if (options.useWordpressAccount !== undefined) { //10/31/23 by DW
-								let token = tokenData.access_token;
-								getUserInfo (token, function (err, theUserInfo) {
-									if (err) {
-										console.log ("getUserInfo: err.message == " + err.message);
-										returnError (err);
-										}
-									else {
-										options.useWordpressAccount (token, theUserInfo); 
-										}
-									});
-								}
-							else {
-								const urlRedirect = urlAppHomePage + "?wordpressaccesstoken=" + base64UrlEncode (tokenData.access_token); //9/11/23 by DW
-								returnRedirect (urlRedirect);
-								}
-							}
-						});
-					}
-				if (options.checkPendingConfirmation !== undefined) {
-					options.checkPendingConfirmation (state.num, function (err) {
-						if (err) {
-							returnError (err);
-							}
-						else {
-							finishWordpressLogin ();
-							}
-						});
-					}
-				else {
-					if (state.num != config.myRandomNumber) {
-						const message = "Can't connect the user because the secret code doesn't match the one we sent.";
+		case "get":
+			switch (theRequest.lowerpath) {
+				case "/now":
+					returnPlaintext (new Date ().toUTCString ());
+					return (true);
+				case "/connect": 
+					connectRedirect (params.urlapphomepage);
+					return (true);
+				case "/callbackfromwordpress":
+					const state = unpackState (params.state);
+					if (state === undefined) {
+						const message = "Can't connect the user because there was an error in the state returned from the server.";
 						returnError ({message});
 						}
 					else {
-						finishWordpressLogin ();
+						function finishWordpressLogin () {
+							const urlAppHomePage = (state.url === undefined) ? config.urlMyHomePage : state.url; //9/4/23 by DW
+							requestTokenFromWordpress (params.code, function (err, tokenData) {
+								if (err) {
+									console.log ("requestTokenFromWordpress: err.message == " + err.message);
+									returnError (err);
+									}
+								else {
+									if (options.useWordpressAccount !== undefined) { //10/31/23 by DW
+										let token = tokenData.access_token;
+										getUserInfo (token, function (err, theUserInfo) {
+											if (err) {
+												console.log ("getUserInfo: err.message == " + err.message);
+												returnError (err);
+												}
+											else {
+												options.useWordpressAccount (token, theUserInfo); 
+												}
+											});
+										}
+									else {
+										const urlRedirect = urlAppHomePage + "?wordpressaccesstoken=" + base64UrlEncode (tokenData.access_token); //9/11/23 by DW
+										returnRedirect (urlRedirect);
+										}
+									}
+								});
+							}
+						if (options.checkPendingConfirmation !== undefined) {
+							options.checkPendingConfirmation (state.num, function (err) {
+								if (err) {
+									returnError (err);
+									}
+								else {
+									finishWordpressLogin ();
+									}
+								});
+							}
+						else {
+							if (state.num != config.myRandomNumber) {
+								const message = "Can't connect the user because the secret code doesn't match the one we sent.";
+								returnError ({message});
+								}
+							else {
+								finishWordpressLogin ();
+								}
+							}
 						}
-					}
+					return (true);
+				case "/wordpressgetuserinfo": //8/26/23 by DW
+					tokenRequired (function (token) {
+						getUserInfo (token, httpReturn);
+						});
+					return (true);
+				case "/wordpressgetusersites": //8/26/23 by DW
+					tokenRequired (function (token) {
+						getUserSites (token, httpReturn);
+						});
+					return (true);
+				case "/wordpressgetsiteposts": //8/28/23 by DW
+					tokenRequired (function (token) {
+						getSitePosts (token, params.idsite, httpReturn);
+						});
+					return (true);
+				case "/wordpressgetsiteusers": //8/28/23 by DW
+					tokenRequired (function (token) {
+						getSiteUsers (token, params.idsite, httpReturn);
+						});
+					return (true);
+				case "/wordpressgetsiteinfo": //8/29/23 by DW
+					tokenRequired (function (token) {
+						getSiteInfo (token, params.idsite, httpReturn);
+						});
+					return (true);
+				case "/wordpressgetsitemedialist": //8/29/23 by DW
+					tokenRequired (function (token) {
+						getSiteMedialist (token, params.idsite, httpReturn);
+						});
+					return (true);
+				case "/wordpressgetpost": //8/28/23 by DW
+					tokenRequired (function (token) {
+						getPost (token, params.idsite, params.idpost, httpReturn);
+						});
+					return (true);
+				case "/wordpressaddpost": //8/29/23 by DW
+					tokenRequired (function (token) {
+						addPost (token, params.idsite, params.jsontext, httpReturn);
+						});
+					return (true);
+				case "/wordpressupdatepost": //8/29/23 by DW
+					tokenRequired (function (token) {
+						updatePost (token, params.idsite, params.idpost, params.jsontext, httpReturn);
+						});
+					return (true);
+				case "/wordpressdeletepost": //9/4/23 by DW
+					tokenRequired (function (token) {
+						deletePost (token, params.idsite, params.idpost, httpReturn);
+						});
+					return (true);
+				case "/wordpressgetsubscriptions": //9/5/23 by DW
+					tokenRequired (function (token) {
+						getSubscriptions (token, httpReturn);
+						});
+					return (true);
+				default:
+					return (false);
 				}
-			return (true);
-		case "/wordpressgetuserinfo": //8/26/23 by DW
-			tokenRequired (function (token) {
-				getUserInfo (token, httpReturn);
-				});
-			return (true);
-		case "/wordpressgetusersites": //8/26/23 by DW
-			tokenRequired (function (token) {
-				getUserSites (token, httpReturn);
-				});
-			return (true);
-		case "/wordpressgetsiteposts": //8/28/23 by DW
-			tokenRequired (function (token) {
-				getSitePosts (token, params.idsite, httpReturn);
-				});
-			return (true);
-		case "/wordpressgetsiteusers": //8/28/23 by DW
-			tokenRequired (function (token) {
-				getSiteUsers (token, params.idsite, httpReturn);
-				});
-			return (true);
-		case "/wordpressgetsiteinfo": //8/29/23 by DW
-			tokenRequired (function (token) {
-				getSiteInfo (token, params.idsite, httpReturn);
-				});
-			return (true);
-		case "/wordpressgetsitemedialist": //8/29/23 by DW
-			tokenRequired (function (token) {
-				getSiteMedialist (token, params.idsite, httpReturn);
-				});
-			return (true);
-		case "/wordpressgetpost": //8/28/23 by DW
-			tokenRequired (function (token) {
-				getPost (token, params.idsite, params.idpost, httpReturn);
-				});
-			return (true);
-		case "/wordpressaddpost": //8/29/23 by DW
-			tokenRequired (function (token) {
-				addPost (token, params.idsite, params.jsontext, httpReturn);
-				});
-			return (true);
-		case "/wordpressupdatepost": //8/29/23 by DW
-			tokenRequired (function (token) {
-				updatePost (token, params.idsite, params.idpost, params.jsontext, httpReturn);
-				});
-			return (true);
-		case "/wordpressdeletepost": //9/4/23 by DW
-			tokenRequired (function (token) {
-				deletePost (token, params.idsite, params.idpost, httpReturn);
-				});
-			return (true);
-		case "/wordpressgetsubscriptions": //9/5/23 by DW
-			tokenRequired (function (token) {
-				getSubscriptions (token, httpReturn);
-				});
-			return (true);
-		default:
-			return (false);;
 		}
+	
+	
+	
 	}
 
 function start (options, callback) {

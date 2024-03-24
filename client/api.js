@@ -40,7 +40,39 @@ function httpRequest (url, timeout, headers, callback) {
 		callback (err);
 		});
 	}
+
+function wpServerPost (path, params, flAuthenticated, filedata, callback, urlServer=getServerAddress ()) { //3/24/24 by DW
+	console.log ("wpServerPost");
+	var whenstart = new Date ();
+	if (!$.isPlainObject (filedata) && (typeof (filedata) != "string")) { //8/2/21 by DW
+		filedata = filedata.toString ();
+		}
+	if (params === undefined) {
+		params = new Object ();
+		}
+	if (flAuthenticated) {
+		params.token = base64UrlEncode (wordpressMemory.accessToken);
+		}
+	var url = urlServer + path + "?" + buildParamList (params, false);
+	$.post (url, filedata, function (data, status) {
+		if (status == "success") {
+			if (callback !== undefined) {
+				callback (undefined, data);
+				}
+			}
+		else {
+			var err = {
+				code: status.status,
+				message: JSON.parse (status.responseText).message
+				};
+			if (callback !== undefined) {
+				callback (err);
+				}
+			}
+		});
+	}
 function wpServerCall (path, params, flAuthenticated, callback, urlServer=getServerAddress ()) {
+	console.log ("wpServerCall");
 	const whenstart = new Date ();
 	var headers = undefined;
 	if (params === undefined) {
@@ -95,6 +127,35 @@ function deletePost (idsite, idpost, callback) { //9/4/23 by DW
 	}
 function getSubscriptions (callback) { //9/5/23 by DW
 	wpServerCall ("wordpressgetsubscriptions", undefined, true, callback);
+	}
+
+function writeUserDataFile (relpath, filedata, type, flPrivate, callback) { //3/24/24 by DW
+	console.log ("writeUserDataFile");
+	const whenstart = new Date ();
+	var params = {
+		relpath, type
+		}
+	if (flPrivate) {
+		params.flprivate = true;
+		}
+	wpServerPost ("writewholefile", params, true, filedata, function (err, data) {
+		if (!err) {
+			console.log ("writeWholeFile: relpath == " + relpath + ", " + secondsSince (whenstart) + " secs."); //8/20/23 by DW
+			}
+		if (callback !== undefined) {
+			callback (err, data);
+			}
+		});
+	}
+function testWriteUserDataFile () {
+	writeUserDataFile ("hello.json", getRandomSnarkySlogan (), "text/plain", true, function (err, data) {
+		if (err) {
+			console.log (err.message);
+			}
+		else {
+			console.log (data);
+			}
+		});
 	}
 
 function testGetUserInfo () {

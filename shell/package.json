@@ -8,6 +8,6 @@
 	"dependencies" : {
 		"daveutils": "*",
 		"davehttp": "*",
-		"wpidentity": "*"
+		"wpidentity": "^0.4.16"
 		} 
 	}

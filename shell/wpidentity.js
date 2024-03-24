@@ -25,7 +25,8 @@ function readConfig (f, config, callback) {
 const config = {
 	port: process.env.PORT || 1408,
 	flLogToConsole: true,
-	flAllowAccessFromAnywhere: true
+	flAllowAccessFromAnywhere: true,
+	flPostEnabled: true, //3/24/24 by DW
 	};
 
 readConfig ("config.json", config, function ()  {
