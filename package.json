@@ -10,7 +10,6 @@
 		},
 	"main": "wpidentity.js",
 	"files": [
-		"storage.js",
 		"wpidentity.js"
 		],
 	"dependencies" : {

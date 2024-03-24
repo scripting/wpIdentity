@@ -14,9 +14,9 @@ create table wpstorage (	username  varchar (255), 	relpath varchar (255), 	ty
 
 ```
 
-2. If you put this table in its own database. If the latter, you should use the encoding command to create the database with:
+3. If you put this table in its own database. If the latter, you should use the encoding command to create the database with:
 
-`create database wpidentity character set utf8mb4 collate utf8mb4_unicode_ci;`
+<blockquote>`create database wpidentity character set utf8mb4 collate utf8mb4_unicode_ci;`</blockquote>
 
 #### 3/23/24; 7:30:58 PM by DW
 
