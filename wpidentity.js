@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.4.14";
+var myProductName = "wpidentity", myVersion = "0.4.15";
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -82,8 +82,6 @@ function requestTokenFromWordpress (theCode, callback) {
 			}
 		});
 	}
-
-
 function convertDate (theDate) {
 	if (theDate === undefined) {
 		return (undefined);
@@ -188,7 +186,6 @@ function convertMediaObject (theObject) {
 		width: theObject.width
 		});
 	}
-
 function getUserInfo (accessToken, callback) { //8/26/23 by DW
 	const wp = wpcom (accessToken);
 	wp.me ().get (function (err, theInfo) {
@@ -215,7 +212,6 @@ function getUserSites (accessToken, callback) { //8/26/23 by DW
 			}
 		});
 	}
-
 function getSitePosts (accessToken, idSite, callback) { //9/12/23 by DW
 	const wp = wpcom (accessToken);
 	const site = wp.site (idSite);
@@ -232,7 +228,6 @@ function getSitePosts (accessToken, idSite, callback) { //9/12/23 by DW
 			}
 		});
 	}
-
 function getSiteUsers (accessToken, idSite, callback) { //8/28/23 by DW
 	const wp = wpcom (accessToken);
 	const site = wp.site (idSite);
@@ -377,6 +372,29 @@ function getSubscriptions (accessToken, callback) { //9/5/23 by DW
 				});
 			callback (undefined, theList);
 			}
+		});
+	}
+
+function startStorage (theDatabase, callback) { //3/24/24 by DW
+	function getMysqlVersion (callback) {
+		const sqltext = "select version () as version;";
+		davesql.runSqltext (sqltext, function (err, result) {
+			var theVersion = undefined;
+			if (!err) {
+				if (result.length > 0) {
+					theVersion = result [0].version;
+					}
+				}
+			callback (undefined, theVersion);
+			});
+		}
+	davesql.start (config.database, function () {
+		getMysqlVersion (function (err, mysqlVersion) { //11/18/23 by DW, 2/1/24; 11:22:16 AM by DW
+			config.mysqlVersion = mysqlVersion;
+			if (callback !== undefined) {
+				callback (undefined, config);
+				}
+			});
 		});
 	}
 
@@ -603,6 +621,11 @@ function start (options, callback) {
 		for (var x in options) {
 			config [x] = options [x];
 			}
+		
+		if (options.database !== undefined) { //3/24/24 by DW
+			startStorage (options.database);
+			}
+		
 		if (callback !== undefined) {
 			callback ();
 			}

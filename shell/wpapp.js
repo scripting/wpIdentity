@@ -1,8 +1,8 @@
-var myProductName = "wpapp", myVersion = "0.4.0";
+var myProductName = "wpapp", myVersion = "0.4.1";
 
 const fs = require ("fs");
 const utils = require ("daveutils");
-const wpidentity = require ("./lib/wpidentity.js");
+const wpidentity = require ("wpidentity");
 const davehttp = require ("davehttp");
 
 function readConfig (f, config, callback) {

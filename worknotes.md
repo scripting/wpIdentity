@@ -1,3 +1,23 @@
+3/24/24; 10:55:17 AM by DW
+
+Storage. Every wpidentity installation has the option of providing storage. Used the same setup as we use in feedland.js.
+
+How to:
+
+1. Provide a database object in config.json, set up exactly as it is in feedlandinstall. 
+
+2. In your MySQL database, create a table called wpstorage with this command. 
+
+```SQL
+
+create table wpstorage (	username  varchar (255), 	relpath varchar (255), 	type varchar (64),	filecontents text,	flprivate boolean,	whenCreated datetime, 	whenUpdated datetime, 	ctSaves int default 0,	primary key (username, relpath, flprivate)	);
+
+```
+
+2. If you put this table in its own database. If the latter, you should use the encoding command to create the database with:
+
+`create database wpidentity character set utf8mb4 collate utf8mb4_unicode_ci;`
+
 #### 3/23/24; 7:30:58 PM by DW
 
 Export getUserInfo, which takes an accessToken and calls back with user info.
