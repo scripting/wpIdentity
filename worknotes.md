@@ -1,3 +1,7 @@
+#### 3/25/24; 10:08:19 AM by DW
+
+Add a cache for usernames.
+
 #### 3/24/24; 10:55:17 AM by DW
 
 Storage. Every wpidentity installation has the option of providing storage. Used the same setup as we use in feedland.js.

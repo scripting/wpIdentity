@@ -1,4 +1,4 @@
-//9/4/23 by DW -- This code can be used in client apps to talk to a server.
+//9/4/23 by DW -- This code can be used in client apps to talk to a server. 
 
 function base64UrlEncode (data) {
 	let base64 = btoa (unescape (encodeURIComponent (data)));
@@ -42,7 +42,6 @@ function httpRequest (url, timeout, headers, callback) {
 	}
 
 function wpServerPost (path, params, flAuthenticated, filedata, callback, urlServer=getServerAddress ()) { //3/24/24 by DW
-	console.log ("wpServerPost");
 	var whenstart = new Date ();
 	if (!$.isPlainObject (filedata) && (typeof (filedata) != "string")) { //8/2/21 by DW
 		filedata = filedata.toString ();
@@ -130,7 +129,6 @@ function getSubscriptions (callback) { //9/5/23 by DW
 	}
 
 function writeUserDataFile (relpath, filedata, type, flPrivate, callback) { //3/24/24 by DW
-	console.log ("writeUserDataFile");
 	const whenstart = new Date ();
 	var params = {
 		relpath, type
@@ -147,8 +145,31 @@ function writeUserDataFile (relpath, filedata, type, flPrivate, callback) { //3/
 			}
 		});
 	}
-function testWriteUserDataFile () {
-	writeUserDataFile ("hello.json", getRandomSnarkySlogan (), "text/plain", true, function (err, data) {
+function readUserDataFile (relpath, flPrivate, callback) { //3/25/24 by DW
+	console.log ("readUserDataFile");
+	const whenstart = new Date ();
+	var params = {
+		relpath
+		}
+	if (flPrivate) {
+		params.flprivate = true;
+		}
+	wpServerCall ("readwholefile", params, true, callback);
+	}
+function deleteUserDataFile (relpath, flPrivate, callback) { //3/26/24 by DW
+	console.log ("deleteUserDataFile");
+	const whenstart = new Date ();
+	var params = {
+		relpath
+		}
+	if (flPrivate) {
+		params.flprivate = true;
+		}
+	wpServerCall ("deletefile", params, true, callback);
+	}
+
+function testDeleteUserDataFile () {
+	deleteUserDataFile ("hello.json", true, function (err, data) {
 		if (err) {
 			console.log (err.message);
 			}
@@ -157,7 +178,33 @@ function testWriteUserDataFile () {
 			}
 		});
 	}
-
+function testWriteUserDataFile () {
+	runEveryMinute (function () {
+		function nowString () {
+			return (new Date ().toLocaleTimeString ());
+			}
+		const slogan = getRandomSnarkySlogan ();
+		console.log (nowstring () + ": " + slogan);
+		writeUserDataFile ("slogan.txt", slogan, "text/plain", true, function (err, data) {
+			if (err) {
+				console.log (err.message);
+				}
+			else {
+				console.log (data);
+				}
+			});
+		});
+	}
+function testReadUserDataFile () {
+	readUserDataFile ("hello.json", true, function (err, data) {
+		if (err) {
+			console.log (err.message);
+			}
+		else {
+			console.log (data);
+			}
+		});
+	}
 function testGetUserInfo () {
 	getUserInfo (function (err, data) {
 		if (err) {

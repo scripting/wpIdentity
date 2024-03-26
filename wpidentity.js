@@ -12,7 +12,6 @@ const wpcom = require ("wpcom"); //8/26/23 by DW
 const davesql = require ("davesql"); //3/24/24 by DW
 
 var config = { 
-	
 	myRandomNumber: utils.random (1, 1000000000),
 	urlMyHomePage: "http://scripting.com/code/wpidentity/client/",
 	
@@ -24,8 +23,16 @@ var config = {
 	scope: "global", //default -- 8/27/23 by DW
 	
 	mysqlVersion: undefined, //3/24/24 by DW
-	flStorageEnabled: false //3/24/24 by DW
+	flStorageEnabled: false, //3/24/24 by DW
+	
+	ctUsernameCacheSecs: 60, //3/25/24 by DW
+	urlServerHomePageSource: "http://scripting.com/code/wordsocial/index.html", //3/25/24 by DW
+	
+	urlServer: "https://word.social/" //3/25/24 by DW
 	};
+
+var usernameCache = new Object ();
+var whenLastUsernameCacheStart = new Date ();
 
 function base64UrlEncode (theData) {
 	var base64 = Buffer.from (theData).toString ('base64');
@@ -375,16 +382,27 @@ function getSubscriptions (accessToken, callback) { //9/5/23 by DW
 			}
 		});
 	}
-
 function getUsername (token, callback) { //3/24/24 by DW
-	getUserInfo (token, function (err, theUser) {
-		if (err) {
-			callback (err);
-			}
-		else {
-			callback (undefined, theUser.username);
-			}
-		});
+	if (utils.secondsSince (whenLastUsernameCacheStart) > config.ctUsernameCacheSecs) {
+		usernameCache = new Object ();
+		}
+	if (usernameCache [token] !== undefined) {
+		callback (undefined, usernameCache [token]);
+		}
+	else {
+		getUserInfo (token, function (err, theUser) {
+			if (err) {
+				callback (err);
+				}
+			else {
+				const username = theUser.username;
+				usernameCache [token] = username;
+				callback (undefined, username);
+				}
+			});
+		}
+	
+	
 	}
 
 function startStorage (theDatabase, callback) { //3/24/24 by DW
@@ -488,6 +506,35 @@ function writeWholeFile (token, relpath, type, flprivate, filecontents, callback
 		});
 	}
 
+function deleteFile (token, relpath, flprivate, callback) { //3/26/24 by DW
+	const now = new Date ();
+	getUsername (token, function (err, username) {
+		if (err) {
+			callback (err);
+			}
+		else {
+			const privateval = (flprivate) ? 1 : 0;
+			const sqltext = "delete from wpstorage where username = " + davesql.encode (username) + " and relpath = " + davesql.encode (relpath) + " and flprivate = " + davesql.encode (privateval) + ";";
+			davesql.runSqltext (sqltext, function (err, result) {
+				if (err) {
+					callback (err);
+					}
+				else {
+					if (result.length == 0) {
+						const message = "Can't find the file " + relpath + " for the user " + username + ".";
+						callback ({message});
+						}
+					else {
+						callback (undefined, true);
+						}
+					}
+				});
+			}
+		});
+	}
+
+
+
 function handleHttpRequest (theRequest, options = new Object ()) { //returns true if request was handled
 	const params = theRequest.params;
 	function returnRedirect (url, code) { //9/30/20 by DW
@@ -514,9 +561,11 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 		}
 	function httpReturn (err, data) {
 		if (err) {
+			console.log ("httpReturn: err.message == " + err.message);
 			returnError (err);
 			}
 		else {
+			console.log ("httpReturn: data == " + utils.jsonStringify (data));
 			returnData (data);
 			}
 		}
@@ -527,6 +576,36 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 		else {
 			theRequest.httpReturn (200, "text/html", htmltext);
 			}
+		}
+	function returnServerHomePage () { //3/25/24 by DW
+		const pagetable = {
+			urlServer: config.urlServer
+			};
+		function getTemplateText (callback) {
+			request (config.urlServerHomePageSource, function (err, response, templatetext) {
+				if (err) {
+					callback (err);
+					}
+				else {
+					if ((response.statusCode >= 200) && (response.statusCode <= 299)) {
+						callback (undefined, templatetext.toString ());
+						}
+					else {
+						const message = "HTTP error == " + response.statusCode;
+						callback ({message});
+						}
+					}
+				});
+			}
+		getTemplateText (function (err, templatetext) {
+			if (err) {
+				returnError (err);
+				}
+			else {
+				const pagetext = utils.multipleReplaceAll (templatetext, pagetable, false, "[%", "%]");
+				returnHtml (undefined, pagetext);
+				}
+			});
 		}
 	function tokenRequired (callback) {
 		const token = (params.token === undefined) ? undefined : base64UrlDecode (params.token);
@@ -598,6 +677,9 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 				}
 		case "get":
 			switch (theRequest.lowerpath) {
+				case "/":
+					returnServerHomePage ();
+					return (true);
 				case "/now":
 					returnPlaintext (new Date ().toUTCString ());
 					return (true);
@@ -714,25 +796,33 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 						getSubscriptions (token, httpReturn);
 						});
 					return (true);
+				case "/readwholefile": //3/25/24 by DW
+					tokenRequired (function (token) {
+						readWholeFile (token, params.relpath, params.flprivate, httpReturn);
+						});
+					return (true);
+				case "/deletefile": //3/26/24 by DW
+					tokenRequired (function (token) {
+						deleteFile (token, params.relpath, params.flprivate, httpReturn);
+						});
+					return (true);
 				default:
 					return (false);
 				}
 		}
-	
-	
-	
 	}
 
 function start (options, callback) {
 	if (options !== undefined) {
 		for (var x in options) {
-			config [x] = options [x];
+			if (options [x] !== undefined) {
+				config [x] = options [x];
+				}
 			}
-		
 		if (options.database !== undefined) { //3/24/24 by DW
-			startStorage (options.database);
+			startStorage (options.database, function () {
+				});
 			}
-		
 		if (callback !== undefined) {
 			callback ();
 			}
