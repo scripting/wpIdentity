@@ -14,7 +14,7 @@ How to:
 
 ```SQL
 
-create table wpstorage (	username  varchar (255), 	relpath varchar (255), 	type varchar (64),	filecontents text,	flprivate boolean,	whenCreated datetime, 	whenUpdated datetime, 	ctSaves int default 0,	primary key (username, relpath, flprivate)	);
+create table wpstorage (	username  varchar (255), 	relpath varchar (255), 	type varchar (64),	filecontents text,	flprivate boolean,	idSite bigint unsigned not null default 0,	idPost int unsigned not null default 0;	whenCreated datetime, 	whenUpdated datetime, 	ctSaves int default 0,	primary key (username, relpath, flprivate)	);
 
 ```
 
