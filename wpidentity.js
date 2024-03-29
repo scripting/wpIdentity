@@ -449,19 +449,7 @@ function readWholeFile (token, relpath, flprivate, callback) { //3/24/24 by DW
 						}
 					else {
 						const theFileRec = result [0];
-						const theReturnedData = {
-							filedata: theFileRec.filecontents.toString (),
-							filestats: {
-								relpath: theFileRec.relpath,
-								type: theFileRec.type,
-								username: theFileRec.username,
-								flprivate: theFileRec.flprivate,
-								ctSaves: theFileRec.ctSaves,
-								whenCreated: theFileRec.whenCreated,
-								whenUpdated: theFileRec.whenUpdated
-								}
-							};
-						callback (undefined, theReturnedData);
+						callback (undefined, theFileRec);
 						}
 					}
 				});
@@ -489,8 +477,8 @@ function writeWholeFile (token, relpath, type, flprivate, filecontents, callback
 			console.log ("writeWholeFile: username == " + username + ", relpath == " + relpath); //9/21/23 by DW
 			readWholeFile (token, relpath, flprivate, function (err, theOriginalFile) {
 				if (!err) {
-					fileRec.whenCreated = theOriginalFile.filestats.whenCreated;
-					fileRec.ctSaves = theOriginalFile.filestats.ctSaves + 1;
+					fileRec.whenCreated = theOriginalFile.whenCreated;
+					fileRec.ctSaves = theOriginalFile.ctSaves + 1;
 					}
 				const sqltext = "replace into wpstorage " + davesql.encodeValues (fileRec) + ";";
 				davesql.runSqltext (sqltext, function (err, result) {
@@ -505,7 +493,6 @@ function writeWholeFile (token, relpath, type, flprivate, filecontents, callback
 			}
 		});
 	}
-
 function deleteFile (token, relpath, flprivate, callback) { //3/26/24 by DW
 	const now = new Date ();
 	getUsername (token, function (err, username) {
@@ -532,8 +519,6 @@ function deleteFile (token, relpath, flprivate, callback) { //3/26/24 by DW
 			}
 		});
 	}
-
-
 
 function handleHttpRequest (theRequest, options = new Object ()) { //returns true if request was handled
 	const params = theRequest.params;
@@ -804,6 +789,11 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 				case "/deletefile": //3/26/24 by DW
 					tokenRequired (function (token) {
 						deleteFile (token, params.relpath, params.flprivate, httpReturn);
+						});
+					return (true);
+				case "/writewholefile": //3/24/24 by DW
+					tokenRequired (function (token) {
+						writeWholeFile (token, params.relpath, params.type, params.flprivate, params.filedata, httpReturn);
 						});
 					return (true);
 				default:

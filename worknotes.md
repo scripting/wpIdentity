@@ -1,3 +1,13 @@
+3/28/24; 11:36:57 AM by DW
+
+#### re writeUserDataFile below..
+
+I couldn't get anything back from the server via POST, so I'm trying GET. 
+
+It worked. I've been over it on both ends, can't see any difference between it and daveappserver which is what we use in feedland and drummer. 
+
+So I'm just going to continue with calling GET, and trust that the next person to pass this way will figure out what I did wrong. ;-)
+
 #### 3/25/24; 10:08:19 AM by DW
 
 Add a cache for usernames.

@@ -71,7 +71,6 @@ function wpServerPost (path, params, flAuthenticated, filedata, callback, urlSer
 		});
 	}
 function wpServerCall (path, params, flAuthenticated, callback, urlServer=getServerAddress ()) {
-	console.log ("wpServerCall");
 	const whenstart = new Date ();
 	var headers = undefined;
 	if (params === undefined) {
@@ -81,10 +80,8 @@ function wpServerCall (path, params, flAuthenticated, callback, urlServer=getSer
 		params.token = base64UrlEncode (wordpressMemory.accessToken);
 		}
 	var url = urlServer + path + "?" + buildParamList (params, false);
-	console.log ("wpServerCall: url == " + url);
 	httpRequest (url, undefined, headers, function (err, jsontext) {
 		if (err) {
-			console.log ("wpServerCall: url == " + url + ", err.message == " + err.message);
 			callback (err);
 			}
 		else {
@@ -131,19 +128,12 @@ function getSubscriptions (callback) { //9/5/23 by DW
 function writeUserDataFile (relpath, filedata, type, flPrivate, callback) { //3/24/24 by DW
 	const whenstart = new Date ();
 	var params = {
-		relpath, type
+		relpath, type, filedata
 		}
 	if (flPrivate) {
 		params.flprivate = true;
 		}
-	wpServerPost ("writewholefile", params, true, filedata, function (err, data) {
-		if (!err) {
-			console.log ("writeWholeFile: relpath == " + relpath + ", " + secondsSince (whenstart) + " secs."); //8/20/23 by DW
-			}
-		if (callback !== undefined) {
-			callback (err, data);
-			}
-		});
+	wpServerCall ("writewholefile", params, true, callback);
 	}
 function readUserDataFile (relpath, flPrivate, callback) { //3/25/24 by DW
 	console.log ("readUserDataFile");
@@ -168,6 +158,23 @@ function deleteUserDataFile (relpath, flPrivate, callback) { //3/26/24 by DW
 	wpServerCall ("deletefile", params, true, callback);
 	}
 
+function testWriteUserDataFile () {
+	function nowString () {
+		return (new Date ().toLocaleTimeString ());
+		}
+	const slogan = getRandomSnarkySlogan (), whenstart = new Date ();
+	writeUserDataFile ("slogan.txt", slogan, "text/plain", true, function (err, data) {
+		if (err) {
+			console.log (nowString () + " - testWriteUserDataFile: err.message == " + err.message);
+			}
+		else {
+			console.log (nowString () + " - testWriteUserDataFile: " + secondsSince (whenstart) + " secs. data == " + jsonStringify (data));
+			}
+		});
+	}
+function testWriteUserDataFileEveryMinute () {
+	runEveryMinute (testWriteUserDataFile);
+	}
 function testDeleteUserDataFile () {
 	deleteUserDataFile ("hello.json", true, function (err, data) {
 		if (err) {
@@ -178,25 +185,8 @@ function testDeleteUserDataFile () {
 			}
 		});
 	}
-function testWriteUserDataFile () {
-	runEveryMinute (function () {
-		function nowString () {
-			return (new Date ().toLocaleTimeString ());
-			}
-		const slogan = getRandomSnarkySlogan ();
-		console.log (nowstring () + ": " + slogan);
-		writeUserDataFile ("slogan.txt", slogan, "text/plain", true, function (err, data) {
-			if (err) {
-				console.log (err.message);
-				}
-			else {
-				console.log (data);
-				}
-			});
-		});
-	}
 function testReadUserDataFile () {
-	readUserDataFile ("hello.json", true, function (err, data) {
+	readUserDataFile ("draft.json", true, function (err, data) {
 		if (err) {
 			console.log (err.message);
 			}
