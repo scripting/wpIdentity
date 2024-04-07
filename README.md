@@ -32,6 +32,8 @@ I've been narrating my work in the <a href="https://github.com/scripting/wordpre
 
 These docs proved useful at different points in this project.
 
+* https://developer.wordpress.com/apps/
+
 * https://developer.wordpress.com/docs/oauth2/
 
 * https://github.com/Automattic/node-wpcom-oauth
