@@ -429,15 +429,23 @@ function startStorage (theDatabase, callback) { //3/24/24 by DW
 			});
 		});
 	}
-function readWholeFile (token, relpath, flprivate, callback) { //3/24/24 by DW
+function readWholeFile (token, relpath, flprivate, idsite, idpost, callback) { //3/24/24 by DW
 	getUsername (token, function (err, username) {
 		if (err) {
 			callback (err);
 			}
 		else {
 			const privateval = (flprivate) ? 1 : 0;
-			const sqltext = "select * from wpstorage where username = " + davesql.encode (username) + " and relpath = " + davesql.encode (relpath) + " and flprivate = " + davesql.encode (privateval) + ";";
-			console.log ("readWholeFile: username == " + username + ", relpath == " + relpath); //9/21/23 by DW
+			var sqltext = "select * from wpstorage where username = " + davesql.encode (username) + " and relpath = " + davesql.encode (relpath) + " and flprivate = " + davesql.encode (privateval)
+			
+			if (idsite !== undefined) { //4/5/24 by DW
+				sqltext += " and idsite = " + davesql.encode (idsite);
+				}
+			if (idpost !== undefined) {
+				sqltext += " and idpost = " + davesql.encode (idpost);
+				}
+			sqltext += ";";
+			
 			davesql.runSqltext (sqltext, function (err, result) {
 				if (err) {
 					callback (err);
@@ -456,7 +464,7 @@ function readWholeFile (token, relpath, flprivate, callback) { //3/24/24 by DW
 			}
 		});
 	}
-function writeWholeFile (token, relpath, type, flprivate, filecontents, callback) { //3/24/24 by DW 
+function writeWholeFile (token, relpath, type, flprivate, filecontents, idsite, idpost, callback) { //3/24/24 by DW 
 	const now = new Date ();
 	getUsername (token, function (err, username) {
 		if (err) {
@@ -464,7 +472,7 @@ function writeWholeFile (token, relpath, type, flprivate, filecontents, callback
 			}
 		else {
 			const privateval = (flprivate) ? 1 : 0;
-			const fileRec = {
+			var fileRec = {
 				username, 
 				relpath, 
 				type,
@@ -474,8 +482,15 @@ function writeWholeFile (token, relpath, type, flprivate, filecontents, callback
 				whenUpdated: now,
 				ctSaves: 1
 				};
-			console.log ("writeWholeFile: username == " + username + ", relpath == " + relpath); //9/21/23 by DW
-			readWholeFile (token, relpath, flprivate, function (err, theOriginalFile) {
+			
+			if (idsite !== undefined) { //4/5/24 by DW
+				fileRec.idsite = idsite;
+				}
+			if (idpost !== undefined) {
+				fileRec.idpost = idpost;
+				}
+			
+			readWholeFile (token, relpath, flprivate, idsite, idpost, function (err, theOriginalFile) {
 				if (!err) {
 					fileRec.whenCreated = theOriginalFile.whenCreated;
 					fileRec.ctSaves = theOriginalFile.ctSaves + 1;
@@ -550,7 +565,6 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 			returnError (err);
 			}
 		else {
-			console.log ("httpReturn: data == " + utils.jsonStringify (data));
 			returnData (data);
 			}
 		}
@@ -654,7 +668,7 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 			switch (theRequest.lowerpath) {
 				case "/writewholefile": //3/24/24 by DW
 					tokenRequired (function (token) {
-						writeWholeFile (token, params.relpath, params.type, params.flprivate, theRequest.postBody.toString (), httpReturn);
+						writeWholeFile (token, params.relpath, params.type, params.flprivate, theRequest.postBody.toString (), params.idsite, params.idpost, httpReturn);
 						});
 					return (true);
 				default:
@@ -783,7 +797,7 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 					return (true);
 				case "/readwholefile": //3/25/24 by DW
 					tokenRequired (function (token) {
-						readWholeFile (token, params.relpath, params.flprivate, httpReturn);
+						readWholeFile (token, params.relpath, params.flprivate, params.idsite, params.idpost, httpReturn);
 						});
 					return (true);
 				case "/deletefile": //3/26/24 by DW
@@ -793,7 +807,7 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 					return (true);
 				case "/writewholefile": //3/24/24 by DW
 					tokenRequired (function (token) {
-						writeWholeFile (token, params.relpath, params.type, params.flprivate, params.filedata, httpReturn);
+						writeWholeFile (token, params.relpath, params.type, params.flprivate, params.filedata, params.idsite, params.idpost, httpReturn);
 						});
 					return (true);
 				default:

@@ -125,7 +125,7 @@ function getSubscriptions (callback) { //9/5/23 by DW
 	wpServerCall ("wordpressgetsubscriptions", undefined, true, callback);
 	}
 
-function writeUserDataFile (relpath, filedata, type, flPrivate, callback) { //3/24/24 by DW
+function writeUserDataFile (relpath, filedata, type, flPrivate, callback, options) { //3/24/24 by DW
 	const whenstart = new Date ();
 	var params = {
 		relpath, type, filedata
@@ -133,9 +133,18 @@ function writeUserDataFile (relpath, filedata, type, flPrivate, callback) { //3/
 	if (flPrivate) {
 		params.flprivate = true;
 		}
+	
+	if (options !== undefined) { //4/5/24 by DW
+		for (var x in options) {
+			if (options [x] !== undefined) {
+				params [x] = options [x];
+				}
+			}
+		}
+	
 	wpServerCall ("writewholefile", params, true, callback);
 	}
-function readUserDataFile (relpath, flPrivate, callback) { //3/25/24 by DW
+function readUserDataFile (relpath, flPrivate, callback, options) { //3/25/24 by DW
 	console.log ("readUserDataFile");
 	const whenstart = new Date ();
 	var params = {
@@ -143,6 +152,13 @@ function readUserDataFile (relpath, flPrivate, callback) { //3/25/24 by DW
 		}
 	if (flPrivate) {
 		params.flprivate = true;
+		}
+	if (options !== undefined) { //4/5/24 by DW
+		for (var x in options) {
+			if (options [x] !== undefined) {
+				params [x] = options [x];
+				}
+			}
 		}
 	wpServerCall ("readwholefile", params, true, callback);
 	}
