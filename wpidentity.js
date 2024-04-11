@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.4.16";
+var myProductName = "wpidentity", myVersion = "0.4.17";
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -305,6 +305,57 @@ function getObjectFromJsontext (jsontext, callback) {
 		}
 	return (theObject);
 	}
+
+function getSpecialDataFile (token, fname, callback) {
+	getUsername (token, function (err, username) {
+		if (err) {
+			callback (err);
+			}
+		else {
+			const flprivate = true;
+			readUserFile (username, fname, flprivate, 0, 0, function (err, theFile) {
+				if (err) {
+					callback (err);
+					}
+				else {
+					console.log ("getSpecialDataFile: fname == " + fname + ", theFile == " + utils.jsonStringify (theFile));
+					var flerror = false;
+					try {
+						theData = JSON.parse (theFile.filecontents);
+						}
+					catch (err) {
+						callback (err);
+						flerror = true;
+						}
+					if (!flerror) {
+						console.log ("getSpecialDataFile: fname == " + fname + ", theData == " + utils.jsonStringify (theData));
+						callback (undefined, theData);
+						}
+					}
+				});
+			}
+		});
+	}
+function processPostText (token, theText, callback) {
+	getSpecialDataFile (token, "glossary.json", function (err, theGlossary) {
+		if (err) {
+			callback (err);
+			}
+		else {
+			getSpecialDataFile (token, "glossary.json", function (err, theFile) {
+				if (err) {
+					callback (err);
+					}
+				else {
+					theText = utils.multipleReplaceAll (theText, theGlossary, false);
+					callback (undefined, theText);
+					}
+				});
+			}
+		});
+	}
+
+
 function addPost (accessToken, idSite, jsontext, callback) { //8/29/23 by DW
 	const jstruct = getObjectFromJsontext (jsontext, callback);
 	if (jstruct === undefined) {
@@ -340,18 +391,22 @@ function updatePost (accessToken, idSite, idPost, jsontext, callback) { //8/29/2
 	const site = wp.site (idSite);
 	const post = site.post (idPost);
 	
-	const thePost = {
-		title: jstruct.title,
-		content: jstruct.content,
-		status: "publish"
-		};
-	post.update (thePost, function (err, theNewPost) {
-		if (err) {
-			callback (err);
+	processPostText (accessToken, jstruct.content, function (err, theProcessedContent) {
+		if (!err) {
 			}
-		else {
-			callback (undefined, convertPost (theNewPost));
-			}
+		const thePost = {
+			title: jstruct.title,
+			content: theProcessedContent,
+			status: "publish"
+			};
+		post.update (thePost, function (err, theNewPost) {
+			if (err) {
+				callback (err);
+				}
+			else {
+				callback (undefined, convertPost (theNewPost));
+				}
+			});
 		});
 	}
 function deletePost (accessToken, idSite, idPost, callback) { //9/4/23 by DW
@@ -401,8 +456,6 @@ function getUsername (token, callback) { //3/24/24 by DW
 				}
 			});
 		}
-	
-	
 	}
 
 function startStorage (theDatabase, callback) { //3/24/24 by DW
@@ -429,38 +482,40 @@ function startStorage (theDatabase, callback) { //3/24/24 by DW
 			});
 		});
 	}
+function readUserFile (username, relpath, flprivate, idsite, idpost, callback) {
+	const privateval = (flprivate) ? 1 : 0;
+	var sqltext = "select * from wpstorage where username = " + davesql.encode (username) + " and relpath = " + davesql.encode (relpath) + " and flprivate = " + davesql.encode (privateval)
+	if (idsite !== undefined) { //4/5/24 by DW
+		sqltext += " and idsite = " + davesql.encode (idsite);
+		}
+	if (idpost !== undefined) {
+		sqltext += " and idpost = " + davesql.encode (idpost);
+		}
+	sqltext += ";";
+	
+	davesql.runSqltext (sqltext, function (err, result) {
+		if (err) {
+			callback (err);
+			}
+		else {
+			if (result.length == 0) {
+				const message = "Can't find the file " + relpath + " for the user " + username + ".";
+				callback ({message});
+				}
+			else {
+				const theFileRec = result [0];
+				callback (undefined, theFileRec);
+				}
+			}
+		});
+	}
 function readWholeFile (token, relpath, flprivate, idsite, idpost, callback) { //3/24/24 by DW
 	getUsername (token, function (err, username) {
 		if (err) {
 			callback (err);
 			}
 		else {
-			const privateval = (flprivate) ? 1 : 0;
-			var sqltext = "select * from wpstorage where username = " + davesql.encode (username) + " and relpath = " + davesql.encode (relpath) + " and flprivate = " + davesql.encode (privateval)
-			
-			if (idsite !== undefined) { //4/5/24 by DW
-				sqltext += " and idsite = " + davesql.encode (idsite);
-				}
-			if (idpost !== undefined) {
-				sqltext += " and idpost = " + davesql.encode (idpost);
-				}
-			sqltext += ";";
-			
-			davesql.runSqltext (sqltext, function (err, result) {
-				if (err) {
-					callback (err);
-					}
-				else {
-					if (result.length == 0) {
-						const message = "Can't find the file " + relpath + " for the user " + username + ".";
-						callback ({message});
-						}
-					else {
-						const theFileRec = result [0];
-						callback (undefined, theFileRec);
-						}
-					}
-				});
+			readUserFile (username, relpath, flprivate, idsite, idpost, callback);
 			}
 		});
 	}

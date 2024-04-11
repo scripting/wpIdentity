@@ -1,24 +1,11 @@
 const flUseLocalServer = false;
 
-var wordpressMemory = {
-	accessToken: undefined,
-	sitelist: undefined
-	};
+var myWordpress;
+
 
 var whenLastUserAction = new Date ();
 
-function saveWordpressmemory () {
-	console.log ("saveWordpressmemory");
-	localStorage.wordpressMemory = jsonStringify (wordpressMemory);
-	}
-function getServerAddress () {
-	if (flUseLocalServer) {
-		return ("http://localhost:1408/");
-		}
-	else {
-		return ("https://wpidentity.scripting.com/");
-		}
-	}
+
 
 //misc
 	function addToolTip (theObject, tipText, placement="right") { //8/24/22 by DW
@@ -51,23 +38,6 @@ function getServerAddress () {
 		return (textarea.value);
 		}
 
-function getSitelist (callback) {
-	if (wordpressMemory.sitelist === undefined) {
-		getUserSites (function (err, theSitelist) {
-			if (err) {
-				callback (err);
-				}
-			else {
-				wordpressMemory.sitelist = theSitelist;
-				saveWordpressmemory ();
-				callback (undefined, theSitelist);
-				}
-			});
-		}
-	else {
-		callback (undefined, wordpressMemory.sitelist);
-		}
-	}
 function sortSiteList (theSites, sortBy="name", flReverseSort=false) {
 	theSites.sort (function (a, b) {
 		switch (sortBy) {
@@ -131,61 +101,57 @@ function viewSitelist (whereToAppend) {
 	if (whereToAppend === undefined) {
 		whereToAppend = $(".divSitelistContainer");
 		}
-	getSitelist (function (err, theList) {
-		function sortTheList () {
-			theList.sites.sort (function (a, b) {
-				switch (options.sortBy) {
-					case "name":
-						var alower = a.name.toLowerCase (), val;
-						var blower = b.name.toLowerCase ();
-						if (options.flReverseSort) { //7/11/22 by DW
-							let tmp = alower;
-							alower = blower;
-							blower = tmp;
-							}
-						if (alower.length == 0) {
-							return (1);
-							}
-						if (blower.length == 0) {
-							return (-1);
-							}
-						if (alower == blower) {
-							val = 0;
+	
+	const theList = myWordpress.getSiteList ();
+	
+	function sortTheList () {
+		theList.sites.sort (function (a, b) {
+			switch (options.sortBy) {
+				case "name":
+					var alower = a.name.toLowerCase (), val;
+					var blower = b.name.toLowerCase ();
+					if (options.flReverseSort) { //7/11/22 by DW
+						let tmp = alower;
+						alower = blower;
+						blower = tmp;
+						}
+					if (alower.length == 0) {
+						return (1);
+						}
+					if (blower.length == 0) {
+						return (-1);
+						}
+					if (alower == blower) {
+						val = 0;
+						}
+					else {
+						if (blower > alower) {
+							val = -1;
 							}
 						else {
-							if (blower > alower) {
-								val = -1;
-								}
-							else {
-								val = 1;
-								}
+							val = 1;
 							}
-						return (val);
-					}
-				});
-			}
-		if (err) {
-			alertDialog (err.message);
-			}
-		else {
-			const divSitelist = $("<div class=\"divSitelist\"></div>");
-			sortSiteList (theList, options.sortBy, options.flReverseSort);
-			theList.forEach (function (item) {
-				divSitelist.append (getRow (item));
-				});
-			whereToAppend.append (divSitelist);
-			}
+						}
+					return (val);
+				}
+			});
+		}
+	const divSitelist = $("<div class=\"divSitelist\"></div>");
+	sortSiteList (theList, options.sortBy, options.flReverseSort);
+	theList.forEach (function (item) {
+		divSitelist.append (getRow (item));
 		});
+	whereToAppend.append (divSitelist);
+	
 	}
 
 function reloadSitelist (callback) { //9/3/23 by DW
 	$(".divSitelistContainer").empty ();
-	wordpressMemory.sitelist = undefined;
 	viewSitelist ();
 	}
 
 function viewUserInfo (callback) { //9/3/23 by DW
-	getUserInfo (function (err, theUserInfo) {
+	myWordpress.getUserInfo (function (err, theUserInfo) {
 		if (err) {
 			alertDialog (err.message);
 			}
@@ -206,17 +172,7 @@ function viewUserInfo (callback) { //9/3/23 by DW
 		});
 	}
 function userIsSignedIn () {
-	return (wordpressMemory.accessToken !== undefined);
-	}
-function connectWithWordpress () {
-	location.href = "https://wpidentity.scripting.com/connect";
-	}
-function logOffWordpress () {
-	confirmDialog ("Log off WordPress.com?", function () {
-		wordpressMemory.accessToken = undefined;
-		delete localStorage.wordpressMemory;
-		location.href = location.href;
-		});
+	return (myWordpress.userIsSignedIn ());
 	}
 function updateForLogin (flConnected=userIsSignedIn ()) {
 	var idActive, idOther;
@@ -240,22 +196,22 @@ function everySecond () {
 	}
 function startup () {
 	console.log ("startup");
-	const accessToken = getURLParameter ("accesstoken");
-	if (accessToken != "null") {
-		wordpressMemory.accessToken = base64UrlDecode (accessToken);
-		saveWordpressmemory ();
-		const newHref = stringNthField (location.href, "?", 1);
-		location.href = newHref;
+	const wpOptions = {
+		serverAddress: (flUseLocalServer) ? "http://localhost:1408/" : "https://wpidentity.scripting.com/",
 		}
-	if (localStorage.wordpressMemory !== undefined) {
-		wordpressMemory = JSON.parse (localStorage.wordpressMemory);
-		}
-	
-	updateForLogin ();
-	if (userIsSignedIn ()) {
-		viewSitelist ();
-		activateToolTips ();
-		self.setInterval (everySecond, 1000); 
-		}
+	myWordpress = new wordpress (wpOptions);
+	myWordpress.startup (function (err) {
+		if (err) {
+			alertDialog ("Can't run the app because there was an error starting up.");
+			}
+		else {
+			updateForLogin (); 
+			if (userIsSignedIn ()) {
+				viewSitelist ();
+				activateToolTips ();
+				self.setInterval (everySecond, 1000); 
+				}
+			}
+		});
 	
 	}

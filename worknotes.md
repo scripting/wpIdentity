@@ -1,3 +1,21 @@
+#### 4/11/24; 11:29:16 AM by DW
+
+Put the API into a wrapper, so it's easy to spot the WordPress calls in client code. 
+
+This breaks all apps that are built on the API, but I preserved the original API code in the source.opml file, and on the web, at <a href="http://scripting.com/code/wpidentity/client/api0.js">this address</a>.
+
+I will update the client app here, to use the new API.
+
+Got wpidentity.scripting.com running again. 
+
+Still need to do:
+
+* create a user storage database to test with for wpidentity
+
+* add some more data to the feedlist, like when each site was created. 
+
+* write some docs that explains what's going on
+
 #### 3/28/24; 11:36:57 AM by DW
 
 #### re writeUserDataFile below..
