@@ -139,8 +139,11 @@ function wordpress (userOptions, callback) {
 				const theList = new Array ();
 				theSitelist.forEach (function (item) {
 					theList.push ({
-						id: item.idSite, 
-						name: item.name
+						idSite: item.idSite, 
+						urlSite: item.urlSite,
+						name: item.name,
+						description: item.description,
+						whenCreated: item.whenCreated
 						});
 					});
 				return (theList);
@@ -150,7 +153,14 @@ function wordpress (userOptions, callback) {
 					callback (err);
 					}
 				else {
-					wordpressMemory.sitelist = getAbbreviatedList (theSitelist);
+					theSitelist.forEach (function (item) { //4/12/24 by DW
+						try {
+							item.whenCreated = new Date (item.whenCreated);
+							}
+						catch (err) {
+							}
+						});
+					wordpressMemory.sitelist = theSitelist;
 					saveWordpressMemory ();
 					console.log ("initSitelist: wordpressMemory.sitelist == " + jsonStringify (wordpressMemory.sitelist));
 					callback (undefined);
@@ -160,24 +170,6 @@ function wordpress (userOptions, callback) {
 		else {
 			callback ();
 			}
-		}
-	function readUserDataFile (relpath, flPrivate, callback, options) { //3/25/24 by DW
-		console.log ("readUserDataFile");
-		const whenstart = new Date ();
-		var params = {
-			relpath
-			}
-		if (flPrivate) {
-			params.flprivate = true;
-			}
-		if (options !== undefined) { //4/5/24 by DW
-			for (var x in options) {
-				if (options [x] !== undefined) {
-					params [x] = options [x];
-					}
-				}
-			}
-		wpServerCall ("readwholefile", params, true, callback);
 		}
 	
 	function wpServerPost (path, params, flAuthenticated, filedata, callback, urlServer=getServerAddress ()) { //3/24/24 by DW
@@ -228,6 +220,43 @@ function wordpress (userOptions, callback) {
 				}
 			});
 		}
+	function readUserDataFile (relpath, flPrivate, callback, options) { //3/25/24 by DW
+		console.log ("readUserDataFile");
+		const whenstart = new Date ();
+		var params = {
+			relpath
+			}
+		if (flPrivate) {
+			params.flprivate = true;
+			}
+		if (options !== undefined) { //4/5/24 by DW
+			for (var x in options) {
+				if (options [x] !== undefined) {
+					params [x] = options [x];
+					}
+				}
+			}
+		wpServerCall ("readwholefile", params, true, callback);
+		}
+	function writeUserDataFile (relpath, filedata, type, flPrivate, callback, options) { //3/24/24 by DW
+		const whenstart = new Date ();
+		var params = {
+			relpath, type, filedata
+			}
+		if (flPrivate) {
+			params.flprivate = true;
+			}
+		
+		if (options !== undefined) { //4/5/24 by DW
+			for (var x in options) {
+				if (options [x] !== undefined) {
+					params [x] = options [x];
+					}
+				}
+			}
+		
+		wpServerCall ("writewholefile", params, true, callback);
+		}
 	
 	this.getUserInfo = function (callback) {
 		callback (undefined, wordpressMemory.userinfo);
@@ -269,26 +298,8 @@ function wordpress (userOptions, callback) {
 		wpServerCall ("wordpressgetsubscriptions", undefined, true, callback);
 		}
 	
-	this.writeUserDataFile = function (relpath, filedata, type, flPrivate, callback, options) { //3/24/24 by DW
-		const whenstart = new Date ();
-		var params = {
-			relpath, type, filedata
-			}
-		if (flPrivate) {
-			params.flprivate = true;
-			}
-		
-		if (options !== undefined) { //4/5/24 by DW
-			for (var x in options) {
-				if (options [x] !== undefined) {
-					params [x] = options [x];
-					}
-				}
-			}
-		
-		wpServerCall ("writewholefile", params, true, callback);
-		}
 	this.readUserDataFile = readUserDataFile;
+	this.writeUserDataFile = writeUserDataFile;
 	
 	this.readUserJsonFile = function (relpath, flPrivate, callback, options) { //4/10/24 by DW
 		readUserDataFile (relpath, flPrivate, function (err, theFileData) {
@@ -327,174 +338,6 @@ function wordpress (userOptions, callback) {
 		}
 	this.markdownProcess = markdownProcess;
 	
-	this.testWriteUserDataFile = function  () {
-		function nowString () {
-			return (new Date ().toLocaleTimeString ());
-			}
-		const slogan = getRandomSnarkySlogan (), whenstart = new Date ();
-		writeUserDataFile ("slogan.txt", slogan, "text/plain", true, function (err, data) {
-			if (err) {
-				console.log (nowString () + " - testWriteUserDataFile: err.message == " + err.message);
-				}
-			else {
-				console.log (nowString () + " - testWriteUserDataFile: " + secondsSince (whenstart) + " secs. data == " + jsonStringify (data));
-				}
-			});
-		}
-	this.testWriteUserDataFileEveryMinute = function () {
-		runEveryMinute (testWriteUserDataFile);
-		}
-	this.testDeleteUserDataFile = function () {
-		deleteUserDataFile ("hello.json", true, function (err, data) {
-			if (err) {
-				console.log (err.message);
-				}
-			else {
-				console.log (data);
-				}
-			});
-		}
-	this.testReadUserDataFile = function () {
-		readUserDataFile ("draft.json", true, function (err, data) {
-			if (err) {
-				console.log (err.message);
-				}
-			else {
-				console.log (data);
-				}
-			});
-		}
-	this.testGetUserInfo = function () {
-		console.log ("testGetUserInfo");
-		getUserInfo (function (err, data) {
-			if (err) {
-				console.log (err.message);
-				}
-			else {
-				console.log (jsonStringify (data));
-				}
-			});
-		}
-	this.testGetUserSites = function () {
-		getUserSites (function (err, data) {
-			if (err) {
-				console.log (err.message);
-				}
-			else {
-				console.log (jsonStringify (data));
-				}
-			});
-		}
-	this.testGetSitePosts = function (idsite) {
-		getSitePosts (idsite, function (err, data) {
-			if (err) {
-				console.log (err.message);
-				}
-			else {
-				console.log (jsonStringify (data));
-				}
-			});
-		}
-	this.testGetSiteUsers = function (idsite) {
-		getSiteUsers (idsite, function (err, data) {
-			if (err) {
-				console.log (err.message);
-				}
-			else {
-				console.log (jsonStringify (data));
-				}
-			});
-		}
-	this.testGetPost = function (idsite, idpost) {
-		getPost (idsite, idpost, function (err, data) {
-			if (err) {
-				console.log (err.message);
-				}
-			else {
-				console.log (jsonStringify (data));
-				}
-			});
-		}
-	this.testGetSiteInfo = function (idsite, idpost) {
-		getSiteInfo (idsite, function (err, data) {
-			if (err) {
-				console.log (err.message);
-				}
-			else {
-				console.log (jsonStringify (data));
-				}
-			});
-		}
-	this.testGetSiteMedialist = function (idsite, idpost) {
-		getSiteMedialist (idsite, function (err, data) {
-			if (err) {
-				console.log (err.message);
-				}
-			else {
-				console.log (jsonStringify (data));
-				}
-			});
-		}
-	this.testAddPost = function (idsite) {
-		function getRandomContent () {
-			var theContent = "";
-			for (var i = 1; i <= 10; i++) {
-				theContent += getRandomSnarkySlogan () + "\n";
-				}
-			return (theContent);
-			}
-		const thePost = {
-			title: "Some random snarky slogans",
-			content: getRandomContent (),
-			status: "publish",
-			date: new Date ().toGMTString (),
-			format: "standard",
-			categories: ["Testing", "Nonsense", "Snark", "Slogans"],
-			comment_status: "open"
-			};
-		addPost (idsite, thePost, function (err, data) {
-			if (err) {
-				console.log (err.message);
-				}
-			else {
-				console.log (jsonStringify (data));
-				}
-			});
-		}
-	this.testUpdatePost = function (idsite, idpost) {
-		const thePost = {
-			content: getRandomContent (),
-			status: "publish",
-			};
-		updatePost (idsite, idpost, thePost, function (err, data) {
-			if (err) {
-				console.log (err.message);
-				}
-			else {
-				console.log (jsonStringify (data));
-				}
-			});
-		}
-	this.testDeletePost = function (idsite, idpost) {
-		deletePost (idsite, idpost, function (err, data) {
-			if (err) {
-				console.log (err.message);
-				}
-			else {
-				console.log (jsonStringify (data));
-				}
-			});
-		}
-	this.testGetSubscriptions = function () {
-		getSubscriptions (function (err, data) {
-			if (err) {
-				console.log (err.message);
-				}
-			else {
-				console.log (jsonStringify (data));
-				}
-			});
-		}
 	
 	this.userIsSignedIn = userIsSignedIn;
 	this.connectWithWordpress = function () {

@@ -1,42 +1,84 @@
 const flUseLocalServer = false;
 
+const myServerAddress = (flUseLocalServer) ? "http://localhost:1408/" : "https://wpidentity.scripting.com/";
+
 var myWordpress;
 
+var appPrefs = {
+	ctMinutesRunning: 0,
+	whenLastMinute: new Date (0), 
+	currentSlogan: ""
+	};
+const fnamePrefs = "demo/prefs.json";
+var flPrefsChanged = false;
 
-var whenLastUserAction = new Date ();
 
+function addToolTip (theObject, tipText, placement="right") { //8/24/22 by DW
+	$(theObject).attr ("data-container", "body"); //10/23/22 by DW
+	$(theObject).attr ("data-toggle", "tooltip");
+	$(theObject).attr ("data-placement", placement);
+	$(theObject).attr ("title", tipText);
+	$(theObject).click (function () { //11/1/22 by DW
+		$(theObject).tooltip ("hide");
+		});
+	return (theObject);
+	}
+function activateToolTips () { //8/28/22 by DW
+	$("[data-toggle=\"tooltip\"]").tooltip ();
+	}
+function getFeedlandTimeString (when, flLongStrings=false) {
+	const options = {
+		flBriefYearDates: true,
+		nowString: "now"
+		};
+	var s = getFacebookTimeString (when, flLongStrings, options);
+	return (s);
+	}
+function userInteracted () { //5/17/21 by DW
+	}
 
-
-//misc
-	function addToolTip (theObject, tipText, placement="right") { //8/24/22 by DW
-		$(theObject).attr ("data-container", "body"); //10/23/22 by DW
-		$(theObject).attr ("data-toggle", "tooltip");
-		$(theObject).attr ("data-placement", placement);
-		$(theObject).attr ("title", tipText);
-		$(theObject).click (function () { //11/1/22 by DW
-			$(theObject).tooltip ("hide");
-			});
-		return (theObject);
-		}
-	function activateToolTips () { //8/28/22 by DW
-		$("[data-toggle=\"tooltip\"]").tooltip ();
-		}
-	function getFeedlandTimeString (when, flLongStrings=false) {
-		const options = {
-			flBriefYearDates: true,
-			nowString: "now"
-			};
-		var s = getFacebookTimeString (when, flLongStrings, options);
-		return (s);
-		}
-	function userInteracted () { //5/17/21 by DW
-		whenLastUserAction = new Date ();
-		}
-	function decodeHtmlEntities (htmltext) {
-		var textarea = document.createElement ("textarea");
-		textarea.innerHTML = htmltext;
-		return (textarea.value);
-		}
+function prefsChanged () {
+	flPrefsChanged = true;
+	}
+function readPrefs (callback) {
+	const whenstart = new Date ();
+	myWordpress.readUserDataFile (fnamePrefs, true, function (err, theSavedPrefs) {
+		if (err) {
+			}
+		else {
+			var thePrefs = new Object (), flJsonError = false;
+			try {
+				thePrefs = JSON.parse (theSavedPrefs.filecontents);
+				}
+			catch (err) {
+				console.log ("readPrefs: err.message == " + err.message);
+				flJsonError = true;
+				}
+			if (!flJsonError) {
+				for (var x in thePrefs) {
+					appPrefs [x] = thePrefs [x];
+					}
+				}
+			console.log ("readPrefs: " + secondsSince (whenstart) + " secs");
+			}
+		if (callback !== undefined) {
+			callback (err, theSavedPrefs);
+			}
+		});
+	}
+function savePrefs (callback) {
+	const jsontext = jsonStringify (appPrefs), whenstart = new Date ();
+	myWordpress.writeUserDataFile (fnamePrefs, jsontext, "application/json", true, function (err, data) {
+		if (err) {
+			console.log ("savePrefs: err.message == " +  err.message);
+			}
+		else {
+			}
+		if (callback !== undefined) {
+			callback (err, data);
+			}
+		});
+	}
 
 function sortSiteList (theSites, sortBy="name", flReverseSort=false) {
 	theSites.sort (function (a, b) {
@@ -144,7 +186,6 @@ function viewSitelist (whereToAppend) {
 	whereToAppend.append (divSitelist);
 	
 	}
-
 function reloadSitelist (callback) { //9/3/23 by DW
 	$(".divSitelistContainer").empty ();
 	viewSitelist ();
@@ -191,13 +232,24 @@ function updateForLogin (flConnected=userIsSignedIn ()) {
 		$(idOther).css ("display", "none")
 		}
 	}
+function everyMinute () {
+	appPrefs.ctMinutesRunning++;
+	appPrefs.whenLastMinute = new Date ();
+	appPrefs.currentSlogan = getRandomSnarkySlogan ();
+	prefsChanged ();
+	console.log ("everyMinute: " + appPrefs.ctMinutesRunning);
+	}
 function everySecond () {
 	updateForLogin ();
+	if (flPrefsChanged) { //4/12/24 by DW
+		flPrefsChanged = false;
+		savePrefs ();
+		}
 	}
 function startup () {
 	console.log ("startup");
 	const wpOptions = {
-		serverAddress: (flUseLocalServer) ? "http://localhost:1408/" : "https://wpidentity.scripting.com/",
+		serverAddress: myServerAddress
 		}
 	myWordpress = new wordpress (wpOptions);
 	myWordpress.startup (function (err) {
@@ -207,9 +259,12 @@ function startup () {
 		else {
 			updateForLogin (); 
 			if (userIsSignedIn ()) {
-				viewSitelist ();
-				activateToolTips ();
-				self.setInterval (everySecond, 1000); 
+				readPrefs (function () { //4/12/24 by DW
+					viewSitelist ();
+					activateToolTips ();
+					self.setInterval (everySecond, 1000); 
+					runEveryMinute (everyMinute);
+					});
 				}
 			}
 		});

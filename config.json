@@ -1,5 +1,22 @@
 {
-	"clientId": 12345,
-	"clientSecret": "xxx",
-	"urlRedirect": "https://mypublicserver.org/callbackFromWordpress"
-	}
+	{
+		"urlServer": "https://myserver.org/",
+		
+		"clientId": 12345,
+		"clientSecret": "xxx",
+		"urlRedirect": "https://myserver.org/callbackFromWordpress",
+		"scope": "global",
+		
+		"database": {
+			"host": "databaseserver.org",
+			"port": 12345,
+			"user": "dbadmin",
+			"password": "xxx",
+			"charset": "utf8mb4",
+			"connectionLimit": 15,
+			"database": "wpidentity",
+			"debug": false,
+			"flLogQueries": false,
+			"flQueueAllRequests": false
+			 }
+		}

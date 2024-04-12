@@ -1,20 +1,18 @@
-#### 4/11/24; 11:29:16 AM by DW
+#### 4/12/24; 12:12:29 PM by DW
 
-Put the API into a wrapper, so it's easy to spot the WordPress calls in client code. 
+#### Put the API into a wrapper, so it's easy to spot the WordPress calls in client code. 
 
-This breaks all apps that are built on the API, but I preserved the original API code in the source.opml file, and on the web, at <a href="http://scripting.com/code/wpidentity/client/api0.js">this address</a>.
+Left the original not-wrapped api file in place, it's used in FeedLand and possibly other places.
 
-I will update the client app here, to use the new API.
+The new api is in api2.js. Yes, I hate that too, but I don't see another way to do it. ;-)
 
-Got wpidentity.scripting.com running again. 
+#### Got wpidentity.scripting.com running again. 
 
-Still need to do:
+#### Wrote code for storage
 
-* create a user storage database to test with for wpidentity
+The demo app maintains a file for each user called demo/prefs.json.
 
-* add some more data to the feedlist, like when each site was created. 
-
-* write some docs that explains what's going on
+Just three values in it, a count, a date, and a slogan. Updated every minute. 
 
 #### 3/28/24; 11:36:57 AM by DW
 
@@ -32,23 +30,7 @@ Add a cache for usernames.
 
 #### 3/24/24; 10:55:17 AM by DW
 
-Storage. Every wpidentity installation has the option of providing storage. Used the same setup as we use in feedland.js.
-
-How to:
-
-1. Provide a database object in config.json, set up exactly as it is in feedlandinstall. 
-
-2. In your MySQL database, create a table called wpstorage with this command. 
-
-```SQL
-
-create table wpstorage (	username varchar (255), 	relpath varchar (255), 	flprivate boolean,	idSite int unsigned not null default 0,	idPost int unsigned not null default 0,	type varchar (64),	filecontents text,	whenCreated datetime, 	whenUpdated datetime, 	ctSaves int default 0,	primary key (username, relpath, flprivate, idSite, idPost)	);
-
-```
-
-3. If you put this table in its own database. If the latter, you should use the encoding command to create the database with:
-
-`create database wpidentity character set utf8mb4 collate utf8mb4_unicode_ci;`
+Moved these notes to docs/storage.md.
 
 #### 3/23/24; 7:30:58 PM by DW
 
