@@ -4,7 +4,7 @@ Every wpidentity installation has the option of providing user-level storage.
 
 #### How to
 
-1. Provide an object named <i>database</i> in config.json. There's an example in config.json in this repo.
+1. Provide an object named <i>database</i> in config.json. There's an example in <a href="https://github.com/scripting/wpIdentity/blob/main/config.json">config.json</a> in this repo.
 
 2. In your MySQL database, create a table called wpstorage with this command. 
 
