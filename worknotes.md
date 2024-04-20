@@ -1,3 +1,41 @@
+#### 4/18/24; 5:29:13 PM by DW
+
+Markdown processing as we save to WordPress. 
+
+Look in processPostText.
+
+#### 4/15/24; 12:05:13 PM by DW
+
+Process emoji shortcodes. 
+
+#### 4/13/24; 1:41:39 PM by DW
+
+By handling "/" in our handleHttpRequest function, we broke FeedLand.
+
+I completely forgot that FeedLand includes this package, and that all HTTP requests go through it first, before anyone else gets it.
+
+In that context it was meant to only handle authorization events, it certainly wasn't meant to handle requests for the home page.
+
+Imagine my surprise when I went to feedland.social and was greeted by the home page text of an app that is not released. Oy.
+
+So what's the fix? 
+
+The first thing to do is a new release with the code that handles "/" commented out. 
+
+Now the fix the other way --
+
+take the default values of urlServer and urlServerHomePageSource out of config, in wpidentity.js, below
+
+if you want us to handle "/" for the app, set urlServerHomePageSource in your config.json file for your app
+
+Renamed these
+
+deletefile ==> wordpressdeletefile
+
+readwholefile ==> wordpressreadwholefile
+
+writewholefile ==> wordpresswritewholefile
+
 #### 4/12/24; 12:12:29 PM by DW
 
 #### Put the API into a wrapper, so it's easy to spot the WordPress calls in client code. 

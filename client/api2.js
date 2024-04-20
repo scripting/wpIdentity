@@ -126,6 +126,7 @@ function wordpress (userOptions, callback) {
 					wordpressMemory.userinfo = userinfo;
 					saveWordpressMemory ();
 					console.log ("initUserInfo: wordpressMemory.userinfo == " + jsonStringify (wordpressMemory.userinfo));
+					callback ();
 					}
 				});
 			}
@@ -236,7 +237,7 @@ function wordpress (userOptions, callback) {
 					}
 				}
 			}
-		wpServerCall ("readwholefile", params, true, callback);
+		wpServerCall ("wordpressreadwholefile", params, true, callback);
 		}
 	function writeUserDataFile (relpath, filedata, type, flPrivate, callback, options) { //3/24/24 by DW
 		const whenstart = new Date ();
@@ -255,7 +256,7 @@ function wordpress (userOptions, callback) {
 				}
 			}
 		
-		wpServerCall ("writewholefile", params, true, callback);
+		wpServerCall ("wordpresswritewholefile", params, true, callback);
 		}
 	
 	this.getUserInfo = function (callback) {
@@ -331,7 +332,7 @@ function wordpress (userOptions, callback) {
 		if (flPrivate) {
 			params.flprivate = true;
 			}
-		wpServerCall ("deletefile", params, true, callback);
+		wpServerCall ("wordpressdeletefile", params, true, callback);
 		}
 	this.getSiteList = function () {
 		return (wordpressMemory.sitelist);

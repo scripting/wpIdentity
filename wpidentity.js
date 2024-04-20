@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.4.17";
+var myProductName = "wpidentity", myVersion = "0.4.23";
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -10,6 +10,8 @@ const request = require ("request");
 const davehttp = require ("davehttp");
 const wpcom = require ("wpcom"); //8/26/23 by DW
 const davesql = require ("davesql"); //3/24/24 by DW
+const emoji = require ("node-emoji");  //4/15/24 by DW
+const marked = require ("marked");  //4/18/24 by DW
 
 var config = { 
 	myRandomNumber: utils.random (1, 1000000000),
@@ -25,10 +27,8 @@ var config = {
 	mysqlVersion: undefined, //3/24/24 by DW
 	flStorageEnabled: false, //3/24/24 by DW
 	
-	ctUsernameCacheSecs: 60, //3/25/24 by DW
-	urlServerHomePageSource: "http://scripting.com/code/wordsocial/index.html", //3/25/24 by DW
+	ctUsernameCacheSecs: 60 //3/25/24 by DW
 	
-	urlServer: "https://word.social/" //3/25/24 by DW
 	};
 
 var usernameCache = new Object ();
@@ -318,7 +318,6 @@ function getSpecialDataFile (token, fname, callback) {
 					callback (err);
 					}
 				else {
-					console.log ("getSpecialDataFile: fname == " + fname + ", theFile == " + utils.jsonStringify (theFile));
 					var flerror = false;
 					try {
 						theData = JSON.parse (theFile.filecontents);
@@ -328,7 +327,6 @@ function getSpecialDataFile (token, fname, callback) {
 						flerror = true;
 						}
 					if (!flerror) {
-						console.log ("getSpecialDataFile: fname == " + fname + ", theData == " + utils.jsonStringify (theData));
 						callback (undefined, theData);
 						}
 					}
@@ -336,25 +334,28 @@ function getSpecialDataFile (token, fname, callback) {
 			}
 		});
 	}
+function emojiProcess (s) {
+	function addSpan (code, name) {
+		return ("<span class=\"spEmoji\">" + code + "</span>");
+		}
+	return (emoji.emojify (s, undefined, addSpan));
+	}
+function markdownProcess (s) {
+	return (s);
+	}
 function processPostText (token, theText, callback) {
+	theText = emojiProcess (theText); //4/15/24 by DW
+	theText = markdownProcess (theText); //4/18/24 by DW
 	getSpecialDataFile (token, "glossary.json", function (err, theGlossary) {
 		if (err) {
 			callback (err);
 			}
 		else {
-			getSpecialDataFile (token, "glossary.json", function (err, theFile) {
-				if (err) {
-					callback (err);
-					}
-				else {
-					theText = utils.multipleReplaceAll (theText, theGlossary, false);
-					callback (undefined, theText);
-					}
-				});
+			theText = utils.multipleReplaceAll (theText, theGlossary, false);
+			callback (undefined, theText);
 			}
 		});
 	}
-
 
 function addPost (accessToken, idSite, jsontext, callback) { //8/29/23 by DW
 	const jstruct = getObjectFromJsontext (jsontext, callback);
@@ -651,15 +652,21 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 					}
 				});
 			}
-		getTemplateText (function (err, templatetext) {
-			if (err) {
-				returnError (err);
-				}
-			else {
-				const pagetext = utils.multipleReplaceAll (templatetext, pagetable, false, "[%", "%]");
-				returnHtml (undefined, pagetext);
-				}
-			});
+		if (config.urlServerHomePageSource === undefined) { //4/13/24 by DW
+			return (false); //not handled
+			}
+		else {
+			getTemplateText (function (err, templatetext) {
+				if (err) {
+					returnError (err);
+					}
+				else {
+					const pagetext = utils.multipleReplaceAll (templatetext, pagetable, false, "[%", "%]");
+					returnHtml (undefined, pagetext);
+					}
+				});
+			return (true); //handled
+			}
 		}
 	function tokenRequired (callback) {
 		const token = (params.token === undefined) ? undefined : base64UrlDecode (params.token);
@@ -721,7 +728,7 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 	switch (theRequest.lowermethod) {
 		case "post":
 			switch (theRequest.lowerpath) {
-				case "/writewholefile": //3/24/24 by DW
+				case "/wordpresswritewholefile": //3/24/24 by DW
 					tokenRequired (function (token) {
 						writeWholeFile (token, params.relpath, params.type, params.flprivate, theRequest.postBody.toString (), params.idsite, params.idpost, httpReturn);
 						});
@@ -732,8 +739,7 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 		case "get":
 			switch (theRequest.lowerpath) {
 				case "/":
-					returnServerHomePage ();
-					return (true);
+					return (returnServerHomePage ()); //4/13/24 by DW == return true if we handled, false otherwise
 				case "/now":
 					returnPlaintext (new Date ().toUTCString ());
 					return (true);
@@ -850,17 +856,17 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 						getSubscriptions (token, httpReturn);
 						});
 					return (true);
-				case "/readwholefile": //3/25/24 by DW
-					tokenRequired (function (token) {
-						readWholeFile (token, params.relpath, params.flprivate, params.idsite, params.idpost, httpReturn);
-						});
-					return (true);
-				case "/deletefile": //3/26/24 by DW
+				case "/wordpressdeletefile": //3/26/24 by DW
 					tokenRequired (function (token) {
 						deleteFile (token, params.relpath, params.flprivate, httpReturn);
 						});
 					return (true);
-				case "/writewholefile": //3/24/24 by DW
+				case "/wordpressreadwholefile": //3/25/24 by DW
+					tokenRequired (function (token) {
+						readWholeFile (token, params.relpath, params.flprivate, params.idsite, params.idpost, httpReturn);
+						});
+					return (true);
+				case "/wordpresswritewholefile": //3/24/24 by DW
 					tokenRequired (function (token) {
 						writeWholeFile (token, params.relpath, params.type, params.flprivate, params.filedata, params.idsite, params.idpost, httpReturn);
 						});

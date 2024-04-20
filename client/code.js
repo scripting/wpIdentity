@@ -7,11 +7,11 @@ var myWordpress;
 var appPrefs = {
 	ctMinutesRunning: 0,
 	whenLastMinute: new Date (0), 
+	localTime: "",
 	currentSlogan: ""
 	};
 const fnamePrefs = "demo/prefs.json";
 var flPrefsChanged = false;
-
 
 function addToolTip (theObject, tipText, placement="right") { //8/24/22 by DW
 	$(theObject).attr ("data-container", "body"); //10/23/22 by DW
@@ -232,13 +232,22 @@ function updateForLogin (flConnected=userIsSignedIn ()) {
 		$(idOther).css ("display", "none")
 		}
 	}
-function everyMinute () {
-	appPrefs.ctMinutesRunning++;
-	appPrefs.whenLastMinute = new Date ();
-	appPrefs.currentSlogan = getRandomSnarkySlogan ();
-	prefsChanged ();
-	console.log ("everyMinute: " + appPrefs.ctMinutesRunning);
+
+function startTestPrefs () { //4/13/24 by DW
+	var ct = 0, maxct = 60;
+	function everyMinute () {
+		if (ct++ < maxct) {
+			appPrefs.ctMinutesRunning++;
+			appPrefs.whenLastMinute = new Date ();
+			appPrefs.currentSlogan = getRandomSnarkySlogan ();
+			appPrefs.localTime= new Date ().toLocaleString ();
+			prefsChanged ();
+			console.log ("testPrefs: " + appPrefs.localTime);
+			}
+		}
+	runEveryMinute (everyMinute);
 	}
+
 function everySecond () {
 	updateForLogin ();
 	if (flPrefsChanged) { //4/12/24 by DW
@@ -263,10 +272,8 @@ function startup () {
 					viewSitelist ();
 					activateToolTips ();
 					self.setInterval (everySecond, 1000); 
-					runEveryMinute (everyMinute);
 					});
 				}
 			}
 		});
-	
 	}
