@@ -27,7 +27,9 @@ var config = {
 	mysqlVersion: undefined, //3/24/24 by DW
 	flStorageEnabled: false, //3/24/24 by DW
 	
-	ctUsernameCacheSecs: 60 //3/25/24 by DW
+	ctUsernameCacheSecs: 60, //3/25/24 by DW
+	maxCtDrafts: 100 //4/27/24 by DW
+	
 	
 	};
 
@@ -591,6 +593,31 @@ function deleteFile (token, relpath, flprivate, callback) { //3/26/24 by DW
 		});
 	}
 
+function getRecentUserDrafts (token, maxCtDraftsParam, callback) { //4/27/24 by DW
+	const now = new Date ();
+	getUsername (token, function (err, username) {
+		if (err) {
+			callback (err);
+			}
+		else {
+			const maxCtDrafts = Math.min (config.maxCtDrafts, maxCtDraftsParam);
+			const sqltext = "select * from wpstorage where relpath = 'draft.json' order by whenCreated desc limit " + maxCtDrafts + ";";
+			davesql.runSqltext (sqltext, function (err, result) {
+				if (err) {
+					callback (err);
+					}
+				else {
+					var theArray = new Array ();
+					result.forEach (function (item) {
+						theArray.push (JSON.parse (item.filecontents));
+						});
+					callback (undefined, theArray);
+					}
+				});
+			}
+		});
+	}
+
 function handleHttpRequest (theRequest, options = new Object ()) { //returns true if request was handled
 	const params = theRequest.params;
 	function returnRedirect (url, code) { //9/30/20 by DW
@@ -871,6 +898,13 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 						writeWholeFile (token, params.relpath, params.type, params.flprivate, params.filedata, params.idsite, params.idpost, httpReturn);
 						});
 					return (true);
+				
+				case "/wordpressgetrecentuserdrafts": //4/27/24 by DW
+					tokenRequired (function (token) {
+						getRecentUserDrafts (token, params.maxdrafts, httpReturn);
+						});
+					return (true);
+				
 				default:
 					return (false);
 				}

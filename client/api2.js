@@ -5,7 +5,8 @@ function wordpress (userOptions, callback) {
 		};
 	var options = {
 		serverAddress: undefined,
-		flMarkdownProcess: true
+		flMarkdownProcess: true,
+		maxCtUserDraftFiles: 25
 		};
 	if (userOptions !== undefined) { //allow caller to override defaults
 		for (x in userOptions) {
@@ -242,7 +243,7 @@ function wordpress (userOptions, callback) {
 	function writeUserDataFile (relpath, filedata, type, flPrivate, callback, options) { //3/24/24 by DW
 		const whenstart = new Date ();
 		var params = {
-			relpath, type, filedata
+			relpath, type
 			}
 		if (flPrivate) {
 			params.flprivate = true;
@@ -256,7 +257,7 @@ function wordpress (userOptions, callback) {
 				}
 			}
 		
-		wpServerCall ("wordpresswritewholefile", params, true, callback);
+		wpServerPost ("wordpresswritewholefile", params, true, filedata, callback);
 		}
 	
 	this.getUserInfo = function (callback) {
@@ -297,6 +298,12 @@ function wordpress (userOptions, callback) {
 		}
 	this.getSubscriptions = function (callback) { //9/5/23 by DW
 		wpServerCall ("wordpressgetsubscriptions", undefined, true, callback);
+		}
+	this.getRecentUserDrafts = function (callback) { //4/27/24 by DW
+		const params = {
+			maxdrafts: options.maxCtUserDraftFiles
+			};
+		wpServerCall ("wordpressgetrecentuserdrafts", params, true, callback);
 		}
 	
 	this.readUserDataFile = readUserDataFile;

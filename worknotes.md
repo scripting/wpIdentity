@@ -1,3 +1,13 @@
+#### 4/27/24; 10:02:23 AM by DW
+
+New call --  /wordpressgetrecentuserdrafts.
+
+#### 4/26/24; 10:06:14 AM by DW
+
+The problem with POST was that it works, but we're not getting any returned data. For the application we have right now that's not a deal-stopper. But it will have to be fixed. 
+
+See note in WORD worknotes for today for explanation with glossary.
+
 #### 4/18/24; 5:29:13 PM by DW
 
 Markdown processing as we save to WordPress. 
