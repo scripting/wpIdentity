@@ -1,3 +1,9 @@
+#### 4/30/24; 10:43:14 AM by DW
+
+Add param to getRecentUserDrafts to let the caller restrict returns to a specific site. Useful for building feeds. 
+
+If config.flServePublicUserFiles is true, we will serve files from user storage database.
+
 #### 4/29/24; 12:12:53 PM by DW
 
 Update: Changed the way this works, the RSS is generated in the app, and we keep it here in user storage. Eventually public files will be availble via HTTP.

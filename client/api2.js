@@ -308,10 +308,13 @@ function wordpress (userOptions, callback) {
 	this.getSubscriptions = function (callback) { //9/5/23 by DW
 		wpServerCall ("wordpressgetsubscriptions", undefined, true, callback);
 		}
-	this.getRecentUserDrafts = function (callback) { //4/27/24 by DW
-		const params = {
-			maxdrafts: options.maxCtUserDraftFiles
+	this.getRecentUserDrafts = function (idsite, callback) { //4/27/24 by DW
+		var params = {
+			maxdrafts: options.maxCtUserDraftFiles,
 			};
+		if (idsite !== undefined) { //4/30/24 by DW
+			params.idsite = idsite;
+			}
 		wpServerCall ("wordpressgetrecentuserdrafts", params, true, function (err, theList) {
 			if (err) {
 				callback (err);

@@ -29,9 +29,10 @@ var config = {
 	flStorageEnabled: false, //3/24/24 by DW
 	
 	ctUsernameCacheSecs: 60, //3/25/24 by DW
-	maxCtDrafts: 100 //4/27/24 by DW
+	maxCtDrafts: 100, //4/27/24 by DW
 	
 	
+	flServePublicUserFiles: false //4/30/24 by DW
 	};
 
 var usernameCache = new Object ();
@@ -594,15 +595,20 @@ function deleteFile (token, relpath, flprivate, callback) { //3/26/24 by DW
 		});
 	}
 
-function getRecentUserDrafts (token, maxCtDraftsParam, callback) { //4/27/24 by DW
+function getRecentUserDrafts (token, maxCtDraftsParam, idSiteParam, callback) { //4/27/24 by DW
 	const now = new Date ();
 	getUsername (token, function (err, username) {
 		if (err) {
 			callback (err);
 			}
 		else {
+			var sitepart = "";
+			if (idSiteParam !== undefined) {
+				sitepart = " and idsite = " + davesql.encode (idSiteParam) + " ";
+				}
 			const maxCtDrafts = Math.min (config.maxCtDrafts, maxCtDraftsParam);
-			const sqltext = "select * from wpstorage where relpath = 'draft.json' order by whenCreated desc limit " + maxCtDrafts + ";";
+			const sqltext = "select * from wpstorage where relpath = 'draft.json' " +  sitepart + "order by whenCreated desc limit " + maxCtDrafts + ";";
+			console.log ("\ngetRecentUserDrafts: sqltext == " + sqltext + "\n");
 			davesql.runSqltext (sqltext, function (err, result) {
 				if (err) {
 					callback (err);
@@ -653,6 +659,53 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 			returnData (data);
 			}
 		}
+	
+	function servePublicFile (virtualpath, callback) { //4/30/24 by DW
+		const parts = virtualpath.split ("/");
+		
+		if (parts.length < 4) {
+			return (false);
+			}
+		const username = parts [1];
+		if (username.length == 0) {
+			return (false);
+			}
+		
+		const idsite = parts [2];
+		if (idsite.length == 0) {
+			return (false);
+			}
+		
+		var relpath = "";
+		parts.forEach (function (step, ix) {
+			if (ix >= 3) {
+				if (relpath.length > 0) {
+					relpath += "/";
+					}
+				relpath += step;
+				}
+			});
+		
+		const sqltext = "select * from  wpstorage where username = " + davesql.encode (username) + " and idsite = " + davesql.encode (idsite) + " and relpath = " + davesql.encode (relpath) + " and flprivate = 0;";
+		console.log ("\nservePublicFile: sqltext == " + sqltext + "\n");
+		davesql.runSqltext (sqltext, function (err, result) {
+			if (err) {
+				returnError (err);
+				}
+			else {
+				if (result.length == 0) {
+					theRequest.httpReturn (404, "text/plain", "Not found");
+					}
+				else {
+					const theFile = result [0];
+					theRequest.httpReturn (200, theFile.type, theFile.filecontents);
+					}
+				}
+			});
+		
+		return (true); //the request was for us
+		}
+	
 	function xmlReturn (err, xmltext) { //4/29/24 by DW
 		if (err) {
 			returnError (err);
@@ -910,12 +963,17 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 					return (true);
 				case "/wordpressgetrecentuserdrafts": //4/27/24 by DW
 					tokenRequired (function (token) {
-						getRecentUserDrafts (token, params.maxdrafts, httpReturn);
+						getRecentUserDrafts (token, params.maxdrafts, params.idsite, httpReturn);
 						});
 					return (true);
 				
 				default:
-					return (false);
+					if (config.flServePublicUserFiles) { //4/30/24 by DW
+						return (servePublicFile (theRequest.lowerpath)); 
+						}
+					else {
+						return (false);
+						}
 				}
 		}
 	}
