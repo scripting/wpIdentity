@@ -1,3 +1,13 @@
+#### 4/29/24; 12:12:53 PM by DW
+
+Update: Changed the way this works, the RSS is generated in the app, and we keep it here in user storage. Eventually public files will be availble via HTTP.
+
+* Start work on RSS feed for each user.
+
+* My feed would be at https://word.social/feed?username=scripting
+
+* I checked that FeedLand doesn't have a call for /feed. If it did, we would consume it before it saw it. 
+
 #### 4/27/24; 10:02:23 AM by DW
 
 New call --  /wordpressgetrecentuserdrafts.

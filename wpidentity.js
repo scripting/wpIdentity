@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.4.23";
+var myProductName = "wpidentity", myVersion = "0.5.0";
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -12,6 +12,7 @@ const wpcom = require ("wpcom"); //8/26/23 by DW
 const davesql = require ("davesql"); //3/24/24 by DW
 const emoji = require ("node-emoji");  //4/15/24 by DW
 const marked = require ("marked");  //4/18/24 by DW
+const rss = require ("daverss"); //4/29/24 by DW
 
 var config = { 
 	myRandomNumber: utils.random (1, 1000000000),
@@ -609,7 +610,8 @@ function getRecentUserDrafts (token, maxCtDraftsParam, callback) { //4/27/24 by 
 				else {
 					var theArray = new Array ();
 					result.forEach (function (item) {
-						theArray.push (JSON.parse (item.filecontents));
+						const jstruct = JSON.parse (item.filecontents);
+						theArray.push (jstruct);
 						});
 					callback (undefined, theArray);
 					}
@@ -649,6 +651,14 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 			}
 		else {
 			returnData (data);
+			}
+		}
+	function xmlReturn (err, xmltext) { //4/29/24 by DW
+		if (err) {
+			returnError (err);
+			}
+		else {
+			theRequest.httpReturn (200, "text/xml", xmltext);
 			}
 		}
 	function returnHtml (err, htmltext) {
@@ -898,7 +908,6 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 						writeWholeFile (token, params.relpath, params.type, params.flprivate, params.filedata, params.idsite, params.idpost, httpReturn);
 						});
 					return (true);
-				
 				case "/wordpressgetrecentuserdrafts": //4/27/24 by DW
 					tokenRequired (function (token) {
 						getRecentUserDrafts (token, params.maxdrafts, httpReturn);

@@ -271,7 +271,16 @@ function wordpress (userOptions, callback) {
 		wpServerCall ("wordpressgetsiteusers", {idsite}, true, callback);
 		}
 	this.getSiteInfo = function (idsite, callback) { //8/29/23 by DW
-		wpServerCall ("wordpressgetsiteinfo", {idsite}, true, callback);
+		var flfound = false;
+		wordpressMemory.sitelist.forEach (function (item) {
+			if (item.idSite == idsite) {
+				callback (undefined, item);
+				flfound = true;
+				}
+			});
+		if (!flfound) {
+			wpServerCall ("wordpressgetsiteinfo", {idsite}, true, callback);
+			}
 		}
 	this.getSiteMedialist = function (idsite, callback) { //8/29/23 by DW
 		wpServerCall ("wordpressgetsitemedialist", {idsite}, true, callback);
@@ -303,7 +312,17 @@ function wordpress (userOptions, callback) {
 		const params = {
 			maxdrafts: options.maxCtUserDraftFiles
 			};
-		wpServerCall ("wordpressgetrecentuserdrafts", params, true, callback);
+		wpServerCall ("wordpressgetrecentuserdrafts", params, true, function (err, theList) {
+			if (err) {
+				callback (err);
+				}
+			else {
+				theList.forEach (function (item) {
+					item.whenCreated = new Date (item.whenCreated);
+					});
+				callback (undefined, theList);
+				}
+			});
 		}
 	
 	this.readUserDataFile = readUserDataFile;
