@@ -186,22 +186,20 @@ function wordpress (userOptions, callback) {
 			params.token = base64UrlEncode (wordpressMemory.accessToken);
 			}
 		var url = urlServer + path + "?" + buildParamList (params, false);
-		$.post (url, filedata, function (data, status) {
-			if (status == "success") {
+		$.post (url, filedata) //5/9/24 by DW
+			.done (function (data, textStatus) {
 				if (callback !== undefined) {
 					callback (undefined, data);
 					}
-				}
-			else {
-				var err = {
-					code: status.status,
-					message: JSON.parse (status.responseText).message
-					};
+				})
+			.fail (function (jqXHR, textStatus, errorThrown) {
 				if (callback !== undefined) {
+					let err = {
+						message: textStatus
+						}
 					callback (err);
 					}
-				}
-			});
+				});
 		}
 	function wpServerCall (path, params, flAuthenticated, callback, urlServer=getServerAddress ()) {
 		const whenstart = new Date ();
@@ -368,6 +366,20 @@ function wordpress (userOptions, callback) {
 		}
 	this.markdownProcess = markdownProcess;
 	
+	this.testPost = function  () { //5/9/24 by DW -- trying to figure out why POST ops don't return
+		const jstruct = {
+			instruction: "Smile for the camera honey"
+			};
+		const jsontext = jsonStringify (jstruct);
+		wpServerPost ("testpost", undefined, true, jsontext, function (err, data) {
+			if (err) {
+				console.log (err.message);
+				}
+			else {
+				console.log (jsonStringify (data));
+				}
+			});
+		},
 	
 	this.userIsSignedIn = userIsSignedIn;
 	this.connectWithWordpress = function () {

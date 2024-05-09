@@ -378,11 +378,14 @@ function addPost (accessToken, idSite, jsontext, callback) { //8/29/23 by DW
 		format: "standard",
 		comment_status: "open"
 		};
+	console.log ("addPost: thePost == " + utils.jsonStringify (thePost)); //5/8/24 by DW
 	site.addPost (thePost, function (err, theNewPost) {
 		if (err) {
+			console.log ("addPost: err.message == " + err.message); //5/8/24 by DW
 			callback (err);
 			}
 		else {
+			console.log ("addPost: theNewPost == " + utils.jsonStringify (theNewPost)); //5/8/24 by DW
 			callback (undefined, convertPost (theNewPost));
 			}
 		});
@@ -550,17 +553,21 @@ function writeWholeFile (token, relpath, type, flprivate, filecontents, idsite, 
 				fileRec.idpost = idpost;
 				}
 			
+			console.log ("writeWholeFile: username == " + username + ", relpath == " + relpath); //9/21/23 by DW
 			readWholeFile (token, relpath, flprivate, idsite, idpost, function (err, theOriginalFile) {
 				if (!err) {
 					fileRec.whenCreated = theOriginalFile.whenCreated;
 					fileRec.ctSaves = theOriginalFile.ctSaves + 1;
 					}
 				const sqltext = "replace into wpstorage " + davesql.encodeValues (fileRec) + ";";
+				console.log ("writeWholeFile: sqltext == " + sqltext); //5/8/24 by DW
 				davesql.runSqltext (sqltext, function (err, result) {
 					if (err) {
+						console.log ("writeWholeFile: err.message == " + err.message); //5/8/24 by DW
 						callback (err);
 						}
 					else {
+						console.log ("writeWholeFile: fileRec == " + utils.jsonStringify (fileRec)); //5/8/24 by DW
 						callback (undefined, fileRec);
 						}
 					});
@@ -607,7 +614,7 @@ function getRecentUserDrafts (token, maxCtDraftsParam, idSiteParam, callback) { 
 				sitepart = " and idsite = " + davesql.encode (idSiteParam) + " ";
 				}
 			const maxCtDrafts = Math.min (config.maxCtDrafts, maxCtDraftsParam);
-			const sqltext = "select * from wpstorage where relpath = 'draft.json' " +  sitepart + "order by whenCreated desc limit " + maxCtDrafts + ";";
+			const sqltext = "select * from wpstorage where relpath = 'draft.json' " +  sitepart + "order by whenUpdated desc limit " + maxCtDrafts + ";";
 			console.log ("\ngetRecentUserDrafts: sqltext == " + sqltext + "\n");
 			davesql.runSqltext (sqltext, function (err, result) {
 				if (err) {
@@ -648,7 +655,7 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 		theRequest.httpReturn (503, "text/plain", err.message);
 		}
 	function returnData (jstruct) {
-		theRequest.httpReturn (200, "application/javascript", utils.jsonStringify (jstruct));
+		theRequest.httpReturn (200, "text/json", utils.jsonStringify (jstruct)); //5/9/24 by DW
 		}
 	function httpReturn (err, data) {
 		if (err) {
@@ -822,6 +829,12 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 					tokenRequired (function (token) {
 						writeWholeFile (token, params.relpath, params.type, params.flprivate, theRequest.postBody.toString (), params.idsite, params.idpost, httpReturn);
 						});
+					return (true);
+				case "/testpost": //5/9/24 by DW
+					let teststruct = {
+						hello: "hooray for hollywood"
+						};
+					httpReturn (undefined, teststruct);
 					return (true);
 				default:
 					return (false);

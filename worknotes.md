@@ -1,3 +1,11 @@
+#### 5/9/24; 11:01:19 AM by DW
+
+I finally got to the bottom of the problem with http post returning. I'm going to fix it, and probably should eventually visit all the code that uses davehttp, because I have replicated the problem far and wide.
+
+First, the code I use to call the server uses jQuery in such a way that errors are not reported. If we were seeing the errors we would have been able to find this much more quickly. I'm fixed it in api2.js here. 
+
+Second, the server returns the wrong type in returnData in wpidentity.js. It was returning "application/javascript" and should have been returning "text/json".
+
 #### 4/30/24; 10:43:14 AM by DW
 
 Add param to getRecentUserDrafts to let the caller restrict returns to a specific site. Useful for building feeds. 
