@@ -1,3 +1,11 @@
+#### 5/10/24; 8:53:59 AM by DW
+
+Adding an "id" column to the database, and changing the queries accordingly.
+
+I believe things will work much better with this approach, basically one row in the database can transition from being a draft to being published without moving. It'll keep the same id. That means you will be able to have more than one unpublished draft. I expect there will be other flexibilities. 
+
+The id is the key.
+
 #### 5/9/24; 11:01:19 AM by DW
 
 I finally got to the bottom of the problem with http post returning. I'm going to fix it, and probably should eventually visit all the code that uses davehttp, because I have replicated the problem far and wide.

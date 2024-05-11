@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.5.0";
+var myProductName = "wpidentity", myVersion = "0.5.1";
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -527,13 +527,28 @@ function readWholeFile (token, relpath, flprivate, idsite, idpost, callback) { /
 			}
 		});
 	}
-function writeWholeFile (token, relpath, type, flprivate, filecontents, idsite, idpost, callback) { //3/24/24 by DW 
+function writeWholeFile (token, relpath, type, flprivate, filecontents, idsite, idpost, iddraft, callback) { 
 	const now = new Date ();
 	getUsername (token, function (err, username) {
 		if (err) {
 			callback (err);
-			}
+			} 
 		else {
+			function getEncodedValues (jstruct) {
+				var values = davesql.encodeValues (jstruct);
+				values = utils.stringMid (values, 1, values.length - 1); //remove extraneous semicolon at the end
+				return (values);
+				}
+			function getValuesForUpdating (theValues) { //this could go into the davesql package
+				var s = "";
+				for (var x in theValues) {
+					if (s.length > 0) {
+						s += ", ";
+						}
+					s += x + "=" + davesql.encode (theValues [x]);
+					}
+				return (s);
+				}
 			const privateval = (flprivate) ? 1 : 0;
 			var fileRec = {
 				username, 
@@ -541,37 +556,48 @@ function writeWholeFile (token, relpath, type, flprivate, filecontents, idsite, 
 				type,
 				flprivate: privateval,
 				filecontents,
-				whenCreated: now,
-				whenUpdated: now,
-				ctSaves: 1
+				whenUpdated: now
 				};
-			
-			if (idsite !== undefined) { //4/5/24 by DW
-				fileRec.idsite = idsite;
+			if (idsite !== undefined) {
+				fileRec.idSite = idsite;
 				}
 			if (idpost !== undefined) {
-				fileRec.idpost = idpost;
+				fileRec.idPost = idpost;
 				}
 			
-			console.log ("writeWholeFile: username == " + username + ", relpath == " + relpath); //9/21/23 by DW
-			readWholeFile (token, relpath, flprivate, idsite, idpost, function (err, theOriginalFile) {
-				if (!err) {
-					fileRec.whenCreated = theOriginalFile.whenCreated;
-					fileRec.ctSaves = theOriginalFile.ctSaves + 1;
-					}
-				const sqltext = "replace into wpstorage " + davesql.encodeValues (fileRec) + ";";
-				console.log ("writeWholeFile: sqltext == " + sqltext); //5/8/24 by DW
+			if (iddraft !== undefined) { //5/11/24 by DW
+				const sqltext = "update wpstorage set " + getValuesForUpdating (fileRec) + ", ctSaves = ctSaves + 1 where id = " + davesql.encode (iddraft) + ";";
 				davesql.runSqltext (sqltext, function (err, result) {
 					if (err) {
-						console.log ("writeWholeFile: err.message == " + err.message); //5/8/24 by DW
 						callback (err);
 						}
 					else {
-						console.log ("writeWholeFile: fileRec == " + utils.jsonStringify (fileRec)); //5/8/24 by DW
+						if (result.affectedRows == 0) {
+							const message = "Can't update the file because there is no record with id == " + iddraft;
+							callback ({message});
+							}
+						else {
+							fileRec.id = iddraft;
+							callback (undefined, fileRec);
+							}
+						}
+					});
+				}
+			else {
+				fileRec.whenCreated = now;
+				fileRec.ctSaves = 1;
+				const onDuplicatePart = "on duplicate key update type = values (type), filecontents = values (filecontents), whenUpdated = " + davesql.encode (now) + ", ctSaves = ctSaves + 1";
+				const sqltext = "insert into wpstorage " + getEncodedValues (fileRec) + " " + onDuplicatePart + ";";
+				davesql.runSqltext (sqltext, function (err, result) {
+					if (err) {
+						callback (err);
+						}
+					else {
+						fileRec.id = result.insertId;
 						callback (undefined, fileRec);
 						}
 					});
-				});
+				}
 			}
 		});
 	}
@@ -601,7 +627,6 @@ function deleteFile (token, relpath, flprivate, callback) { //3/26/24 by DW
 			}
 		});
 	}
-
 function getRecentUserDrafts (token, maxCtDraftsParam, idSiteParam, callback) { //4/27/24 by DW
 	const now = new Date ();
 	getUsername (token, function (err, username) {
@@ -827,7 +852,7 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 			switch (theRequest.lowerpath) {
 				case "/wordpresswritewholefile": //3/24/24 by DW
 					tokenRequired (function (token) {
-						writeWholeFile (token, params.relpath, params.type, params.flprivate, theRequest.postBody.toString (), params.idsite, params.idpost, httpReturn);
+						writeWholeFile (token, params.relpath, params.type, params.flprivate, theRequest.postBody.toString (), params.idsite, params.idpost, params.iddraft, httpReturn);
 						});
 					return (true);
 				case "/testpost": //5/9/24 by DW
@@ -971,7 +996,7 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 					return (true);
 				case "/wordpresswritewholefile": //3/24/24 by DW
 					tokenRequired (function (token) {
-						writeWholeFile (token, params.relpath, params.type, params.flprivate, params.filedata, params.idsite, params.idpost, httpReturn);
+						writeWholeFile (token, params.relpath, params.type, params.flprivate, params.filedata, params.idsite, params.idpost, params.iddraft, httpReturn);
 						});
 					return (true);
 				case "/wordpressgetrecentuserdrafts": //4/27/24 by DW
