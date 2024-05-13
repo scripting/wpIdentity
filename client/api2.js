@@ -257,6 +257,24 @@ function wordpress (userOptions, callback) {
 		
 		wpServerPost ("wordpresswritewholefile", params, true, filedata, callback);
 		}
+	function writeUniqueFile (relpath, filedata, type, flPrivate, callback, options) { //5/12/24 by DW
+		var params = {
+			relpath, type
+			}
+		if (flPrivate) {
+			params.flprivate = true;
+			}
+		
+		if (options !== undefined) { //4/5/24 by DW
+			for (var x in options) {
+				if (options [x] !== undefined) {
+					params [x] = options [x];
+					}
+				}
+			}
+		
+		wpServerPost ("wordpresswriteuniquefile", params, true, filedata, callback);
+		}
 	
 	this.getUserInfo = function (callback) {
 		callback (undefined, wordpressMemory.userinfo);
@@ -328,6 +346,7 @@ function wordpress (userOptions, callback) {
 	
 	this.readUserDataFile = readUserDataFile;
 	this.writeUserDataFile = writeUserDataFile;
+	this.writeUniqueFile = writeUniqueFile; //5/12/24 by DW
 	
 	this.readUserJsonFile = function (relpath, flPrivate, callback, options) { //4/10/24 by DW
 		readUserDataFile (relpath, flPrivate, function (err, theFileData) {

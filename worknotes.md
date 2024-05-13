@@ -1,3 +1,19 @@
+#### 5/12/24; 9:02:36 AM by DW
+
+new entrypoint -- writeUniqueFile, explained in a comment at the head of the function in source.opml
+
+writeWholeFile is the general-purpose routine, this is for files that can only have one instance per path/type/etc
+
+examples include the user's prefs.json file for a specific app, or the user's glossary.json file. 
+
+these files are a lot simpler to work with than the draft.json files.
+
+we could manage these files ourselves at a higher level, but that would mean we would have to remember the id of the glossary.json file, in order to save it.
+
+it's simpler to just provide a new entrypoint for these files that finds the id before writing it, the info is after all, in the database. ;-)
+
+this could be done on the client, but that means two round trips for the data. this is a little more efficient. 
+
 #### 5/10/24; 8:53:59 AM by DW
 
 Adding an "id" column to the database, and changing the queries accordingly.

@@ -601,6 +601,14 @@ function writeWholeFile (token, relpath, type, flprivate, filecontents, idsite, 
 			}
 		});
 	}
+
+function writeUniqueFile (token, relpath, type, flprivate, filecontents, idsite, idpost, callback) { //5/12/24 by DW
+	readWholeFile (token, relpath, flprivate, idsite, idpost, function (err, theOriginalFile) {
+		const id = (err) ? undefined : theOriginalFile.id; //if id is undefined, treat it as a new file
+		writeWholeFile (token, relpath, type, flprivate, filecontents, idsite, idpost, id, callback);
+		});
+	}
+
 function deleteFile (token, relpath, flprivate, callback) { //3/26/24 by DW
 	const now = new Date ();
 	getUsername (token, function (err, username) {
@@ -649,6 +657,12 @@ function getRecentUserDrafts (token, maxCtDraftsParam, idSiteParam, callback) { 
 					var theArray = new Array ();
 					result.forEach (function (item) {
 						const jstruct = JSON.parse (item.filecontents);
+						
+						jstruct.idDraft = item.id; //copy data from database for use in the app -- 5/12/24 by DW
+						jstruct.whenCreated = new Date (item.whenCreated);
+						jstruct.whenUpdated = new Date (item.whenUpdated); 
+						jstruct.ctSaves = item.ctSaves; 
+						
 						theArray.push (jstruct);
 						});
 					callback (undefined, theArray);
@@ -853,6 +867,11 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 				case "/wordpresswritewholefile": //3/24/24 by DW
 					tokenRequired (function (token) {
 						writeWholeFile (token, params.relpath, params.type, params.flprivate, theRequest.postBody.toString (), params.idsite, params.idpost, params.iddraft, httpReturn);
+						});
+					return (true);
+				case "/wordpresswriteuniquefile": //5/12/24 by DW
+					tokenRequired (function (token) {
+						writeUniqueFile (token, params.relpath, params.type, params.flprivate, theRequest.postBody.toString (), params.idsite, params.idpost, httpReturn);
 						});
 					return (true);
 				case "/testpost": //5/9/24 by DW
