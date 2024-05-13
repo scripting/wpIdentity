@@ -10,7 +10,7 @@ Every wpidentity installation has the option of providing user-level storage.
 
 ```SQL
 
-create table wpstorage (	username varchar (255), 	relpath varchar (255), 	flprivate boolean,	idSite int unsigned not null default 0,	idPost int unsigned not null default 0,	type varchar (64),	filecontents text,	whenCreated datetime, 	whenUpdated datetime, 	ctSaves int default 0,	primary key (username, relpath, flprivate, idSite, idPost)	);
+create table wpstorage (	id int auto_increment key, 	username varchar (255), 	relpath varchar (255), 	flprivate boolean,	idSite int unsigned not null default 0,	idPost int unsigned not null default 0,	type varchar (64),	filecontents text,	whenCreated datetime, 	whenUpdated datetime, 	ctSaves int unsigned not null default 0,	index draftIndex (username, relpath, flprivate, idSite, idPost)	);
 
 ```
 
