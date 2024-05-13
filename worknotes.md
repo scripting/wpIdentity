@@ -2,6 +2,8 @@
 
 Changed the name of the project from wordpressIdentity to wpIdentity, so it agrees with the name of the NPM package. 
 
+Fixed a bug in the glossary code, we were failing if there is no glossary.json file for the user. But it's okay to not have a glossary.
+
 #### 5/12/24; 9:02:36 AM by DW
 
 new entrypoint -- writeUniqueFile, explained in a comment at the head of the function in source.opml

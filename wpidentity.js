@@ -351,13 +351,10 @@ function processPostText (token, theText, callback) {
 	theText = emojiProcess (theText); //4/15/24 by DW
 	theText = markdownProcess (theText); //4/18/24 by DW
 	getSpecialDataFile (token, "glossary.json", function (err, theGlossary) {
-		if (err) {
-			callback (err);
-			}
-		else {
+		if (!err) {
 			theText = utils.multipleReplaceAll (theText, theGlossary, false);
-			callback (undefined, theText);
 			}
+		callback (undefined, theText);
 		});
 	}
 
