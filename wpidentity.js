@@ -367,24 +367,26 @@ function addPost (accessToken, idSite, jsontext, callback) { //8/29/23 by DW
 	const wp = wpcom (accessToken);
 	const site = wp.site (idSite);
 	
-	const thePost = {
-		title: jstruct.title,
-		content: jstruct.content,
-		status: "publish",
-		date: new Date ().toGMTString (),
-		format: "standard",
-		comment_status: "open"
-		};
-	console.log ("addPost: thePost == " + utils.jsonStringify (thePost)); //5/8/24 by DW
-	site.addPost (thePost, function (err, theNewPost) {
-		if (err) {
-			console.log ("addPost: err.message == " + err.message); //5/8/24 by DW
-			callback (err);
-			}
-		else {
-			console.log ("addPost: theNewPost == " + utils.jsonStringify (theNewPost)); //5/8/24 by DW
-			callback (undefined, convertPost (theNewPost));
-			}
+	processPostText (accessToken, jstruct.content, function (err, theProcessedContent) { //5/13/24 by DW
+		const thePost = {
+			title: jstruct.title,
+			content: theProcessedContent, //5/13/24 by DW
+			status: "publish",
+			date: new Date ().toGMTString (),
+			format: "standard",
+			comment_status: "open"
+			};
+		console.log ("addPost: thePost == " + utils.jsonStringify (thePost)); //5/8/24 by DW
+		site.addPost (thePost, function (err, theNewPost) {
+			if (err) {
+				console.log ("addPost: err.message == " + err.message); //5/8/24 by DW
+				callback (err);
+				}
+			else {
+				console.log ("addPost: theNewPost == " + utils.jsonStringify (theNewPost)); //5/8/24 by DW
+				callback (undefined, convertPost (theNewPost));
+				}
+			});
 		});
 	}
 function updatePost (accessToken, idSite, idPost, jsontext, callback) { //8/29/23 by DW
@@ -397,8 +399,6 @@ function updatePost (accessToken, idSite, idPost, jsontext, callback) { //8/29/2
 	const post = site.post (idPost);
 	
 	processPostText (accessToken, jstruct.content, function (err, theProcessedContent) {
-		if (!err) {
-			}
 		const thePost = {
 			title: jstruct.title,
 			content: theProcessedContent,
