@@ -1,3 +1,7 @@
+#### 5/13/24; 9:38:56 AM by DW
+
+Changed the name of the project from wordpressIdentity to wpIdentity, so it agrees with the name of the NPM package. 
+
 #### 5/12/24; 9:02:36 AM by DW
 
 new entrypoint -- writeUniqueFile, explained in a comment at the head of the function in source.opml
