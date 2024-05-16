@@ -32,7 +32,9 @@ var config = {
 	maxCtDrafts: 100, //4/27/24 by DW
 	
 	
-	flServePublicUserFiles: false //4/30/24 by DW
+	flServePublicUserFiles: false, //4/30/24 by DW
+	urlPublicUserFiles: "https://wordland.social/", //5/16/24 by DW
+	maxCtFiles: 100 //5/16/24 by DW
 	};
 
 var usernameCache = new Object ();
@@ -546,6 +548,13 @@ function writeWholeFile (token, relpath, type, flprivate, filecontents, idsite, 
 					}
 				return (s);
 				}
+			function setUrlpublic () { //5/16/24 by DW
+				if (!flprivate) { //5/16/24 by DW
+					if (idsite !== undefined) {
+						fileRec.urlPublic = config.urlPublicUserFiles + username + "/" + idsite + "/" + relpath
+						}
+					}
+				}
 			const privateval = (flprivate) ? 1 : 0;
 			var fileRec = {
 				username, 
@@ -575,6 +584,7 @@ function writeWholeFile (token, relpath, type, flprivate, filecontents, idsite, 
 							}
 						else {
 							fileRec.id = iddraft;
+							setUrlpublic (); //5/16/24 by DW
 							callback (undefined, fileRec);
 							}
 						}
@@ -591,6 +601,7 @@ function writeWholeFile (token, relpath, type, flprivate, filecontents, idsite, 
 						}
 					else {
 						fileRec.id = result.insertId;
+						setUrlpublic (); //5/16/24 by DW
 						callback (undefined, fileRec);
 						}
 					});
@@ -598,14 +609,12 @@ function writeWholeFile (token, relpath, type, flprivate, filecontents, idsite, 
 			}
 		});
 	}
-
 function writeUniqueFile (token, relpath, type, flprivate, filecontents, idsite, idpost, callback) { //5/12/24 by DW
 	readWholeFile (token, relpath, flprivate, idsite, idpost, function (err, theOriginalFile) {
 		const id = (err) ? undefined : theOriginalFile.id; //if id is undefined, treat it as a new file
 		writeWholeFile (token, relpath, type, flprivate, filecontents, idsite, idpost, id, callback);
 		});
 	}
-
 function deleteFile (token, relpath, flprivate, callback) { //3/26/24 by DW
 	const now = new Date ();
 	getUsername (token, function (err, username) {
@@ -645,7 +654,6 @@ function getRecentUserDrafts (token, maxCtDraftsParam, idSiteParam, callback) { 
 				}
 			const maxCtDrafts = Math.min (config.maxCtDrafts, maxCtDraftsParam);
 			const sqltext = "select * from wpstorage where relpath = 'draft.json' " +  sitepart + "order by whenUpdated desc limit " + maxCtDrafts + ";";
-			console.log ("\ngetRecentUserDrafts: sqltext == " + sqltext + "\n");
 			davesql.runSqltext (sqltext, function (err, result) {
 				if (err) {
 					callback (err);
@@ -668,6 +676,32 @@ function getRecentUserDrafts (token, maxCtDraftsParam, idSiteParam, callback) { 
 			}
 		});
 	}
+
+function getUserFileInfo (token, maxFiles, callback) { //5/16/24 by DW
+	getUsername (token, function (err, username) { 
+		if (err) {
+			callback (err);
+			}
+		else {
+			const maxCtFiles = Math.min (config.maxCtFiles, maxFiles);
+			const sqltext = "select * from wpstorage where username = " + davesql.encode (username) + " order by id asc limit " + maxCtFiles + ";";
+			console.log ("getUserFileInfo: sqltext == " + sqltext);
+			davesql.runSqltext (sqltext, function (err, result) {
+				if (err) {
+					callback (err);
+					}
+				else {
+					var theArray = new Array ();
+					result.forEach (function (item) {
+						theArray.push (item);
+						});
+					callback (undefined, theArray);
+					}
+				});
+			}
+		});
+	}
+
 
 function handleHttpRequest (theRequest, options = new Object ()) { //returns true if request was handled
 	const params = theRequest.params;
@@ -1020,7 +1054,11 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 						getRecentUserDrafts (token, params.maxdrafts, params.idsite, httpReturn);
 						});
 					return (true);
-				
+				case "/wordpressgetuserfileinfo": //5/16/24 by DW
+					tokenRequired (function (token) {
+						getUserFileInfo (token, params.maxfiles, httpReturn);
+						});
+					return (true);
 				default:
 					if (config.flServePublicUserFiles) { //4/30/24 by DW
 						return (servePublicFile (theRequest.lowerpath)); 

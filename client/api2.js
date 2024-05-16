@@ -6,7 +6,7 @@ function wordpress (userOptions, callback) {
 	var options = {
 		serverAddress: undefined,
 		flMarkdownProcess: true,
-		maxCtUserDraftFiles: 25
+		maxCtUserDraftFiles: 100
 		};
 	if (userOptions !== undefined) { //allow caller to override defaults
 		for (x in userOptions) {
@@ -339,6 +339,19 @@ function wordpress (userOptions, callback) {
 				theList.forEach (function (item) {
 					item.whenCreated = new Date (item.whenCreated);
 					});
+				callback (undefined, theList);
+				}
+			});
+		}
+	this.getUserFileInfo = function (callback) { //5/16/24 by DW
+		var params = {
+			maxfiles: options.maxCtUserDraftFiles,
+			};
+		wpServerCall ("wordpressgetuserfileinfo", params, true, function (err, theList) {
+			if (err) {
+				callback (err);
+				}
+			else {
 				callback (undefined, theList);
 				}
 			});
