@@ -489,6 +489,15 @@ function startStorage (theDatabase, callback) { //3/24/24 by DW
 			});
 		});
 	}
+function convertStorageItem (item) { //5/16/24 by DW -- convert database item to the item struct defined by the API
+	if (item.idSite == 0) {
+		item.idSite = undefined;
+		}
+	if (item.idPost == 0) {
+		item.idPost = undefined;
+		}
+	return (item);
+	}
 function readUserFile (username, relpath, flprivate, idsite, idpost, callback) {
 	const privateval = (flprivate) ? 1 : 0;
 	var sqltext = "select * from wpstorage where username = " + davesql.encode (username) + " and relpath = " + davesql.encode (relpath) + " and flprivate = " + davesql.encode (privateval)
@@ -676,7 +685,6 @@ function getRecentUserDrafts (token, maxCtDraftsParam, idSiteParam, callback) { 
 			}
 		});
 	}
-
 function getUserFileInfo (token, maxFiles, callback) { //5/16/24 by DW
 	getUsername (token, function (err, username) { 
 		if (err) {
@@ -685,7 +693,6 @@ function getUserFileInfo (token, maxFiles, callback) { //5/16/24 by DW
 		else {
 			const maxCtFiles = Math.min (config.maxCtFiles, maxFiles);
 			const sqltext = "select * from wpstorage where username = " + davesql.encode (username) + " order by id asc limit " + maxCtFiles + ";";
-			console.log ("getUserFileInfo: sqltext == " + sqltext);
 			davesql.runSqltext (sqltext, function (err, result) {
 				if (err) {
 					callback (err);
@@ -693,7 +700,7 @@ function getUserFileInfo (token, maxFiles, callback) { //5/16/24 by DW
 				else {
 					var theArray = new Array ();
 					result.forEach (function (item) {
-						theArray.push (item);
+						theArray.push (convertStorageItem (item));
 						});
 					callback (undefined, theArray);
 					}
@@ -701,7 +708,6 @@ function getUserFileInfo (token, maxFiles, callback) { //5/16/24 by DW
 			}
 		});
 	}
-
 
 function handleHttpRequest (theRequest, options = new Object ()) { //returns true if request was handled
 	const params = theRequest.params;
