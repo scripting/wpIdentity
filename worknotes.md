@@ -1,3 +1,7 @@
+#### 5/17/24; 4:55:01 PM by DW
+
+Added a whenPublished property to the struct returned by addPost and updatePost. 
+
 #### 5/13/24; 9:38:56 AM by DW
 
 Changed the name of the project from wordpressIdentity to wpIdentity, so it agrees with the name of the NPM package. 

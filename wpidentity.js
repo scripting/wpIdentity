@@ -385,8 +385,10 @@ function addPost (accessToken, idSite, jsontext, callback) { //8/29/23 by DW
 				callback (err);
 				}
 			else {
-				console.log ("addPost: theNewPost == " + utils.jsonStringify (theNewPost)); //5/8/24 by DW
-				callback (undefined, convertPost (theNewPost));
+				var theConvertedPost = convertPost (theNewPost); //5/17/24 by DW
+				theConvertedPost.whenPublished = new Date ();
+				console.log ("addPost: theConvertedPost == " + utils.jsonStringify (theConvertedPost)); //5/8/24 by DW
+				callback (undefined, theConvertedPost);
 				}
 			});
 		});
@@ -411,7 +413,10 @@ function updatePost (accessToken, idSite, idPost, jsontext, callback) { //8/29/2
 				callback (err);
 				}
 			else {
-				callback (undefined, convertPost (theNewPost));
+				var theConvertedPost = convertPost (theNewPost); //5/17/24 by DW
+				theConvertedPost.whenPublished = new Date ();
+				console.log ("updatePost: theConvertedPost == " + utils.jsonStringify (theConvertedPost)); //5/8/24 by DW
+				callback (undefined, theConvertedPost);
 				}
 			});
 		});
