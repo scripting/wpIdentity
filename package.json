@@ -20,6 +20,7 @@
 		"daverss": "*",
 		"davesql": "*",
 		"marked": "3.0.8",
-		"node-emoji": "1.11.0"
+		"node-emoji": "1.11.0",
+		"nodejs-websocket": "*",
 		}
 	}

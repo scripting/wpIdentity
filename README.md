@@ -32,19 +32,21 @@ I've been narrating my work in the <a href="https://github.com/scripting/wordpre
 
 These docs proved useful at different points in this project.
 
+* https://github.com/Automattic/wpcom.js/tree/master/docs -- docs for the routines we call 
+
 * https://developer.wordpress.com/apps/
 
 * https://developer.wordpress.com/docs/oauth2/
 
 * https://github.com/Automattic/node-wpcom-oauth
 
+* https://github.com/Automattic/wp-calypso
+
 * https://github.com/Automattic/wp-calypso/tree/trunk/packages/wpcom.js
 
 * https://github.com/Automattic/wp-calypso/tree/trunk/packages/wpcom.js/docs
 
 * https://github.com/Automattic/wpcom-connect-examples
-
-* https://github.com/Automattic/wp-calypso
 
 ### Other pointers
 

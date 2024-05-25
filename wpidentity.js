@@ -13,6 +13,7 @@ const davesql = require ("davesql"); //3/24/24 by DW
 const emoji = require ("node-emoji");  //4/15/24 by DW
 const marked = require ("marked");  //4/18/24 by DW
 const rss = require ("daverss"); //4/29/24 by DW
+const websocket = require ("nodejs-websocket"); //5/24/24 by DW 
 
 var config = { 
 	myRandomNumber: utils.random (1, 1000000000),
@@ -34,11 +35,12 @@ var config = {
 	
 	flServePublicUserFiles: false, //4/30/24 by DW
 	urlPublicUserFiles: "https://wordland.social/", //5/16/24 by DW
-	maxCtFiles: 100 //5/16/24 by DW
+	maxCtFiles: 100, //5/16/24 by DW
+	
+	flWebsocketEnabled: true, //5/24/24 by DW
+	websocketPort: 1622,
+	urlSocketServer: "wss://wordland.social/"
 	};
-
-var usernameCache = new Object ();
-var whenLastUsernameCacheStart = new Date ();
 
 function base64UrlEncode (theData) {
 	var base64 = Buffer.from (theData).toString ('base64');
@@ -69,650 +71,788 @@ function readConfig (f, config, callback) {
 		});
 	}
 
-function requestTokenFromWordpress (theCode, callback) {
-	var theRequest = {
-		method: "POST",
-		url: config.urlRequestToken,
-		form: {
-			client_id: config.clientId,
-			client_secret: config.clientSecret,
-			redirect_uri: config.urlRedirect,
-			code: theCode,
-			grant_type: "authorization_code"
-			}
-		};
-	request (theRequest, function (err, response, body) {
-		if (err) {
-			callback (err);
-			}
-		else {
-			try {
-				const data = JSON.parse (body);
-				callback (undefined, data);
+//wordpress
+	function requestTokenFromWordpress (theCode, callback) {
+		var theRequest = {
+			method: "POST",
+			url: config.urlRequestToken,
+			form: {
+				client_id: config.clientId,
+				client_secret: config.clientSecret,
+				redirect_uri: config.urlRedirect,
+				code: theCode,
+				grant_type: "authorization_code"
 				}
-			catch (err) {
+			};
+		request (theRequest, function (err, response, body) {
+			if (err) {
 				callback (err);
 				}
-			}
-		});
-	}
-function convertDate (theDate) {
-	if (theDate === undefined) {
-		return (undefined);
-		}
-	else {
-		const d = new Date (theDate);
-		if (isNaN (d)) {
-			return (undefined);
-			}
-		return (d);
-		}
-	}
-function convertString (theString) {
-	if (theString === undefined) {
-		return (undefined);
-		}
-	if (theString.length == 0) {
-		return (undefined);
-		}
-	else {
-		return (s);
-		}
-	}
-function convertPost (item) { //convert a post received from WordPress to the struct defined by our API -- 9/12/23 by DW
-	function getCatArray () {
-		var catarray = new Array ();
-		for (var x in item.categories) {
-			catarray.push (x);
-			}
-		return (catarray);
-		}
-	function getCatstring () {
-		var catstring = "";
-		for (var x in item.categories) {
-			catstring += "," + x;
-			}
-		if (catstring.length > 0) {
-			catstring = utils.stringDelete (catstring, 1, 1);
-			}
-		return (catstring);
-		}
-	return ({
-		idPost: item.ID,
-		idSite: item.site_ID,
-		title: item.title,
-		guid: item.guid,
-		content: item.content,
-		type: item.type,
-		categories: getCatArray (),
-		url: item.URL,
-		urlShort: item.short_URL,
-		whenCreated: convertDate (item.date),
-		author: {
-			id: item.author.ID,
-			username: item.author.login,
-			name: item.author.name
-			}
-		});
-	}
-function convertUser (theUser) {
-	return ({
-		idUser: theUser.ID,
-		name: theUser.display_name,
-		username: theUser.username,
-		email: theUser.email,
-		idPrimaryBlog: theUser.primary_blog,
-		urlPrimaryBlog: theUser.primary_blog_url,
-		whenStarted: convertDate (theUser.date),
-		ctSites: theUser.site_count
-		});
-	}
-function convertSite (theSite) {
-	return ({
-		idSite: theSite.ID,
-		urlSite: theSite.URL,
-		description: theSite.description,
-		name: theSite.name,
-		whenCreated: convertDate (theSite.options.created_at),
-		ctPosts: theSite.options.post_count
-		});
-	}
-function convertSubscription (theSubscription) {
-	return ({
-		id: theSubscription.ID,
-		idWpBlog: (theSubscription.blog_ID == "0") ? undefined : theSubscription.blog_ID,
-		feedUrl: theSubscription.URL, 
-		whenSubscribed: convertDate (theSubscription.date_subscribed)
-		});
-	}
-function convertMediaObject (theObject) {
-	return ({
-		id: theObject.ID,
-		url: theObject.URL,
-		whenCreated: theObject.date,
-		idPost: theObject.post_ID,
-		idAuthor: theObject.author_ID,
-		type: theObject.mime_type,
-		title: theObject.title,
-		description: convertString (theObject.description),
-		alt: convertString (theObject.alt),
-		height: theObject.height,
-		width: theObject.width
-		});
-	}
-function getUserInfo (accessToken, callback) { //8/26/23 by DW
-	const wp = wpcom (accessToken);
-	wp.me ().get (function (err, theInfo) {
-		if (err) {
-			callback (err);
-			}
-		else {
-			callback (undefined, convertUser (theInfo));
-			}
-		});
-	}
-function getUserSites (accessToken, callback) { //8/26/23 by DW
-	const wp = wpcom (accessToken);
-	wp.me ().sites (function (err, theSiteList) {
-		if (err) {
-			callback (err);
-			}
-		else {
-			var theList = new Array ();
-			theSiteList.sites.forEach (function (item) {
-				theList.push (convertSite (item));
-				});
-			callback (undefined, theList);
-			}
-		});
-	}
-function getSitePosts (accessToken, idSite, callback) { //9/12/23 by DW
-	const wp = wpcom (accessToken);
-	const site = wp.site (idSite);
-	site.postsList (function (err, thePosts) { //9/12/23 by DW
-		if (err) {
-			callback (err);
-			}
-		else {
-			var theList = new Array ();
-			thePosts.posts.forEach (function (item) {
-				theList.push (convertPost (item));
-				});
-			callback (undefined, theList);
-			}
-		});
-	}
-function getSiteUsers (accessToken, idSite, callback) { //8/28/23 by DW
-	const wp = wpcom (accessToken);
-	const site = wp.site (idSite);
-	site.usersList (function (err, theUsers) {
-		if (err) {
-			callback (err);
-			}
-		else {
-			var theList = new Array ();
-			theUsers.users.forEach (function (item) {
-				theList.push (convertUser (item));
-				});
-			callback (undefined, theList);
-			}
-		});
-	}
-function getSiteInfo (accessToken, idSite, callback) { //8/29/23 by DW
-	const wp = wpcom (accessToken);
-	const site = wp.site (idSite);
-	site.get (function (err, theInfo) {
-		if (err) {
-			callback (err);
-			}
-		else {
-			callback (undefined, convertSite (theInfo));
-			}
-		});
-	}
-function getSiteMedialist (accessToken, idSite, callback) { //8/29/23 by DW
-	const wp = wpcom (accessToken);
-	const site = wp.site (idSite);
-	site.mediaList (function (err, theMedialist) {
-		if (err) {
-			callback (err);
-			}
-		else {
-			var theList = new Array ();
-			theMedialist.media.forEach (function (item) {
-				theList.push (convertMediaObject (item));
-				});
-			callback (undefined, theList);
-			}
-		});
-	}
-function getPost (accessToken, idSite, idPost, callback) { //9/12/23 by DW
-	const wp = wpcom (accessToken);
-	const site = wp.site (idSite);
-	const post = site.post (idPost);
-	post.get (function (err, thePost) { //9/12/23 by DW
-		if (err) {
-			callback (err);
-			}
-		else {
-			callback (undefined, convertPost (thePost));
-			}
-		});
-	}
-function getObjectFromJsontext (jsontext, callback) {
-	var theObject;
-	try {
-		theObject = JSON.parse (jsontext);
-		}
-	catch (err) {
-		const message = "Can't add or update the post because the JSON text is not valid.";
-		callback ({message});
-		return (undefined);
-		}
-	return (theObject);
-	}
-
-function getSpecialDataFile (token, fname, callback) {
-	getUsername (token, function (err, username) {
-		if (err) {
-			callback (err);
-			}
-		else {
-			const flprivate = true;
-			readUserFile (username, fname, flprivate, 0, 0, function (err, theFile) {
-				if (err) {
+			else {
+				try {
+					const data = JSON.parse (body);
+					callback (undefined, data);
+					}
+				catch (err) {
 					callback (err);
 					}
-				else {
-					var flerror = false;
-					try {
-						theData = JSON.parse (theFile.filecontents);
-						}
-					catch (err) {
-						callback (err);
-						flerror = true;
-						}
-					if (!flerror) {
-						callback (undefined, theData);
-						}
-					}
-				});
-			}
-		});
-	}
-function emojiProcess (s) {
-	function addSpan (code, name) {
-		return ("<span class=\"spEmoji\">" + code + "</span>");
-		}
-	return (emoji.emojify (s, undefined, addSpan));
-	}
-function markdownProcess (s) {
-	return (s);
-	}
-function processPostText (token, theText, callback) {
-	theText = emojiProcess (theText); //4/15/24 by DW
-	theText = markdownProcess (theText); //4/18/24 by DW
-	getSpecialDataFile (token, "glossary.json", function (err, theGlossary) {
-		if (!err) {
-			theText = utils.multipleReplaceAll (theText, theGlossary, false);
-			}
-		callback (undefined, theText);
-		});
-	}
-
-function addPost (accessToken, idSite, jsontext, callback) { //8/29/23 by DW
-	const jstruct = getObjectFromJsontext (jsontext, callback);
-	if (jstruct === undefined) {
-		return;
-		}
-	
-	const wp = wpcom (accessToken);
-	const site = wp.site (idSite);
-	
-	processPostText (accessToken, jstruct.content, function (err, theProcessedContent) { //5/13/24 by DW
-		const thePost = {
-			title: jstruct.title,
-			content: theProcessedContent, //5/13/24 by DW
-			status: "publish",
-			date: new Date ().toGMTString (),
-			format: "standard",
-			comment_status: "open"
-			};
-		console.log ("addPost: thePost == " + utils.jsonStringify (thePost)); //5/8/24 by DW
-		site.addPost (thePost, function (err, theNewPost) {
-			if (err) {
-				console.log ("addPost: err.message == " + err.message); //5/8/24 by DW
-				callback (err);
-				}
-			else {
-				var theConvertedPost = convertPost (theNewPost); //5/17/24 by DW
-				theConvertedPost.whenPublished = new Date ();
-				console.log ("addPost: theConvertedPost == " + utils.jsonStringify (theConvertedPost)); //5/8/24 by DW
-				callback (undefined, theConvertedPost);
 				}
 			});
-		});
-	}
-function updatePost (accessToken, idSite, idPost, jsontext, callback) { //8/29/23 by DW
-	const jstruct = getObjectFromJsontext (jsontext, callback);
-	if (jstruct === undefined) {
-		return;
 		}
-	const wp = wpcom (accessToken);
-	const site = wp.site (idSite);
-	const post = site.post (idPost);
-	
-	processPostText (accessToken, jstruct.content, function (err, theProcessedContent) {
-		const thePost = {
-			title: jstruct.title,
-			content: theProcessedContent,
-			status: "publish"
-			};
-		post.update (thePost, function (err, theNewPost) {
-			if (err) {
-				callback (err);
+	function convertDate (theDate) {
+		if (theDate === undefined) {
+			return (undefined);
+			}
+		else {
+			const d = new Date (theDate);
+			if (isNaN (d)) {
+				return (undefined);
 				}
-			else {
-				var theConvertedPost = convertPost (theNewPost); //5/17/24 by DW
-				theConvertedPost.whenPublished = new Date ();
-				console.log ("updatePost: theConvertedPost == " + utils.jsonStringify (theConvertedPost)); //5/8/24 by DW
-				callback (undefined, theConvertedPost);
+			return (d);
+			}
+		}
+	function convertString (theString) {
+		if (theString === undefined) {
+			return (undefined);
+			}
+		if (theString.length == 0) {
+			return (undefined);
+			}
+		else {
+			return (s);
+			}
+		}
+	function convertPost (item) { //convert a post received from WordPress to the struct defined by our API -- 9/12/23 by DW
+		function getCatArray () {
+			var catarray = new Array ();
+			for (var x in item.categories) {
+				catarray.push (x);
+				}
+			return (catarray);
+			}
+		function getCatstring () {
+			var catstring = "";
+			for (var x in item.categories) {
+				catstring += "," + x;
+				}
+			if (catstring.length > 0) {
+				catstring = utils.stringDelete (catstring, 1, 1);
+				}
+			return (catstring);
+			}
+		return ({
+			idPost: item.ID,
+			idSite: item.site_ID,
+			title: item.title,
+			guid: item.guid,
+			content: item.content,
+			type: item.type,
+			categories: getCatArray (),
+			url: item.URL,
+			urlShort: item.short_URL,
+			whenCreated: convertDate (item.date),
+			author: {
+				id: item.author.ID,
+				username: item.author.login,
+				name: item.author.name
 				}
 			});
-		});
-	}
-function deletePost (accessToken, idSite, idPost, callback) { //9/4/23 by DW
-	const wp = wpcom (accessToken);
-	const site = wp.site (idSite);
-	const post = site.post (idPost);
-	post.delete (function (err, theDeletedPost) {
-		if (err) {
-			callback (err);
-			}
-		else {
-			callback (undefined, convertPost (theDeletedPost));
-			}
-		});
-	}
-function getSubscriptions (accessToken, callback) { //9/5/23 by DW
-	const wp = wpcom (accessToken);
-	wp.req.get ("/read/following/mine", {}, function (err, theSubscriptionList) {
-		if (err) {
-			callback (err);
-			}
-		else {
-			var theList = new Array ();
-			theSubscriptionList.subscriptions.forEach (function (item) {
-				theList.push (convertSubscription (item));
-				});
-			callback (undefined, theList);
-			}
-		});
-	}
-function getUsername (token, callback) { //3/24/24 by DW
-	if (utils.secondsSince (whenLastUsernameCacheStart) > config.ctUsernameCacheSecs) {
-		usernameCache = new Object ();
 		}
-	if (usernameCache [token] !== undefined) {
-		callback (undefined, usernameCache [token]);
+	function convertUser (theUser) {
+		return ({
+			idUser: theUser.ID,
+			name: theUser.display_name,
+			username: theUser.username,
+			email: theUser.email,
+			idPrimaryBlog: theUser.primary_blog,
+			urlPrimaryBlog: theUser.primary_blog_url,
+			whenStarted: convertDate (theUser.date),
+			ctSites: theUser.site_count
+			});
 		}
-	else {
-		getUserInfo (token, function (err, theUser) {
+	function convertSite (theSite) {
+		return ({
+			idSite: theSite.ID,
+			urlSite: theSite.URL,
+			description: theSite.description,
+			name: theSite.name,
+			whenCreated: convertDate (theSite.options.created_at),
+			ctPosts: theSite.options.post_count
+			});
+		}
+	function convertSubscription (theSubscription) {
+		return ({
+			id: theSubscription.ID,
+			idWpBlog: (theSubscription.blog_ID == "0") ? undefined : theSubscription.blog_ID,
+			feedUrl: theSubscription.URL, 
+			whenSubscribed: convertDate (theSubscription.date_subscribed)
+			});
+		}
+	function convertMediaObject (theObject) {
+		return ({
+			id: theObject.ID,
+			url: theObject.URL,
+			whenCreated: theObject.date,
+			idPost: theObject.post_ID,
+			idAuthor: theObject.author_ID,
+			type: theObject.mime_type,
+			title: theObject.title,
+			description: convertString (theObject.description),
+			alt: convertString (theObject.alt),
+			height: theObject.height,
+			width: theObject.width
+			});
+		}
+	function getUserInfo (accessToken, callback) { //8/26/23 by DW
+		const wp = wpcom (accessToken);
+		wp.me ().get (function (err, theInfo) {
 			if (err) {
 				callback (err);
 				}
 			else {
-				const username = theUser.username;
-				usernameCache [token] = username;
-				callback (undefined, username);
+				callback (undefined, convertUser (theInfo));
 				}
 			});
 		}
-	}
-
-function startStorage (theDatabase, callback) { //3/24/24 by DW
-	function getMysqlVersion (callback) {
-		const sqltext = "select version () as version;";
-		davesql.runSqltext (sqltext, function (err, result) {
-			var theVersion = undefined;
-			if (!err) {
-				if (result.length > 0) {
-					theVersion = result [0].version;
-					console.log ("getMysqlVersion: theVersion == " + theVersion);
-					}
-				}
-			callback (undefined, theVersion);
-			});
-		}
-	davesql.start (config.database, function () {
-		getMysqlVersion (function (err, mysqlVersion) { //11/18/23 by DW, 2/1/24; 11:22:16 AM by DW
-			config.flStorageEnabled = true;
-			config.mysqlVersion = mysqlVersion;
-			if (callback !== undefined) {
-				callback (undefined, config);
-				}
-			});
-		});
-	}
-function convertStorageItem (item) { //5/16/24 by DW -- convert database item to the item struct defined by the API
-	if (item.idSite == 0) {
-		item.idSite = undefined;
-		}
-	if (item.idPost == 0) {
-		item.idPost = undefined;
-		}
-	return (item);
-	}
-function readUserFile (username, relpath, flprivate, idsite, idpost, callback) {
-	const privateval = (flprivate) ? 1 : 0;
-	var sqltext = "select * from wpstorage where username = " + davesql.encode (username) + " and relpath = " + davesql.encode (relpath) + " and flprivate = " + davesql.encode (privateval)
-	if (idsite !== undefined) { //4/5/24 by DW
-		sqltext += " and idsite = " + davesql.encode (idsite);
-		}
-	if (idpost !== undefined) {
-		sqltext += " and idpost = " + davesql.encode (idpost);
-		}
-	sqltext += ";";
-	
-	davesql.runSqltext (sqltext, function (err, result) {
-		if (err) {
-			callback (err);
-			}
-		else {
-			if (result.length == 0) {
-				const message = "Can't find the file " + relpath + " for the user " + username + ".";
-				callback ({message});
+	function getUserSites (accessToken, callback) { //8/26/23 by DW
+		const wp = wpcom (accessToken);
+		wp.me ().sites (function (err, theSiteList) {
+			if (err) {
+				callback (err);
 				}
 			else {
-				const theFileRec = result [0];
-				callback (undefined, theFileRec);
+				var theList = new Array ();
+				theSiteList.sites.forEach (function (item) {
+					theList.push (convertSite (item));
+					});
+				callback (undefined, theList);
 				}
+			});
+		}
+	function getSitePosts (accessToken, idSite, callback) { //9/12/23 by DW
+		const wp = wpcom (accessToken);
+		const site = wp.site (idSite);
+		site.postsList (function (err, thePosts) { //9/12/23 by DW
+			if (err) {
+				callback (err);
+				}
+			else {
+				var theList = new Array ();
+				thePosts.posts.forEach (function (item) {
+					theList.push (convertPost (item));
+					});
+				callback (undefined, theList);
+				}
+			});
+		}
+	function getSiteUsers (accessToken, idSite, callback) { //8/28/23 by DW
+		const wp = wpcom (accessToken);
+		const site = wp.site (idSite);
+		site.usersList (function (err, theUsers) {
+			if (err) {
+				callback (err);
+				}
+			else {
+				var theList = new Array ();
+				theUsers.users.forEach (function (item) {
+					theList.push (convertUser (item));
+					});
+				callback (undefined, theList);
+				}
+			});
+		}
+	function getSiteInfo (accessToken, idSite, callback) { //8/29/23 by DW
+		const wp = wpcom (accessToken);
+		const site = wp.site (idSite);
+		site.get (function (err, theInfo) {
+			if (err) {
+				callback (err);
+				}
+			else {
+				callback (undefined, convertSite (theInfo));
+				}
+			});
+		}
+	function getSiteMedialist (accessToken, idSite, callback) { //8/29/23 by DW
+		const wp = wpcom (accessToken);
+		const site = wp.site (idSite);
+		site.mediaList (function (err, theMedialist) {
+			if (err) {
+				callback (err);
+				}
+			else {
+				var theList = new Array ();
+				theMedialist.media.forEach (function (item) {
+					theList.push (convertMediaObject (item));
+					});
+				callback (undefined, theList);
+				}
+			});
+		}
+	function getPost (accessToken, idSite, idPost, callback) { //9/12/23 by DW
+		const wp = wpcom (accessToken);
+		const site = wp.site (idSite);
+		const post = site.post (idPost);
+		post.get (function (err, thePost) { //9/12/23 by DW
+			if (err) {
+				callback (err);
+				}
+			else {
+				callback (undefined, convertPost (thePost));
+				}
+			});
+		}
+	function getObjectFromJsontext (jsontext, callback) {
+		var theObject;
+		try {
+			theObject = JSON.parse (jsontext);
 			}
-		});
-	}
-function readWholeFile (token, relpath, flprivate, idsite, idpost, callback) { //3/24/24 by DW
-	getUsername (token, function (err, username) {
-		if (err) {
-			callback (err);
+		catch (err) {
+			const message = "Can't add or update the post because the JSON text is not valid.";
+			callback ({message});
+			return (undefined);
 			}
-		else {
-			readUserFile (username, relpath, flprivate, idsite, idpost, callback);
-			}
-		});
-	}
-function writeWholeFile (token, relpath, type, flprivate, filecontents, idsite, idpost, iddraft, callback) { 
-	const now = new Date ();
-	getUsername (token, function (err, username) {
-		if (err) {
-			callback (err);
-			} 
-		else {
-			function getEncodedValues (jstruct) {
-				var values = davesql.encodeValues (jstruct);
-				values = utils.stringMid (values, 1, values.length - 1); //remove extraneous semicolon at the end
-				return (values);
+		return (theObject);
+		}
+//storage
+	var usernameCache = new Object ();
+	var whenLastUsernameCacheStart = new Date ();
+	
+	function getSpecialDataFile (token, fname, callback) {
+		getUsername (token, function (err, username) {
+			if (err) {
+				callback (err);
 				}
-			function getValuesForUpdating (theValues) { //this could go into the davesql package
-				var s = "";
-				for (var x in theValues) {
-					if (s.length > 0) {
-						s += ", ";
-						}
-					s += x + "=" + davesql.encode (theValues [x]);
-					}
-				return (s);
-				}
-			function setUrlpublic () { //5/16/24 by DW
-				if (!flprivate) { //5/16/24 by DW
-					if (idsite !== undefined) {
-						fileRec.urlPublic = config.urlPublicUserFiles + username + "/" + idsite + "/" + relpath
-						}
-					}
-				}
-			const privateval = (flprivate) ? 1 : 0;
-			var fileRec = {
-				username, 
-				relpath, 
-				type,
-				flprivate: privateval,
-				filecontents,
-				whenUpdated: now
-				};
-			if (idsite !== undefined) {
-				fileRec.idSite = idsite;
-				}
-			if (idpost !== undefined) {
-				fileRec.idPost = idpost;
-				}
-			
-			if (iddraft !== undefined) { //5/11/24 by DW
-				const sqltext = "update wpstorage set " + getValuesForUpdating (fileRec) + ", ctSaves = ctSaves + 1 where id = " + davesql.encode (iddraft) + ";";
-				davesql.runSqltext (sqltext, function (err, result) {
+			else {
+				const flprivate = true;
+				readUserFile (username, fname, flprivate, 0, 0, function (err, theFile) {
 					if (err) {
 						callback (err);
 						}
 					else {
-						if (result.affectedRows == 0) {
-							const message = "Can't update the file because there is no record with id == " + iddraft;
-							callback ({message});
+						var flerror = false;
+						try {
+							theData = JSON.parse (theFile.filecontents);
+							}
+						catch (err) {
+							callback (err);
+							flerror = true;
+							}
+						if (!flerror) {
+							callback (undefined, theData);
+							}
+						}
+					});
+				}
+			});
+		}
+	function emojiProcess (s) {
+		function addSpan (code, name) {
+			return ("<span class=\"spEmoji\">" + code + "</span>");
+			}
+		return (emoji.emojify (s, undefined, addSpan));
+		}
+	function markdownProcess (s) {
+		return (s);
+		}
+	function processPostText (token, theText, callback) {
+		theText = emojiProcess (theText); //4/15/24 by DW
+		theText = markdownProcess (theText); //4/18/24 by DW
+		getSpecialDataFile (token, "glossary.json", function (err, theGlossary) {
+			if (!err) {
+				theText = utils.multipleReplaceAll (theText, theGlossary, false);
+				}
+			callback (undefined, theText);
+			});
+		}
+	
+	function addPost (accessToken, idSite, jsontext, callback) { //8/29/23 by DW
+		const jstruct = getObjectFromJsontext (jsontext, callback);
+		if (jstruct === undefined) {
+			return;
+			}
+		
+		const wp = wpcom (accessToken);
+		const site = wp.site (idSite);
+		
+		processPostText (accessToken, jstruct.content, function (err, theProcessedContent) { //5/13/24 by DW
+			const thePost = {
+				title: jstruct.title,
+				content: theProcessedContent, //5/13/24 by DW
+				status: "publish",
+				date: new Date ().toGMTString (),
+				format: "standard",
+				comment_status: "open"
+				};
+			console.log ("addPost: thePost == " + utils.jsonStringify (thePost)); //5/8/24 by DW
+			site.addPost (thePost, function (err, theNewPost) {
+				if (err) {
+					console.log ("addPost: err.message == " + err.message); //5/8/24 by DW
+					callback (err);
+					}
+				else {
+					var theConvertedPost = convertPost (theNewPost); //5/17/24 by DW
+					theConvertedPost.whenPublished = new Date ();
+					console.log ("addPost: theConvertedPost == " + utils.jsonStringify (theConvertedPost)); //5/8/24 by DW
+					callback (undefined, theConvertedPost);
+					}
+				});
+			});
+		}
+	function updatePost (accessToken, idSite, idPost, jsontext, callback) { //8/29/23 by DW
+		const jstruct = getObjectFromJsontext (jsontext, callback);
+		if (jstruct === undefined) {
+			return;
+			}
+		const wp = wpcom (accessToken);
+		const site = wp.site (idSite);
+		const post = site.post (idPost);
+		
+		processPostText (accessToken, jstruct.content, function (err, theProcessedContent) {
+			const thePost = {
+				title: jstruct.title,
+				content: theProcessedContent,
+				status: "publish"
+				};
+			post.update (thePost, function (err, theNewPost) {
+				if (err) {
+					callback (err);
+					}
+				else {
+					var theConvertedPost = convertPost (theNewPost); //5/17/24 by DW
+					theConvertedPost.whenPublished = new Date ();
+					console.log ("updatePost: theConvertedPost == " + utils.jsonStringify (theConvertedPost)); //5/8/24 by DW
+					callback (undefined, theConvertedPost);
+					}
+				});
+			});
+		}
+	function deletePost (accessToken, idSite, idPost, callback) { //9/4/23 by DW
+		const wp = wpcom (accessToken);
+		const site = wp.site (idSite);
+		const post = site.post (idPost);
+		post.delete (function (err, theDeletedPost) {
+			if (err) {
+				callback (err);
+				}
+			else {
+				callback (undefined, convertPost (theDeletedPost));
+				}
+			});
+		}
+	function getSubscriptions (accessToken, callback) { //9/5/23 by DW
+		const wp = wpcom (accessToken);
+		wp.req.get ("/read/following/mine", {}, function (err, theSubscriptionList) {
+			if (err) {
+				callback (err);
+				}
+			else {
+				var theList = new Array ();
+				theSubscriptionList.subscriptions.forEach (function (item) {
+					theList.push (convertSubscription (item));
+					});
+				callback (undefined, theList);
+				}
+			});
+		}
+	function getUsername (token, callback) { //3/24/24 by DW
+		if (utils.secondsSince (whenLastUsernameCacheStart) > config.ctUsernameCacheSecs) {
+			usernameCache = new Object ();
+			}
+		if (usernameCache [token] !== undefined) {
+			callback (undefined, usernameCache [token]);
+			}
+		else {
+			getUserInfo (token, function (err, theUser) {
+				if (err) {
+					callback (err);
+					}
+				else {
+					const username = theUser.username;
+					usernameCache [token] = username;
+					callback (undefined, username);
+					}
+				});
+			}
+		}
+	
+	function startStorage (theDatabase, callback) { //3/24/24 by DW
+		function getMysqlVersion (callback) {
+			const sqltext = "select version () as version;";
+			davesql.runSqltext (sqltext, function (err, result) {
+				var theVersion = undefined;
+				if (!err) {
+					if (result.length > 0) {
+						theVersion = result [0].version;
+						console.log ("getMysqlVersion: theVersion == " + theVersion);
+						}
+					}
+				callback (undefined, theVersion);
+				});
+			}
+		davesql.start (config.database, function () {
+			getMysqlVersion (function (err, mysqlVersion) { //11/18/23 by DW, 2/1/24; 11:22:16 AM by DW
+				config.flStorageEnabled = true;
+				config.mysqlVersion = mysqlVersion;
+				if (callback !== undefined) {
+					callback (undefined, config);
+					}
+				});
+			});
+		}
+	function convertStorageItem (item) { //5/16/24 by DW -- convert database item to the item struct defined by the API
+		if (item.idSite == 0) {
+			item.idSite = undefined;
+			}
+		if (item.idPost == 0) {
+			item.idPost = undefined;
+			}
+		return (item);
+		}
+	function readUserFile (username, relpath, flprivate, idsite, idpost, callback) {
+		const privateval = (flprivate) ? 1 : 0;
+		var sqltext = "select * from wpstorage where username = " + davesql.encode (username) + " and relpath = " + davesql.encode (relpath) + " and flprivate = " + davesql.encode (privateval)
+		if (idsite !== undefined) { //4/5/24 by DW
+			sqltext += " and idsite = " + davesql.encode (idsite);
+			}
+		if (idpost !== undefined) {
+			sqltext += " and idpost = " + davesql.encode (idpost);
+			}
+		sqltext += ";";
+		
+		davesql.runSqltext (sqltext, function (err, result) {
+			if (err) {
+				callback (err);
+				}
+			else {
+				if (result.length == 0) {
+					const message = "Can't find the file " + relpath + " for the user " + username + ".";
+					callback ({message});
+					}
+				else {
+					const theFileRec = result [0];
+					callback (undefined, theFileRec);
+					}
+				}
+			});
+		}
+	function readWholeFile (token, relpath, flprivate, idsite, idpost, callback) { //3/24/24 by DW
+		getUsername (token, function (err, username) {
+			if (err) {
+				callback (err);
+				}
+			else {
+				readUserFile (username, relpath, flprivate, idsite, idpost, callback);
+				}
+			});
+		}
+	function writeWholeFile (token, relpath, type, flprivate, filecontents, idsite, idpost, iddraft, callback) { 
+		const now = new Date ();
+		getUsername (token, function (err, username) {
+			if (err) {
+				callback (err);
+				} 
+			else {
+				function getEncodedValues (jstruct) {
+					var values = davesql.encodeValues (jstruct);
+					values = utils.stringMid (values, 1, values.length - 1); //remove extraneous semicolon at the end
+					return (values);
+					}
+				function getValuesForUpdating (theValues) { //this could go into the davesql package
+					var s = "";
+					for (var x in theValues) {
+						if (s.length > 0) {
+							s += ", ";
+							}
+						s += x + "=" + davesql.encode (theValues [x]);
+						}
+					return (s);
+					}
+				function setUrlpublic () { //5/16/24 by DW
+					if (!flprivate) { //5/16/24 by DW
+						if (idsite !== undefined) {
+							fileRec.urlPublic = config.urlPublicUserFiles + username + "/" + idsite + "/" + relpath
+							}
+						}
+					}
+				const privateval = (flprivate) ? 1 : 0;
+				var fileRec = {
+					username, 
+					relpath, 
+					type,
+					flprivate: privateval,
+					filecontents,
+					whenUpdated: now
+					};
+				if (idsite !== undefined) {
+					fileRec.idSite = idsite;
+					}
+				if (idpost !== undefined) {
+					fileRec.idPost = idpost;
+					}
+				
+				if (iddraft !== undefined) { //5/11/24 by DW
+					const sqltext = "update wpstorage set " + getValuesForUpdating (fileRec) + ", ctSaves = ctSaves + 1 where id = " + davesql.encode (iddraft) + ";";
+					davesql.runSqltext (sqltext, function (err, result) {
+						if (err) {
+							callback (err);
 							}
 						else {
-							fileRec.id = iddraft;
+							if (result.affectedRows == 0) {
+								const message = "Can't update the file because there is no record with id == " + iddraft;
+								callback ({message});
+								}
+							else {
+								fileRec.id = iddraft;
+								setUrlpublic (); //5/16/24 by DW
+								callback (undefined, fileRec);
+								}
+							}
+						});
+					}
+				else {
+					fileRec.whenCreated = now;
+					fileRec.ctSaves = 1;
+					const onDuplicatePart = "on duplicate key update type = values (type), filecontents = values (filecontents), whenUpdated = " + davesql.encode (now) + ", ctSaves = ctSaves + 1";
+					const sqltext = "insert into wpstorage " + getEncodedValues (fileRec) + " " + onDuplicatePart + ";";
+					davesql.runSqltext (sqltext, function (err, result) {
+						if (err) {
+							callback (err);
+							}
+						else {
+							fileRec.id = result.insertId;
 							setUrlpublic (); //5/16/24 by DW
 							callback (undefined, fileRec);
 							}
-						}
-					});
+						});
+					}
+				}
+			});
+		}
+	function writeUniqueFile (token, relpath, type, flprivate, filecontents, idsite, idpost, callback) { //5/12/24 by DW
+		readWholeFile (token, relpath, flprivate, idsite, idpost, function (err, theOriginalFile) {
+			const id = (err) ? undefined : theOriginalFile.id; //if id is undefined, treat it as a new file
+			writeWholeFile (token, relpath, type, flprivate, filecontents, idsite, idpost, id, callback);
+			});
+		}
+	function deleteFile (token, relpath, flprivate, callback) { //3/26/24 by DW
+		const now = new Date ();
+		getUsername (token, function (err, username) {
+			if (err) {
+				callback (err);
 				}
 			else {
-				fileRec.whenCreated = now;
-				fileRec.ctSaves = 1;
-				const onDuplicatePart = "on duplicate key update type = values (type), filecontents = values (filecontents), whenUpdated = " + davesql.encode (now) + ", ctSaves = ctSaves + 1";
-				const sqltext = "insert into wpstorage " + getEncodedValues (fileRec) + " " + onDuplicatePart + ";";
+				const privateval = (flprivate) ? 1 : 0;
+				const sqltext = "delete from wpstorage where username = " + davesql.encode (username) + " and relpath = " + davesql.encode (relpath) + " and flprivate = " + davesql.encode (privateval) + ";";
 				davesql.runSqltext (sqltext, function (err, result) {
 					if (err) {
 						callback (err);
 						}
 					else {
-						fileRec.id = result.insertId;
-						setUrlpublic (); //5/16/24 by DW
-						callback (undefined, fileRec);
+						if (result.length == 0) {
+							const message = "Can't find the file " + relpath + " for the user " + username + ".";
+							callback ({message});
+							}
+						else {
+							callback (undefined, true);
+							}
 						}
 					});
 				}
-			}
-		});
-	}
-function writeUniqueFile (token, relpath, type, flprivate, filecontents, idsite, idpost, callback) { //5/12/24 by DW
-	readWholeFile (token, relpath, flprivate, idsite, idpost, function (err, theOriginalFile) {
-		const id = (err) ? undefined : theOriginalFile.id; //if id is undefined, treat it as a new file
-		writeWholeFile (token, relpath, type, flprivate, filecontents, idsite, idpost, id, callback);
-		});
-	}
-function deleteFile (token, relpath, flprivate, callback) { //3/26/24 by DW
-	const now = new Date ();
-	getUsername (token, function (err, username) {
-		if (err) {
-			callback (err);
-			}
-		else {
-			const privateval = (flprivate) ? 1 : 0;
-			const sqltext = "delete from wpstorage where username = " + davesql.encode (username) + " and relpath = " + davesql.encode (relpath) + " and flprivate = " + davesql.encode (privateval) + ";";
-			davesql.runSqltext (sqltext, function (err, result) {
-				if (err) {
-					callback (err);
+			});
+		}
+	function getRecentUserDrafts (token, maxCtDraftsParam, idSiteParam, callback) { //4/27/24 by DW
+		const now = new Date ();
+		getUsername (token, function (err, username) {
+			if (err) {
+				callback (err);
+				}
+			else {
+				var sitepart = "";
+				if (idSiteParam !== undefined) {
+					sitepart = " and idsite = " + davesql.encode (idSiteParam) + " ";
 					}
-				else {
-					if (result.length == 0) {
-						const message = "Can't find the file " + relpath + " for the user " + username + ".";
-						callback ({message});
+				const maxCtDrafts = Math.min (config.maxCtDrafts, maxCtDraftsParam);
+				const sqltext = "select * from wpstorage where relpath = 'draft.json' " +  sitepart + "order by whenUpdated desc limit " + maxCtDrafts + ";";
+				davesql.runSqltext (sqltext, function (err, result) {
+					if (err) {
+						callback (err);
 						}
 					else {
-						callback (undefined, true);
+						var theArray = new Array ();
+						result.forEach (function (item) {
+							const jstruct = JSON.parse (item.filecontents);
+							
+							jstruct.idDraft = item.id; //copy data from database for use in the app -- 5/12/24 by DW
+							jstruct.whenCreated = new Date (item.whenCreated);
+							jstruct.whenUpdated = new Date (item.whenUpdated); 
+							jstruct.ctSaves = item.ctSaves; 
+							
+							theArray.push (jstruct);
+							});
+						callback (undefined, theArray);
+						}
+					});
+				}
+			});
+		}
+	function getUserFileInfo (token, maxFiles, callback) { //5/16/24 by DW
+		getUsername (token, function (err, username) { 
+			if (err) {
+				callback (err);
+				}
+			else {
+				const maxCtFiles = Math.min (config.maxCtFiles, maxFiles);
+				const sqltext = "select * from wpstorage where username = " + davesql.encode (username) + " order by id asc limit " + maxCtFiles + ";";
+				davesql.runSqltext (sqltext, function (err, result) {
+					if (err) {
+						callback (err);
+						}
+					else {
+						var theArray = new Array ();
+						result.forEach (function (item) {
+							theArray.push (convertStorageItem (item));
+							});
+						callback (undefined, theArray);
+						}
+					});
+				}
+			});
+		}
+//sockets -- 5/24/24 by DW
+	var theWsServer = undefined;
+	
+	function getWsProtocol () { //2/8/23 by DW
+		const protocol = (utils.getBoolean (config.flSecureWebsocket)) ? "wss://" : "ws://";
+		return (protocol);
+		}
+	function notifySocketSubscribers (verb, payload, flPayloadIsString, callbackToQualify) {
+		if (theWsServer !== undefined) {
+			var ctUpdates = 0, now = new Date (), ctTotalSockets = 0;
+			if (payload !== undefined) { 
+				if (!flPayloadIsString) {
+					payload = utils.jsonStringify (payload);
+					}
+				}
+			theWsServer.connections.forEach (function (conn, ix) {
+				ctTotalSockets++;
+				if (conn.appData !== undefined) { //it's one of ours
+					var flnotify = true;
+					if (callbackToQualify !== undefined) {
+						flnotify = callbackToQualify (conn);
+						}
+					if (flnotify) {
+						try {
+							conn.sendText (verb + "\r" + payload);
+							conn.appData.whenLastUpdate = now;
+							conn.appData.ctUpdates++;
+							ctUpdates++;
+							}
+						catch (err) {
+							console.log ("notifySocketSubscribers: socket #" + i + ": error updating");
+							}
 						}
 					}
 				});
 			}
-		});
-	}
-function getRecentUserDrafts (token, maxCtDraftsParam, idSiteParam, callback) { //4/27/24 by DW
-	const now = new Date ();
-	getUsername (token, function (err, username) {
-		if (err) {
-			callback (err);
+		}
+	function checkWebSocketCalls () { //expire timed-out calls
+		}
+	function countOpenSockets () {
+		if (theWsServer === undefined) { //12/18/15 by DW
+			return (0);
 			}
 		else {
-			var sitepart = "";
-			if (idSiteParam !== undefined) {
-				sitepart = " and idsite = " + davesql.encode (idSiteParam) + " ";
+			return (theWsServer.connections.length);
+			}
+		}
+	function getOpenSocketsArray () { //return an array with data about open sockets
+		var theArray = new Array ();
+		theWsServer.connections.forEach (function (conn, ix) {
+			if (conn.appData !== undefined) { //it's one of ours
+				theArray.push ({
+					arrayIndex: ix,
+					lastVerb: conn.appData.lastVerb,
+					urlToWatch: conn.appData.urlToWatch,
+					domain: conn.appData.domain,
+					whenStarted: utils.viewDate (conn.appData.whenStarted),
+					whenLastUpdate: utils.viewDate (conn.appData.whenLastUpdate)
+					});
 				}
-			const maxCtDrafts = Math.min (config.maxCtDrafts, maxCtDraftsParam);
-			const sqltext = "select * from wpstorage where relpath = 'draft.json' " +  sitepart + "order by whenUpdated desc limit " + maxCtDrafts + ";";
-			davesql.runSqltext (sqltext, function (err, result) {
-				if (err) {
-					callback (err);
-					}
-				else {
-					var theArray = new Array ();
-					result.forEach (function (item) {
-						const jstruct = JSON.parse (item.filecontents);
-						
-						jstruct.idDraft = item.id; //copy data from database for use in the app -- 5/12/24 by DW
-						jstruct.whenCreated = new Date (item.whenCreated);
-						jstruct.whenUpdated = new Date (item.whenUpdated); 
-						jstruct.ctSaves = item.ctSaves; 
-						
-						theArray.push (jstruct);
-						});
-					callback (undefined, theArray);
+			});
+		return (theArray);
+		}
+	function handleWebSocketConnection (conn) { 
+		
+		
+		var now = new Date ();
+		conn.appData = { //initialize
+			whenStarted: now,
+			ctUpdates: 0,
+			whenLastUpdate: new Date (0),
+			lastVerb: undefined,
+			urlToWatch: undefined,
+			domain: undefined
+			};
+		
+		function logToConsole (conn, verb, value) {
+			}
+		
+		function kissOtherLogonsGoodnight (username, theNewConnection) {
+			theWsServer.connections.forEach (function (conn, ix) {
+				if (conn.appData !== undefined) { //it's one of ours
+					if (conn != theNewConnection) { //it's not the new one
+						if (conn.appData.wordpressUserInfo.username == username) {
+							console.log ("kissOtherLogonsGoodnight: \"" + conn.appData.wordpressUserInfo.username + "\" = \"" + username + "\""); 
+							conn.sendText ("goodnight");
+							}
+						}
 					}
 				});
 			}
-		});
-	}
-function getUserFileInfo (token, maxFiles, callback) { //5/16/24 by DW
-	getUsername (token, function (err, username) { 
-		if (err) {
-			callback (err);
-			}
-		else {
-			const maxCtFiles = Math.min (config.maxCtFiles, maxFiles);
-			const sqltext = "select * from wpstorage where username = " + davesql.encode (username) + " order by id asc limit " + maxCtFiles + ";";
-			davesql.runSqltext (sqltext, function (err, result) {
-				if (err) {
-					callback (err);
+		
+		conn.on ("text", function (s) {
+			var words = s.split (" ");
+			if (words.length > 1) { //new protocol as of 11/29/15 by DW
+				conn.appData.whenLastUpdate = now;
+				conn.appData.lastVerb = words [0];
+				switch (words [0]) {
+					case "greetings": 
+						let accessToken = utils.trimWhitespace (words [1]);
+						getUserInfo (accessToken, function (err, theUserInfo) {
+							if (!err) {
+								conn.appData.accessToken = accessToken;
+								conn.appData.wordpressUserInfo = theUserInfo;
+								console.log ("handleWebSocketConnection: conn.appData == " + utils.jsonStringify (conn.appData));
+								kissOtherLogonsGoodnight (theUserInfo.username, conn);
+								}
+							});
+						break;
+					
 					}
-				else {
-					var theArray = new Array ();
-					result.forEach (function (item) {
-						theArray.push (convertStorageItem (item));
-						});
-					callback (undefined, theArray);
-					}
-				});
+				}
+			else {
+				conn.close ();
+				}
+			});
+		conn.on ("close", function () {
+			});
+		conn.on ("error", function (err) {
+			});
+		}
+	function webSocketStartup () {
+		console.log ("webSocketStartup: config.flWebsocketEnabled == " + config.flWebsocketEnabled);
+		if (config.flWebsocketEnabled) {
+			try {
+				theWsServer = websocket.createServer (handleWebSocketConnection);
+				console.log ("webSocketStartup: config.websocketPort == " + config.websocketPort);
+				theWsServer.listen (config.websocketPort);
+				}
+			catch (err) {
+				console.log ("webSocketStartup: err.message == " + err.message);
+				}
 			}
-		});
-	}
+		}
 
 function handleHttpRequest (theRequest, options = new Object ()) { //returns true if request was handled
 	const params = theRequest.params;
@@ -812,7 +952,8 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 		}
 	function returnServerHomePage () { //3/25/24 by DW
 		const pagetable = {
-			urlServer: config.urlServer
+			urlServer: config.urlServer,
+			urlSocketServer: config.urlSocketServer //5/25/24 by DW
 			};
 		function getTemplateText (callback) {
 			request (config.urlServerHomePageSource, function (err, response, templatetext) {
@@ -1082,6 +1223,7 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 	}
 
 function start (options, callback) {
+	console.log ("wpIdentity.start: options == " + utils.jsonStringify (options));
 	if (options !== undefined) {
 		for (var x in options) {
 			if (options [x] !== undefined) {
@@ -1092,6 +1234,7 @@ function start (options, callback) {
 			startStorage (options.database, function () {
 				});
 			}
+		webSocketStartup (); //5/24/24 by DW
 		if (callback !== undefined) {
 			callback ();
 			}

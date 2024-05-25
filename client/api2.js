@@ -6,7 +6,11 @@ function wordpress (userOptions, callback) {
 	var options = {
 		serverAddress: undefined,
 		flMarkdownProcess: true,
-		maxCtUserDraftFiles: 100
+		maxCtUserDraftFiles: 100,
+		flWebsocketEnabled: true, //5/24/24 by DW
+		urlChatLogSocket: "ws://localhost:1622/",
+		flWatchSocketForOtherCopies: true,
+		goodnightDialogMsg: "WordLand is running in another tab. You must reload this one, or -- you can safely close it."
 		};
 	if (userOptions !== undefined) { //allow caller to override defaults
 		for (x in userOptions) {
@@ -276,6 +280,53 @@ function wordpress (userOptions, callback) {
 		wpServerPost ("wordpresswriteuniquefile", params, true, filedata, callback);
 		}
 	
+	function wsConnectUserToServer () { //5/24/24 by DW
+		var flGoodnightDialogShowing = false; 
+		if (options.flWebsocketEnabled) { //2/8/23 by DW
+			var mySocket = undefined;
+			function handleGoodnightMessage () {
+				if (options.flWatchSocketForOtherCopies) { //12/20/21 by DW
+					if (!flGoodnightDialogShowing) {
+						flGoodnightDialogShowing = true;
+						mySocket.close (1000, "Received goodnight message."); //1000 is the code for normal closure
+						alertDialog (options.goodnightDialogMsg, function () {
+							location.reload (true);
+							});
+						}
+					}
+				}
+			function checkConnection () {
+				if ((mySocket === undefined) && (!flGoodnightDialogShowing)) { //5/25/24 by  DW -- don't reopen socket after being told to go away
+					mySocket = new WebSocket (options.urlChatLogSocket); 
+					mySocket.onopen = function (evt) {
+						if (userIsSignedIn ()) { //2/8/23 by DW
+							const msg = "greetings " + wordpressMemory.accessToken;
+							console.log ("wsConnectToServer: msg == " + msg);
+							mySocket.send (msg);
+							}
+						};
+					mySocket.onmessage = function (evt) {
+						if (evt.data !== undefined) { //no error
+							console.log ("wsConnectToServer: evt.data == " + evt.data);
+							switch (evt.data) {
+								case "goodnight":
+									handleGoodnightMessage (); 
+									break;
+								}
+							}
+						};
+					mySocket.onclose = function (evt) {
+						mySocket = undefined;
+						};
+					mySocket.onerror = function (evt) {
+						console.log ("wsConnectToServer: socket received an error.");
+						};
+					}
+				}
+			self.setInterval (checkConnection, 1000);
+			}
+		}
+	
 	this.getUserInfo = function (callback) {
 		callback (undefined, wordpressMemory.userinfo);
 		}
@@ -427,6 +478,7 @@ function wordpress (userOptions, callback) {
 		if (userIsSignedIn ()) {
 			initSitelist (function (err) {
 				initUserInfo (function (err) {
+					wsConnectUserToServer (); //5/24/24 by DW
 					callback ();
 					});
 				});

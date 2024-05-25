@@ -1,3 +1,7 @@
+#### 5/25/24; 10:36:42 AM by DW
+
+Added websockets support and goodnight kisses. 
+
 #### 5/17/24; 4:55:01 PM by DW
 
 Added a whenPublished property to the struct returned by addPost and updatePost. 
