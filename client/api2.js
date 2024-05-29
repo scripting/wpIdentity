@@ -279,6 +279,12 @@ function wordpress (userOptions, callback) {
 		
 		wpServerPost ("wordpresswriteuniquefile", params, true, filedata, callback);
 		}
+	function readDraft (id, callback) { //5/29/24 by DW
+		wpServerCall ("wordpressreaddraft", {id}, true, callback);
+		}
+	function deleteDraft (id, callback) { //5/29/24 by DW
+		wpServerCall ("wordpressdeletedraft", {id}, true, callback);
+		}
 	
 	function wsConnectUserToServer () { //5/24/24 by DW
 		var flGoodnightDialogShowing = false; 
@@ -411,6 +417,8 @@ function wordpress (userOptions, callback) {
 	this.readUserDataFile = readUserDataFile;
 	this.writeUserDataFile = writeUserDataFile;
 	this.writeUniqueFile = writeUniqueFile; //5/12/24 by DW
+	this.readDraft = readDraft;  //5/29/24 by DW
+	this.deleteDraft = deleteDraft; //5/29/24 by DW
 	
 	this.readUserJsonFile = function (relpath, flPrivate, callback, options) { //4/10/24 by DW
 		readUserDataFile (relpath, flPrivate, function (err, theFileData) {

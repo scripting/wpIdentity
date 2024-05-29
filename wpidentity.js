@@ -719,6 +719,54 @@ function readConfig (f, config, callback) {
 				}
 			});
 		}
+	
+	function readDraft (token, iddraft, callback) { //5/29/24 by DW
+		getUsername (token, function (err, username) {
+			if (err) {
+				callback (err);
+				} 
+			else {
+				const sqltext = "select * from wpstorage where username = " + davesql.encode (username) + " and id = " + davesql.encode (iddraft) + ";";
+				console.log ("readDraft: sqltext == " + sqltext);
+				davesql.runSqltext (sqltext, function (err, result) {
+					if (err) {
+						callback (err);
+						}
+					else {
+						if (result.affectedRows == 0) {
+							const message = "Can't get the file because there is no record with id == " + iddraft;
+							callback ({message});
+							}
+						else {
+							callback (undefined, result [0]);
+							}
+						}
+					});
+				}
+			});
+		}
+	function deleteDraft (token, iddraft, callback) { //5/29/24 by DW
+		getUsername (token, function (err, username) {
+			if (err) {
+				callback (err);
+				} 
+			else {
+				const sqltext = "delete from wpstorage where username = " + davesql.encode (username) + " and id = " + davesql.encode (iddraft) + ";";
+				console.log ("deleteDraft: sqltext == " + sqltext);
+				davesql.runSqltext (sqltext, function (err, result) {
+					if (err) {
+						callback (err);
+						}
+					else {
+						callback (undefined, true);
+						}
+					});
+				}
+			});
+		}
+	
+	
+	
 //sockets -- 5/24/24 by DW
 	var theWsServer = undefined;
 	
@@ -1209,6 +1257,16 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 				case "/wordpressgetuserfileinfo": //5/16/24 by DW
 					tokenRequired (function (token) {
 						getUserFileInfo (token, params.maxfiles, httpReturn);
+						});
+					return (true);
+				case "/wordpressreaddraft": //5/29/24 by DW
+					tokenRequired (function (token) {
+						readDraft (token, params.id, httpReturn);
+						});
+					return (true);
+				case "/wordpressdeletedraft": //5/29/24 by DW
+					tokenRequired (function (token) {
+						deleteDraft (token, params.id, httpReturn);
 						});
 					return (true);
 				default:
