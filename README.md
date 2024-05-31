@@ -24,6 +24,8 @@ Here's a <a href="https://imgs.scripting.com/2023/09/05/wpsitelist.png">screen s
 
 5. node wpidentity.js
 
+6. If you want to use the storage feature, you'll need to <a href="https://github.com/scripting/wpIdentity/blob/main/docs/storage.md">set up the database</a>. 
+
 ### Check out worknotes
 
 I've been narrating my work in the <a href="https://github.com/scripting/wordpressIdentity/blob/main/worknotes.md">worknotes</a>. 
