@@ -26,6 +26,10 @@ Here's a <a href="https://imgs.scripting.com/2023/09/05/wpsitelist.png">screen s
 
 6. If you want to use the storage feature, you'll need to <a href="https://github.com/scripting/wpIdentity/blob/main/docs/storage.md">set up the database</a>. 
 
+### History
+
+In October 2024, I wrote a brief doc about the <a href="https://github.com/scripting/wpIdentity/blob/main/docs/history.md">history of wpIdentity</a>, its purpose, where it came from , how to explore. 
+
 ### Check out worknotes
 
 I've been narrating my work in the <a href="https://github.com/scripting/wordpressIdentity/blob/main/worknotes.md">worknotes</a>. 

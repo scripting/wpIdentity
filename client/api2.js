@@ -307,7 +307,6 @@ function wordpress (userOptions, callback) {
 					mySocket.onopen = function (evt) {
 						if (userIsSignedIn ()) { //2/8/23 by DW
 							const msg = "greetings " + wordpressMemory.accessToken;
-							console.log ("wsConnectToServer: msg == " + msg);
 							mySocket.send (msg);
 							}
 						};
