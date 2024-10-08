@@ -14,7 +14,9 @@ It's called <a href="https://github.com/scripting/wpIdentity">wpidentity</a>, be
 
 ### Foundation for browser-based apps
 
-It does much more than identity. The thing I'm most proud of is the simplicity of the API. WordPress already has a very nice REST API but it's possible to further factor the API by creating an object called wordPress which is defined in a file called <a href="https://github.com/scripting/wpIdentity/blob/main/client/api2.js">api2.js</a> in the <a href="https://github.com/scripting/wpIdentity/tree/main/client">client folder</a> of the wpidentity project, which is a very simple demo app. The this API is patterned after the approach Facebook took in their browser interface, which I first used about ten years go when I was working on Fargo. I was very impressed with how much easier it was to use than the Twitter API which works more or less like the WordPress API does. They all get the job done, but the FB approach factors out a lot of the code you'd have to write if you were using the "naked" WordPress API. (It's possible others have done this previously, not claiming to have invented this, I want to be sure people get that.)
+It does much more than identity. The thing I'm most proud of is the simplicity of the API. WordPress already has a very nice REST API but it's possible to further factor the API by creating an object called wordPress which is defined in a file called <a href="https://github.com/scripting/wpIdentity/blob/main/client/api2.js">api2.js</a> in the <a href="https://github.com/scripting/wpIdentity/tree/main/client">client folder</a> of the wpidentity project, which is a very simple demo app. 
+
+This API is patterned after the approach Facebook took in their browser interface, which I first used about ten years go when I was working on Fargo. I was very impressed with how much easier it was to use than the Twitter API which works more or less like the WordPress API does. They all get the job done, but the FB approach factors out a lot of the code you'd have to write if you were using the "naked" WordPress API. (It's possible others have done this previously, not claiming to have invented this, I want to be sure people get that.)
 
 ### Missing functionality
 
@@ -26,5 +28,5 @@ Anyway, I find myself wanting to explain this to a few people now, in Oct 2024, 
 
 ### License
 
-<a href="https://github.com/scripting/wpIdentity">wpIdentity</a> is licensed under the most liberal MIT license. So if Automattic or the foundation or whatever (I'm very confused about who's who in this world) wants to adopt it, they can -- or any developer is free to use it however they like. As a personal favor, I would like to be credited personally as the initial author if you choose to use it, and please point back to my GitHub project. But you are not <i>required</i> to do all this. 
+<a href="https://github.com/scripting/wpIdentity">wpIdentity</a> is licensed under the most liberal MIT license. So if Automattic or the foundation or whoever (I'm confused about who's who in this world) wants to adopt it, they can -- or any developer is free to use it however they like. As a personal favor, I would like to be credited personally as the initial author if you choose to use it, and please point back to my GitHub project. But you are not <i>required</i> to do all this. 
 
