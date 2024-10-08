@@ -4,9 +4,9 @@ How it came to be, to whom do we owe credit, and how to explore.
 
 ### What it is
 
-<a href="https://github.com/scripting/wpIdentity/">wpIdentity</a> is a package I developed over the last couple of years, for a browser-based writing app I'm working on that works with WordPress. 
-
 wpIdentity simplifies the <a href="https://github.com/Automattic/wp-calypso/tree/trunk/packages/wpcom.js">WordPress REST API</a>, making it easier to incorporate into JavaScript apps running in the browser. 
+
+It has grown beyond its initial function to server as a foundation for a simple browser-based writing app I'm working on, that works primarily with WordPress.
 
 ### FeedLand needed it, quickly
 
@@ -22,9 +22,9 @@ I still have some more functionality to cover, notably uploads of images and med
 
 ### Why now?
 
-Anyway, I find myself wanting to explain this to a few people now, so I thought it would be best to write it up in a blog post, and li
+Anyway, I find myself wanting to explain this to a few people now, in Oct 2024, so I thought it would be best to write it up, and answer any questions people might have, to improve the docs. 
 
-<a href="https://github.com/scripting/wpIdentity">wpIdentity</a> is licensed under the most liberal MIT license. So if Automattic or the foundation or whatever (I'm very confused about who's who in this world) wants to adopt it, or any developer is free to use it however they like. As a personal favor, I would like to be credited personally as the initial author if you choose to use it, and please point back to my GitHub project. But you are not <i>required</i> to do all this.  
+### License
 
-If you have any questions, please post an issue in the repo here. 
+<a href="https://github.com/scripting/wpIdentity">wpIdentity</a> is licensed under the most liberal MIT license. So if Automattic or the foundation or whatever (I'm very confused about who's who in this world) wants to adopt it, they can -- or any developer is free to use it however they like. As a personal favor, I would like to be credited personally as the initial author if you choose to use it, and please point back to my GitHub project. But you are not <i>required</i> to do all this. 
 
