@@ -6,7 +6,7 @@ How it came to be, to whom do we owe credit, and how to explore.
 
 <a href="https://github.com/scripting/wpIdentity/tree/main">wpIdentity</a> simplifies the <a href="https://github.com/Automattic/wp-calypso/tree/trunk/packages/wpcom.js">WordPress REST API</a>, making it easier to incorporate into JavaScript apps running in the browser. 
 
-It has grown beyond its initial function to server= as a foundation for a simple browser-based writing app I'm working on, that works primarily with WordPress.
+It has grown beyond its initial function to serve as a foundation for a simple browser-based writing app I'm working on, that works primarily with WordPress.
 
 ### FeedLand needed it, quickly
 
