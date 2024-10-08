@@ -22,11 +22,11 @@ This API is patterned after the approach Facebook took in their browser interfac
 
 I still have some more functionality to cover, notably uploads of images and media objects. It's a high priority for the app I've developed that runs on top of this API. 
 
-### Why now?
-
-Anyway, I find myself wanting to explain this to a few people now, in Oct 2024, so I thought it would be best to write it up, and answer any questions people might have, to improve the docs. 
-
 ### License
 
 <a href="https://github.com/scripting/wpIdentity">wpIdentity</a> is licensed under the most liberal MIT license. So if Automattic or the foundation or whoever (I'm confused about who's who in this world) wants to adopt it, they can -- or any developer is free to use it however they like. As a personal favor, I would like to be credited personally as the initial author if you choose to use it, and please point back to my GitHub project. But you are not <i>required</i> to do all this. 
+
+### Why now?
+
+Anyway, I find myself wanting to explain this to a few people now, in Oct 2024, so I thought it would be best to write it up, and answer any questions people might have, to improve the docs. 
 
