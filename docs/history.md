@@ -10,7 +10,7 @@ It has grown beyond its initial function to server= as a foundation for a simple
 
 ### FeedLand needed it, quickly
 
-It's called <a href="https://github.com/scripting/wpIdentity">wpidentity</a>, because that's initially what its purpose was, to provide an easy way for such an app to hook into WordPress as an identity system. That functionality is used in <a href="https://feedland.org/">FeedLand</a>. It was kind of an emergency project because Twitter, which we had previously used for identity was going through its own identity crisis. As a result FeedLand uses WP identity by default, in addition to email-based identity.
+It's called <a href="https://github.com/scripting/wpIdentity">wpidentity</a>, because that's initially what its purpose was, to provide an easy way for a browser-based app use WordPress as an identity system. That functionality is used in <a href="https://feedland.org/">FeedLand</a>. It was kind of an emergency project because Twitter, which we had previously used for identity was going through its own identity crisis. As a result FeedLand uses WP identity by default, in addition to email-based identity which serves as a backup against any future problems.
 
 ### Foundation for browser-based apps
 
