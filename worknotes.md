@@ -12,6 +12,12 @@ How to debug this locally. This is what I always forget how to do so I'm documen
 
 3. You should start with a working config.json from the server, and modify it to correspond to the local equivalents. 
 
+Changing type of <i>filecontents</i> column from text to longtext. 
+
+* alter table wpstorage modify column filecontents longtext;
+
+* one of the RSS feeds we generate got too big for a text, ie 64K.
+
 #### 5/25/24; 10:36:42 AM by DW
 
 Added websockets support and goodnight kisses. 
