@@ -1,5 +1,5 @@
 {
-	"name": "wpapp",
+	"name": "wpapp", 
 	"description": "Shell for running wpidentity as a server.",
 	"author": "Dave Winer <dave@scripting.com>",
 	"version": "0.4.1",
@@ -8,6 +8,6 @@
 	"dependencies" : {
 		"daveutils": "*",
 		"davehttp": "*",
-		"wpidentity": "^0.4.16"
+		"wpidentity": "^0.5.2"
 		} 
 	}

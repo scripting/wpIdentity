@@ -30,3 +30,9 @@ Files can be public or private. At this point there's no functionality for publi
 
 The relpath field is meant to be a relative path to the "home" of the user's storage, but it's really just a string. You can use slashes to create structure, so for example there could be prefs files for different apps, with the first part of the path being the name of the app. The demo app stores its prefs file in demo/prefs.json. 
 
+#### Queries that work
+
+select id, relpath, idSite, idPost, whenCreated, whenUpdated from wpstorage order by whenUpdated desc;
+
+select filecontents from wpstorage where id = 65;
+

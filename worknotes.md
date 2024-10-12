@@ -1,3 +1,17 @@
+#### 10/12/24; 10:06:11 AM by DW
+
+Going to start posting worknotes here again.
+
+How to debug this locally. This is what I always forget how to do so I'm documenting it somewhere I think I'll look for the info. If only I could tell ChatGPT to remember this for me. Someday soon of course. ;-) 
+
+1. Create localStorage.wordpressMemory in the JS debugger on the client machine you're using for testing.
+
+2. One value must be set -- accessToken -- which you should copy from a client system you're using to access the app.
+
+* localStorage.wordpressMemory = {"accessToken": "asdfasdfasdfsf"}
+
+3. You should start with a working config.json from the server, and modify it to correspond to the local equivalents. 
+
 #### 5/25/24; 10:36:42 AM by DW
 
 Added websockets support and goodnight kisses. 

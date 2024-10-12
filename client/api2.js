@@ -140,42 +140,22 @@ function wordpress (userOptions, callback) {
 			}
 		}
 	function initSitelist (callback) {
-		if (wordpressMemory.sitelist === undefined) {
-			function getAbbreviatedList (theSitelist) {
-				const theList = new Array ();
-				theSitelist.forEach (function (item) {
-					theList.push ({
-						idSite: item.idSite, 
-						urlSite: item.urlSite,
-						name: item.name,
-						description: item.description,
-						whenCreated: item.whenCreated
-						});
+		const whenstart = new Date ();
+		getUserSites (function (err, theSitelist) {
+			if (!err) {
+				theSitelist.forEach (function (item) { //4/12/24 by DW
+					try {
+						item.whenCreated = new Date (item.whenCreated);
+						}
+					catch (err) {
+						}
 					});
-				return (theList);
+				wordpressMemory.sitelist = theSitelist;
+				saveWordpressMemory ();
+				console.log ("initSitelist: wordpressMemory.sitelist.length == " + wordpressMemory.sitelist.length + ", " + secondsSince (whenstart) + " secs.");
 				}
-			getUserSites (function (err, theSitelist) {
-				if (err) {
-					callback (err);
-					}
-				else {
-					theSitelist.forEach (function (item) { //4/12/24 by DW
-						try {
-							item.whenCreated = new Date (item.whenCreated);
-							}
-						catch (err) {
-							}
-						});
-					wordpressMemory.sitelist = theSitelist;
-					saveWordpressMemory ();
-					console.log ("initSitelist: wordpressMemory.sitelist == " + jsonStringify (wordpressMemory.sitelist));
-					callback (undefined);
-					}
-				});
-			}
-		else {
-			callback ();
-			}
+			});
+		callback (undefined); //we're not waiting for this to complete
 		}
 	
 	function wpServerPost (path, params, flAuthenticated, filedata, callback, urlServer=getServerAddress ()) { //3/24/24 by DW
