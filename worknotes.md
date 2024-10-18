@@ -1,3 +1,7 @@
+#### 10/17/24; 12:30:49 PM by DW
+
+Fixed a bug in readDraft, it would crash if the draft didn't exist. 
+
 #### 10/12/24; 10:06:11 AM by DW
 
 Going to start posting worknotes here again.

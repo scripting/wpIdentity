@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.5.2";
+var myProductName = "wpidentity", myVersion = "0.5.3";
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -733,7 +733,7 @@ function readConfig (f, config, callback) {
 						callback (err);
 						}
 					else {
-						if (result.affectedRows == 0) {
+						if (result.length == 0) { //10/17/24 by DW
 							const message = "Can't get the file because there is no record with id == " + iddraft;
 							callback ({message});
 							}
