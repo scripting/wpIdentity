@@ -342,6 +342,9 @@ function wordpress (userOptions, callback) {
 	this.getSiteMedialist = function (idsite, callback) { //8/29/23 by DW
 		wpServerCall ("wordpressgetsitemedialist", {idsite}, true, callback);
 		}
+	this.getSiteCategories = function (idsite, callback) { //10/19/24 by DW
+		wpServerCall ("wordpressgetsitecategories", {idsite}, true, callback);
+		}
 	this.getPost = function (idsite, idpost, callback) { //8/28/23 by DW
 		wpServerCall ("wordpressgetpost", {idsite, idpost}, true, callback);
 		}

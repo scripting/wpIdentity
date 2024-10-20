@@ -314,6 +314,18 @@ function readConfig (f, config, callback) {
 			}
 		return (theObject);
 		}
+	function getSiteCategories (accessToken, idSite, callback) { //10/19/24 by DW
+		const wp = wpcom (accessToken);
+		const site = wp.site (idSite);
+		site.categoriesList (function (err, theCategories) { 
+			if (err) {
+				callback (err);
+				}
+			else {
+				callback (undefined, theCategories);
+				}
+			});
+		}
 //storage
 	var usernameCache = new Object ();
 	var whenLastUsernameCacheStart = new Date ();
@@ -1207,6 +1219,11 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 				case "/wordpressgetsitemedialist": //8/29/23 by DW
 					tokenRequired (function (token) {
 						getSiteMedialist (token, params.idsite, httpReturn);
+						});
+					return (true);
+				case "/wordpressgetsitecategories": //10/19/24 by DW
+					tokenRequired (function (token) {
+						getSiteCategories (token, params.idsite, httpReturn);
 						});
 					return (true);
 				case "/wordpressgetpost": //8/28/23 by DW
