@@ -203,6 +203,17 @@ function readConfig (f, config, callback) {
 			width: theObject.width
 			});
 		}
+	function convertCategory (theCategory) { //10/20/24 by DW
+		return ({
+			id: theCategory.ID, //a number
+			slug: theCategory.slug, //it's a unique identifier that's text, derived from the name of the category
+			name: theCategory.name,
+			description: theCategory.description,
+			feedUrl: theCategory.feed_url,
+			idParent: (theCategory.parent == 0) ? undefined : theCategory.parent,
+			ctPosts: theCategory.post_count
+			});
+		}
 	function getUserInfo (accessToken, callback) { //8/26/23 by DW
 		const wp = wpcom (accessToken);
 		wp.me ().get (function (err, theInfo) {
@@ -322,7 +333,11 @@ function readConfig (f, config, callback) {
 				callback (err);
 				}
 			else {
-				callback (undefined, theCategories);
+				var returnedCats = new Array ();
+				theCategories.categories.forEach (function (item) {
+					returnedCats.push (convertCategory (item));
+					});
+				callback (undefined, returnedCats);
 				}
 			});
 		}

@@ -1,3 +1,9 @@
+#### 10/20/24; 10:38:13 AM by DW
+
+adding support for categories.
+
+convertCategory converts a category from WP format to our API's format.
+
 #### 10/17/24; 12:30:49 PM by DW
 
 Fixed a bug in readDraft, it would crash if the draft didn't exist. 
