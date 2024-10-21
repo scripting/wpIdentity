@@ -1,3 +1,11 @@
+#### 10/21/24; 10:04:54 AM by DW
+
+More categories work.
+
+* We weren't transmitting the categories back to wordpress when creating or updating a wordpress post. 
+
+* When asked for a list of categories for a site, do not include "uncategorized." It's not something the user can choose, nor should they be concerned about it. Not sure what they intended us to do here, but we have to work around it in every instance, so we might as well cut it out at the beginning. 
+
 #### 10/20/24; 10:38:13 AM by DW
 
 adding support for categories.

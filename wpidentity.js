@@ -325,6 +325,20 @@ function readConfig (f, config, callback) {
 			}
 		return (theObject);
 		}
+	function getCategoriesObject (jstruct) {
+		if (jstruct.categories === undefined) {
+			return (undefined);
+			}
+		else {
+			var catstruct = new Object ();
+			jstruct.categories.forEach (function (item, ix) {
+				catstruct [item] = {
+					ID: ix + 1
+					};
+				});
+			return (catstruct);
+			}
+		}
 	function getSiteCategories (accessToken, idSite, callback) { //10/19/24 by DW
 		const wp = wpcom (accessToken);
 		const site = wp.site (idSite);
@@ -335,7 +349,9 @@ function readConfig (f, config, callback) {
 			else {
 				var returnedCats = new Array ();
 				theCategories.categories.forEach (function (item) {
-					returnedCats.push (convertCategory (item));
+					if (item.slug != "uncategorized") { //10/21/24 by DW
+						returnedCats.push (convertCategory (item));
+						}
 					});
 				callback (undefined, returnedCats);
 				}
@@ -406,6 +422,7 @@ function readConfig (f, config, callback) {
 			const thePost = {
 				title: jstruct.title,
 				content: theProcessedContent, //5/13/24 by DW
+				categories: jstruct.categories, //10/21/24 by DW
 				status: "publish",
 				date: new Date ().toGMTString (),
 				format: "standard",
@@ -439,6 +456,7 @@ function readConfig (f, config, callback) {
 			const thePost = {
 				title: jstruct.title,
 				content: theProcessedContent,
+				categories: jstruct.categories, //10/21/24 by DW
 				status: "publish"
 				};
 			post.update (thePost, function (err, theNewPost) {
@@ -791,9 +809,6 @@ function readConfig (f, config, callback) {
 				}
 			});
 		}
-	
-	
-	
 //sockets -- 5/24/24 by DW
 	var theWsServer = undefined;
 	
