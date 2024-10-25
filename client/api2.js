@@ -152,7 +152,6 @@ function wordpress (userOptions, callback) {
 					});
 				wordpressMemory.sitelist = theSitelist;
 				saveWordpressMemory ();
-				console.log ("initSitelist: wordpressMemory.sitelist.length == " + wordpressMemory.sitelist.length + ", " + secondsSince (whenstart) + " secs.");
 				}
 			});
 		callback (undefined); //we're not waiting for this to complete
@@ -205,7 +204,6 @@ function wordpress (userOptions, callback) {
 			});
 		}
 	function readUserDataFile (relpath, flPrivate, callback, options) { //3/25/24 by DW
-		console.log ("readUserDataFile");
 		const whenstart = new Date ();
 		var params = {
 			relpath
