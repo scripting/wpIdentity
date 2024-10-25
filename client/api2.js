@@ -444,21 +444,25 @@ function wordpress (userOptions, callback) {
 		return (wordpressMemory.sitelist);
 		}
 	this.markdownProcess = markdownProcess;
-	
-	this.testPost = function  () { //5/9/24 by DW -- trying to figure out why POST ops don't return
-		const jstruct = {
-			instruction: "Smile for the camera honey"
-			};
-		const jsontext = jsonStringify (jstruct);
-		wpServerPost ("testpost", undefined, true, jsontext, function (err, data) {
-			if (err) {
-				console.log (err.message);
-				}
-			else {
-				console.log (jsonStringify (data));
-				}
-			});
+	this.isUserWhitelisted = function (callback) { //10/24/24 by DW
+		wpServerCall ("wordpressuseriswhitelisted", undefined, true, callback);
 		},
+	
+	//testing functions, mostly commented out -- 10/24/24 by DW
+		this.testPost = function  () { //5/9/24 by DW -- trying to figure out why POST ops don't return
+			const jstruct = {
+				instruction: "Smile for the camera honey"
+				};
+			const jsontext = jsonStringify (jstruct);
+			wpServerPost ("testpost", undefined, true, jsontext, function (err, data) {
+				if (err) {
+					console.log (err.message);
+					}
+				else {
+					console.log (jsonStringify (data));
+					}
+				});
+			},
 	
 	this.userIsSignedIn = userIsSignedIn;
 	this.connectWithWordpress = function () {

@@ -1,3 +1,13 @@
+#### 10/24/24; 9:19:50 AM by DW
+
+whitelist -- so we can start testing with a limited group of users.
+
+* two new config values: config.flUseWhitelist, a boolean default false, authorizedAccounts, an array of usernames who are authorized, default empty array.
+
+* first version, we just add a new api call that allows you to find out if the user is whitelisted. it returns true if the whitelist is not enabled, otherwise search the authorizedAccounts list.
+
+* core function isUserWhitelisted, also in the api2.js.
+
 #### 10/21/24; 10:04:54 AM by DW
 
 More categories work.

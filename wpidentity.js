@@ -39,7 +39,10 @@ var config = {
 	
 	flWebsocketEnabled: true, //5/24/24 by DW
 	websocketPort: 1622,
-	urlSocketServer: "wss://wordland.social/"
+	urlSocketServer: "wss://wordland.social/",
+	
+	flUseWhitelist: false, //10/24/24 by DW
+	authorizedAccounts: new Array ()
 	};
 
 function base64UrlEncode (theData) {
@@ -772,7 +775,6 @@ function readConfig (f, config, callback) {
 				} 
 			else {
 				const sqltext = "select * from wpstorage where username = " + davesql.encode (username) + " and id = " + davesql.encode (iddraft) + ";";
-				console.log ("readDraft: sqltext == " + sqltext);
 				davesql.runSqltext (sqltext, function (err, result) {
 					if (err) {
 						callback (err);
@@ -808,6 +810,28 @@ function readConfig (f, config, callback) {
 					});
 				}
 			});
+		}
+	
+	function isUserWhitelisted (token, callback) { //10/24/24 by DW
+		if (config.flUseWhitelist) {
+			getUsername (token, function (err, username) {
+				if (err) {
+					callback (err);
+					}
+				else {
+					var flWhitelisted = false;
+					config.authorizedAccounts.forEach (function (item) {
+						if (item == username) {
+							flWhitelisted = true;
+							}
+						});
+					callback (undefined, flWhitelisted);
+					}
+				});
+			}
+		else {
+			callback (undefined, true); //if not using whitelist, everyone is whitelisted
+			}
 		}
 //sockets -- 5/24/24 by DW
 	var theWsServer = undefined;
@@ -1005,7 +1029,6 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 			});
 		
 		const sqltext = "select * from  wpstorage where username = " + davesql.encode (username) + " and idsite = " + davesql.encode (idsite) + " and relpath = " + davesql.encode (relpath) + " and flprivate = 0;";
-		console.log ("\nservePublicFile: sqltext == " + sqltext + "\n");
 		davesql.runSqltext (sqltext, function (err, result) {
 			if (err) {
 				returnError (err);
@@ -1084,7 +1107,14 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 			returnError ({message});
 			}
 		else {
-			callback (token);
+			isUserWhitelisted (token, function (err, flWhitelisted) { //10/24/24 by DW
+				if (err) {
+					returnError (err);
+					}
+				else {
+					callback (token);
+					}
+				});
 			}
 		}
 	function unpackState (jsontext) { //9/4/23 by DW
@@ -1316,6 +1346,11 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 						deleteDraft (token, params.id, httpReturn);
 						});
 					return (true);
+				case "/wordpressuseriswhitelisted": //10/24/24 by DW
+					tokenRequired (function (token) {
+						isUserWhitelisted (token, httpReturn);
+						});
+					return (true);
 				default:
 					if (config.flServePublicUserFiles) { //4/30/24 by DW
 						return (servePublicFile (theRequest.lowerpath)); 
@@ -1328,6 +1363,8 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 	}
 
 function start (options, callback) {
+	function everySecond () { //10/24/24 by DW
+		}
 	console.log ("wpIdentity.start: options == " + utils.jsonStringify (options));
 	if (options !== undefined) {
 		for (var x in options) {
