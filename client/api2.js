@@ -318,6 +318,9 @@ function wordpress (userOptions, callback) {
 	this.getUserInfo = function (callback) {
 		callback (undefined, wordpressMemory.userinfo);
 		}
+	this.getUserInfoSync = function () { //10/26/24 by DW
+		return (wordpressMemory.userinfo);
+		}
 	this.getUserSites = getUserSites;
 	this.getSitePosts = function (idsite, callback) { //8/28/23 by DW
 		wpServerCall ("wordpressgetsiteposts", {idsite}, true, callback);

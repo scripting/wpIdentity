@@ -1,3 +1,7 @@
+#### 10/26/24; 9:15:57 AM by DW
+
+Fixed a startup problem for new users. In getRecentUserDrafts we were getting the most recent drafts for all users, but we must restrict it to the user. 
+
 #### 10/24/24; 9:19:50 AM by DW
 
 whitelist -- so we can start testing with a limited group of users.

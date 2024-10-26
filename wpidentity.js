@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.5.3";
+var myProductName = "wpidentity", myVersion = "0.5.4";
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -721,7 +721,8 @@ function readConfig (f, config, callback) {
 					sitepart = " and idsite = " + davesql.encode (idSiteParam) + " ";
 					}
 				const maxCtDrafts = Math.min (config.maxCtDrafts, maxCtDraftsParam);
-				const sqltext = "select * from wpstorage where relpath = 'draft.json' " +  sitepart + "order by whenUpdated desc limit " + maxCtDrafts + ";";
+				const sqltext = "select * from wpstorage where relpath = 'draft.json' and username = " + davesql.encode (username) +  sitepart + " order by whenUpdated desc limit " + maxCtDrafts + ";"; //10/26/24 by DW
+				console.log ("\ngetRecentUserDrafts: sqltext == " + sqltext + "\n");
 				davesql.runSqltext (sqltext, function (err, result) {
 					if (err) {
 						callback (err);
