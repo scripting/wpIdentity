@@ -968,6 +968,29 @@ function readConfig (f, config, callback) {
 				}
 			}
 		}
+//misc -- 10/28/24 by DW
+	function fixBookmarksFile () { //10/28/24 by DW
+		fs.readFile ("bookmarks.opml", function (err, opmltext) {
+			if (err) {
+				console.log ("fixBookmarksFile: err.message == " + err.message);
+				}
+			else {
+				const filecontents = opmltext.toString (), username = "scripting", relpath = "bookmarks.opml";
+				const sqltext = "UPDATE wpstorage SET filecontents = " + davesql.encode (filecontents) + " WHERE username = " + davesql.encode (username) + " AND relpath = " + davesql.encode (relpath) + ";";
+				console.log ("fixBookmarksFile: sqltext == " + sqltext);
+				davesql.runSqltext (sqltext, function (err, result) {
+					if (err) {
+						console.log ("fixBookmarksFile: err.message == " + err.message);
+						}
+					else {
+						console.log ("fixBookmarksFile: result == " + utils.jsonStringify (result));
+						}
+					});
+				
+				
+				}
+			});
+		}
 
 function handleHttpRequest (theRequest, options = new Object ()) { //returns true if request was handled
 	const params = theRequest.params;
