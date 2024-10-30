@@ -268,6 +268,12 @@ function wordpress (userOptions, callback) {
 			callback (err === undefined);
 			});
 		}
+	function getNextDraft (id, callback) { //10/29/24 by DW
+		wpServerCall ("wordpressgetnextdraft", {id}, true, callback);
+		}
+	function getPrevDraft (id, callback) { //10/29/24 by DW
+		wpServerCall ("wordpressgetprevdraft", {id}, true, callback);
+		}
 	
 	function wsConnectUserToServer () { //5/24/24 by DW
 		var flGoodnightDialogShowing = false; 
@@ -407,7 +413,8 @@ function wordpress (userOptions, callback) {
 	this.writeUniqueFile = writeUniqueFile; //5/12/24 by DW
 	this.readDraft = readDraft;  //5/29/24 by DW
 	this.deleteDraft = deleteDraft; //5/29/24 by DW
-	this.draftExists = draftExists; //10/17/24 by DW
+	this.getNextDraft = getNextDraft; //10/29/24 by DW
+	this.getPrevDraft = getPrevDraft; //10/29/24 by DW
 	
 	this.readUserJsonFile = function (relpath, flPrivate, callback, options) { //4/10/24 by DW
 		readUserDataFile (relpath, flPrivate, function (err, theFileData) {

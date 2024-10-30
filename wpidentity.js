@@ -834,6 +834,38 @@ function readConfig (f, config, callback) {
 			callback (undefined, true); //if not using whitelist, everyone is whitelisted
 			}
 		}
+	
+	function getNextDraft (token, id, flPrev, callback) { //10/29/24 by DW
+		getUsername (token, function (err, username) {
+			if (err) {
+				callback (err);
+				} 
+			else {
+				const chCompare = (flPrev) ? " < " : " > ";
+				const ascendOrDescend = (flPrev) ? " desc " : " asc ";
+				const sqltext = "select *  from wpstorage  where username = " + davesql.encode (username) + " and relpath = " + davesql.encode ("draft.json") + " and id " + chCompare + davesql.encode (id) + " order by id " + ascendOrDescend + " limit 1;";
+				console.log ("getNextDraft: sqltext == " + sqltext);
+				davesql.runSqltext (sqltext, function (err, result) {
+					if (err) {
+						callback (err);
+						}
+					else {
+						if (result.length == 0) {
+							const which = (flPrev) ? "previous" : "next";
+							const message = "Can't get the next draft because there is no " + which + " draft.";
+							callback ({message});
+							}
+						else {
+							const jsontext = result [0].filecontents;
+							const draftInfo = JSON.parse (jsontext);
+							callback (undefined, draftInfo);
+							}
+						}
+					});
+				}
+			});
+		}
+	
 //sockets -- 5/24/24 by DW
 	var theWsServer = undefined;
 	
@@ -1373,6 +1405,16 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 				case "/wordpressuseriswhitelisted": //10/24/24 by DW
 					tokenRequired (function (token) {
 						isUserWhitelisted (token, httpReturn);
+						});
+					return (true);
+				case "/wordpressgetnextdraft": //10/29/24 by DW
+					tokenRequired (function (token) {
+						getNextDraft (token, params.id, false, httpReturn);
+						});
+					return (true);
+				case "/wordpressgetprevdraft": //10/29/24 by DW
+					tokenRequired (function (token) {
+						getNextDraft (token, params.id, true, httpReturn);
 						});
 					return (true);
 				default:
