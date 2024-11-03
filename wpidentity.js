@@ -30,7 +30,7 @@ var config = {
 	flStorageEnabled: false, //3/24/24 by DW
 	
 	ctUsernameCacheSecs: 60, //3/25/24 by DW
-	maxCtDrafts: 100, //4/27/24 by DW
+	maxCtDrafts: 1000, //4/27/24 by DW & 10/31/24 by DW
 	
 	
 	flServePublicUserFiles: false, //4/30/24 by DW
@@ -866,6 +866,40 @@ function readConfig (f, config, callback) {
 			});
 		}
 	
+	function getNextPrevArray (token, callback) { //11/1/24 by DW
+		getUsername (token, function (err, username) {
+			if (err) {
+				callback (err);
+				} 
+			else {
+				const relpath = "draft.json";
+				const sqltext = "select id  from wpstorage  where username = " + davesql.encode (username) + " and relpath = " + davesql.encode (relpath) + " order by id  asc;";
+				console.log ("getNextPrevArray: sqltext == " + sqltext);
+				davesql.runSqltext (sqltext, function (err, result) {
+					if (err) {
+						callback (err);
+						}
+					else {
+						if (result.length == 0) {
+							const message = "Can't get the next/prevs because the user \"" + username + "\" has no drafts.";
+							callback ({message});
+							}
+						else {
+							const theArray = new Array ();
+							result.forEach (function (item) {
+								theArray.push (item.id);
+								});
+							callback (undefined, theArray);
+							}
+						}
+					});
+				}
+			});
+		}
+	
+	
+	
+	
 //sockets -- 5/24/24 by DW
 	var theWsServer = undefined;
 	
@@ -1415,6 +1449,11 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 				case "/wordpressgetprevdraft": //10/29/24 by DW
 					tokenRequired (function (token) {
 						getNextDraft (token, params.id, true, httpReturn);
+						});
+					return (true);
+				case "/wordpressgetnextprevarray": //11/1/24 by DW
+					tokenRequired (function (token) {
+						getNextPrevArray (token, httpReturn);
 						});
 					return (true);
 				default:

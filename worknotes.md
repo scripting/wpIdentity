@@ -1,3 +1,13 @@
+#### 11/1/24; 10:35:37 AM by DW
+
+Added support for the nextPrevArray used to implement the arrows in WordLand. See getNextPrevArray.
+
+#### 10/31/24; 7:03:56 PM by DW
+
+Increase the default config.maxCtDrafts to 1000. Previously it was 100. I'm hitting that limit when I rebuild the Bookmarks menu or backup my drafts. I don't know if we can have a limit, unless we have a limit of drafts for non-paying users. That comes later. 
+
+Also changed the default value for options.maxCtUserDraftFiles in api2.j to 1000 to agree. This is passed as a parameter to the server. 
+
 #### 10/26/24; 9:15:57 AM by DW
 
 Fixed a startup problem for new users. In getRecentUserDrafts we were getting the most recent drafts for all users, but we must restrict it to the user. 

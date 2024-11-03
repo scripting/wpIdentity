@@ -6,7 +6,7 @@ function wordpress (userOptions, callback) {
 	var options = {
 		serverAddress: undefined,
 		flMarkdownProcess: true,
-		maxCtUserDraftFiles: 100,
+		maxCtUserDraftFiles: 1000, //10/31/24 by DW
 		flWebsocketEnabled: true, //5/24/24 by DW
 		urlChatLogSocket: "ws://localhost:1622/",
 		flWatchSocketForOtherCopies: true,
@@ -274,6 +274,9 @@ function wordpress (userOptions, callback) {
 	function getPrevDraft (id, callback) { //10/29/24 by DW
 		wpServerCall ("wordpressgetprevdraft", {id}, true, callback);
 		}
+	function getNextPrevArray (callback) { //11/1/24 by DW
+		wpServerCall ("wordpressgetnextprevarray", undefined, true, callback);
+		}
 	
 	function wsConnectUserToServer () { //5/24/24 by DW
 		var flGoodnightDialogShowing = false; 
@@ -415,6 +418,7 @@ function wordpress (userOptions, callback) {
 	this.deleteDraft = deleteDraft; //5/29/24 by DW
 	this.getNextDraft = getNextDraft; //10/29/24 by DW
 	this.getPrevDraft = getPrevDraft; //10/29/24 by DW
+	this.getNextPrevArray = getNextPrevArray; //11/1/24 by DW
 	
 	this.readUserJsonFile = function (relpath, flPrivate, callback, options) { //4/10/24 by DW
 		readUserDataFile (relpath, flPrivate, function (err, theFileData) {
