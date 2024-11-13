@@ -83,6 +83,14 @@ function wordpress (userOptions, callback) {
 			}
 		return (decodeURIComponent (escape (atob (theData))));
 		}
+	function arrayBufferToBase64 (buffer) { //11/13/24 by DW
+		const bytes = new Uint8Array (buffer);
+		let binary = "";
+		for (let i = 0; i < bytes.byteLength; i++) {
+			binary += String.fromCharCode (bytes [i]);
+			}
+		return (btoa (binary));
+		}
 	function httpRequest (url, timeout, headers, callback) { 
 		timeout = (timeout === undefined) ? 30000 : timeout;
 		var jxhr = $.ajax ({ 
@@ -277,60 +285,30 @@ function wordpress (userOptions, callback) {
 	function getNextPrevArray (callback) { //11/1/24 by DW
 		wpServerCall ("wordpressgetnextprevarray", undefined, true, callback);
 		}
-	function uploadImageFile (callback) { //11/11/24 by DW
+	function uploadImageFile (idsite, callback) { //11/11/24 by DW
 		console.log ("uploadImageFile");
-		function arrayBufferToBase64 (buffer) {
-			const bytes = new Uint8Array (buffer);
-			let binary = "";
-			for (let i = 0; i < bytes.byteLength; i++) {
-				binary += String.fromCharCode (bytes [i]);
-				}
-			return (btoa (binary));
-			}
 		const theInput = $("<input type=\"file\" id=\"idImageFileInput\" accept=\"image/*\" style=\"display: none;\">");
 		$("body").append (theInput);
 		theInput.on ("change", function () {
-			const file = this.files [0];
-			if (file === undefined) { //no file selected
+			const theFile = this.files [0];
+			if (theFile === undefined) { //no file selected
 				theInput.remove ();
 				}
 			else {
 				const reader = new FileReader ();
 				reader.onload = function (ev) {
-					function uploadImageDirectly (path, arrayBuffer, filetype, filename, idsite, callback) {
-						const base64Data = arrayBufferToBase64 (arrayBuffer);
-						const params = {
-							token: base64UrlEncode (wordpressMemory.accessToken),
-							name: filename,
-							type: filetype, 
-							idsite
-							}
-						const url = getServerAddress () + path + "?" + buildParamList (params, false);
-						$.ajax ({
-							url,
-							type: "POST",
-							data: base64Data,
-							processData: false, 
-							contentType: "text/plain", 
-							success: function (data) {
-								callback (undefined, data);
-								},
-							error: function (jqXHR, message, errorThrown) {
-								callback ({message});
-								}
-							});
+					const params = {
+						name: theFile.name,
+						type: theFile.type, 
+						idsite
 						}
-					
-					const filename = "honeypot.png";
-					const idsite = 237777565;
-					const filetype = file.type;
-					const arrayBuffer = ev.target.result;
-					
-					console.log ("arrayBuffer length:", arrayBuffer.byteLength);
-					
-					uploadImageDirectly ("wordpressuploadimage", arrayBuffer, filetype, filename, idsite, callback);
+					const filedata = arrayBufferToBase64 (ev.target.result);
+					wpServerPost ("wordpressuploadimage", params, true, filedata, function (err, data) {
+						theInput.remove ();
+						callback (err, data);
+						});
 					}
-				reader.readAsArrayBuffer (file);
+				reader.readAsArrayBuffer (theFile);
 				}
 			});
 		theInput.click ();

@@ -1,3 +1,9 @@
+#### 11/13/24; 8:32:46 AM by DW
+
+It took three full days to get uploading images to work. A lot of trial and error and guesswork, but the code works now, and today I'm going to clean it up and move on to other things, hopefully.
+
+Note that because we also provide an API that runs in the browser, no one will have to go through this to get functional code, the problem is solved at least for this context. 
+
 #### 11/10/24; 12:29:58 PM by DW
 
 Uploading images.

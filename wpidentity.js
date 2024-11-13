@@ -42,7 +42,9 @@ var config = {
 	urlSocketServer: "wss://wordland.social/",
 	
 	flUseWhitelist: false, //10/24/24 by DW
-	authorizedAccounts: new Array ()
+	authorizedAccounts: new Array (),
+	
+	flDeleteTempFiles: true //11/13/24 by DW
 	};
 
 function base64UrlEncode (theData) {
@@ -200,6 +202,8 @@ function readConfig (f, config, callback) {
 			idAuthor: theObject.author_ID,
 			type: theObject.mime_type,
 			title: theObject.title,
+			file: theObject.file, //11/13/24 by DW
+			guid: theObject.guid, //11/13/24 by DW
 			description: convertString (theObject.description),
 			alt: convertString (theObject.alt),
 			height: theObject.height,
@@ -360,20 +364,14 @@ function readConfig (f, config, callback) {
 				}
 			});
 		}
-	function uploadImage (accessToken, base64Data, imageName, mimeType, idSite, callback) { //11/10/24 by DW
+	function uploadImage (accessToken, base64Data, filename, mimeType, idSite, callback) { //11/10/24 by DW
 		const wp = wpcom (accessToken);
 		const site = wp.site (idSite);
 		
 		const imageBuffer = Buffer.from (base64Data, "base64");
 		
-		
 		function writeBufferToTempFile (callback) {
-			const f = "data/tmp/1200.png";
-			
-			console.log ("writeBufferToTempFile: imageBuffer.length == " + imageBuffer.length);
-			console.log ("writeBufferToTempFile: Buffer.isBuffer (imageBuffer) == " + Buffer.isBuffer (imageBuffer));
-			
-			
+			const f = "data/tmp/" + idSite + "/" + filename;
 			utils.sureFilePath (f, function () {
 				fs.writeFile (f, imageBuffer, function (err) {
 					if (err) {
@@ -393,20 +391,28 @@ function readConfig (f, config, callback) {
 			else {
 				const fileStream = fs.createReadStream (relpath);
 				fileStream.on ("close", function () {
-					fs.unlink (relpath, function (err) {
-						});
+					if (config.flDeleteTempFiles) {
+						fs.unlink (relpath, function (err) {
+							});
+						}
 					});
 				const theImage = {
 					file: fileStream,
-					filename: imageName,
-					'Content-Type': mimeType
+					filename,
+					"Content-Type": mimeType
 					};
 				site.addMediaFiles (theImage, function (err, data) {
 					if (err) {
 						callback (err);
 						}
 					else {
-						callback (undefined, convertMediaObject (data));
+						if (data.media.length == 0) {
+							const message = "No media files were uploaded.";
+							callback ({message});
+							}
+						else {
+							callback (undefined, convertMediaObject (data.media [0]));
+							}
 						}
 					});
 				}
