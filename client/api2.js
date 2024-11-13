@@ -277,6 +277,64 @@ function wordpress (userOptions, callback) {
 	function getNextPrevArray (callback) { //11/1/24 by DW
 		wpServerCall ("wordpressgetnextprevarray", undefined, true, callback);
 		}
+	function uploadImageFile (callback) { //11/11/24 by DW
+		console.log ("uploadImageFile");
+		function arrayBufferToBase64 (buffer) {
+			const bytes = new Uint8Array (buffer);
+			let binary = "";
+			for (let i = 0; i < bytes.byteLength; i++) {
+				binary += String.fromCharCode (bytes [i]);
+				}
+			return (btoa (binary));
+			}
+		const theInput = $("<input type=\"file\" id=\"idImageFileInput\" accept=\"image/*\" style=\"display: none;\">");
+		$("body").append (theInput);
+		theInput.on ("change", function () {
+			const file = this.files [0];
+			if (file === undefined) { //no file selected
+				theInput.remove ();
+				}
+			else {
+				const reader = new FileReader ();
+				reader.onload = function (ev) {
+					function uploadImageDirectly (path, arrayBuffer, filetype, filename, idsite, callback) {
+						const base64Data = arrayBufferToBase64 (arrayBuffer);
+						const params = {
+							token: base64UrlEncode (wordpressMemory.accessToken),
+							name: filename,
+							type: filetype, 
+							idsite
+							}
+						const url = getServerAddress () + path + "?" + buildParamList (params, false);
+						$.ajax ({
+							url,
+							type: "POST",
+							data: base64Data,
+							processData: false, 
+							contentType: "text/plain", 
+							success: function (data) {
+								callback (undefined, data);
+								},
+							error: function (jqXHR, message, errorThrown) {
+								callback ({message});
+								}
+							});
+						}
+					
+					const filename = "honeypot.png";
+					const idsite = 237777565;
+					const filetype = file.type;
+					const arrayBuffer = ev.target.result;
+					
+					console.log ("arrayBuffer length:", arrayBuffer.byteLength);
+					
+					uploadImageDirectly ("wordpressuploadimage", arrayBuffer, filetype, filename, idsite, callback);
+					}
+				reader.readAsArrayBuffer (file);
+				}
+			});
+		theInput.click ();
+		}
 	
 	function wsConnectUserToServer () { //5/24/24 by DW
 		var flGoodnightDialogShowing = false; 
@@ -419,6 +477,7 @@ function wordpress (userOptions, callback) {
 	this.getNextDraft = getNextDraft; //10/29/24 by DW
 	this.getPrevDraft = getPrevDraft; //10/29/24 by DW
 	this.getNextPrevArray = getNextPrevArray; //11/1/24 by DW
+	this.uploadImageFile = uploadImageFile; //11/11/24 by DW
 	
 	this.readUserJsonFile = function (relpath, flPrivate, callback, options) { //4/10/24 by DW
 		readUserDataFile (relpath, flPrivate, function (err, theFileData) {

@@ -1,3 +1,7 @@
+#### 11/10/24; 12:29:58 PM by DW
+
+Uploading images.
+
 #### 11/1/24; 10:35:37 AM by DW
 
 Added support for the nextPrevArray used to implement the arrows in WordLand. See getNextPrevArray.

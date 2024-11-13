@@ -360,6 +360,58 @@ function readConfig (f, config, callback) {
 				}
 			});
 		}
+	function uploadImage (accessToken, base64Data, imageName, mimeType, idSite, callback) { //11/10/24 by DW
+		const wp = wpcom (accessToken);
+		const site = wp.site (idSite);
+		
+		const imageBuffer = Buffer.from (base64Data, "base64");
+		
+		
+		function writeBufferToTempFile (callback) {
+			const f = "data/tmp/1200.png";
+			
+			console.log ("writeBufferToTempFile: imageBuffer.length == " + imageBuffer.length);
+			console.log ("writeBufferToTempFile: Buffer.isBuffer (imageBuffer) == " + Buffer.isBuffer (imageBuffer));
+			
+			
+			utils.sureFilePath (f, function () {
+				fs.writeFile (f, imageBuffer, function (err) {
+					if (err) {
+						callback (err);
+						}
+					else {
+						callback (undefined, f);
+						}
+					});
+				});
+			}
+		
+		writeBufferToTempFile (function (err, relpath) {
+			if (err) {
+				callback (err);
+				}
+			else {
+				const fileStream = fs.createReadStream (relpath);
+				fileStream.on ("close", function () {
+					fs.unlink (relpath, function (err) {
+						});
+					});
+				const theImage = {
+					file: fileStream,
+					filename: imageName,
+					'Content-Type': mimeType
+					};
+				site.addMediaFiles (theImage, function (err, data) {
+					if (err) {
+						callback (err);
+						}
+					else {
+						callback (undefined, convertMediaObject (data));
+						}
+					});
+				}
+			});
+		}
 //storage
 	var usernameCache = new Object ();
 	var whenLastUsernameCacheStart = new Date ();
@@ -1272,6 +1324,11 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 						hello: "hooray for hollywood"
 						};
 					httpReturn (undefined, teststruct);
+					return (true);
+				case "/wordpressuploadimage": //11/10/24 by DW
+					tokenRequired (function (token) {
+						uploadImage (token, theRequest.postBody, params.name, params.type, params.idsite, httpReturn);
+						});
 					return (true);
 				default:
 					return (false);
