@@ -932,7 +932,6 @@ function readConfig (f, config, callback) {
 			else {
 				const relpath = "draft.json";
 				const sqltext = "select id  from wpstorage  where username = " + davesql.encode (username) + " and relpath = " + davesql.encode (relpath) + " order by id  asc;";
-				console.log ("getNextPrevArray: sqltext == " + sqltext);
 				davesql.runSqltext (sqltext, function (err, result) {
 					if (err) {
 						callback (err);
@@ -1062,7 +1061,6 @@ function readConfig (f, config, callback) {
 							if (!err) {
 								conn.appData.accessToken = accessToken;
 								conn.appData.wordpressUserInfo = theUserInfo;
-								console.log ("handleWebSocketConnection: conn.appData == " + utils.jsonStringify (conn.appData));
 								kissOtherLogonsGoodnight (theUserInfo.username, conn);
 								}
 							});
