@@ -44,7 +44,8 @@ var config = {
 	flUseWhitelist: false, //10/24/24 by DW
 	authorizedAccounts: new Array (),
 	
-	flDeleteTempFiles: true //11/13/24 by DW
+	flDeleteTempFiles: true, //11/13/24 by DW
+	flConvertImagesToGutenberg: true //11/16/24 by DW
 	};
 
 function base64UrlEncode (theData) {
@@ -457,10 +458,31 @@ function readConfig (f, config, callback) {
 		return (emoji.emojify (s, undefined, addSpan));
 		}
 	function markdownProcess (s) {
+		s = marked (s);
 		return (s);
 		}
+	
+	function processMarkdownImages (markdowntext) { //11/16/24 by DW
+		if (config.flConvertImagesToGutenberg) {
+			const imageRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
+			function processOneImage (alttext, url) {
+				const templatetext = "<!-- wp:image -->\n<figure class=\"wp-block-image size-large is-resized\"><a href=\"[%url%]\"><img src=\"[%url%]\" alt=\"[%alttext%]\" class=\"wp-image-4375\" style=\"width:86px;height:auto\"/></a></figure>\n<!-- /wp:image -->"
+				const newtext = utils.multipleReplaceAll (templatetext, {alttext, url}, false, "[%", "%]");
+				return (newtext);
+				}
+			const newMarkdowntext = markdowntext.replace (imageRegex, function (match, altText, url) {
+				return (processOneImage (altText, url));
+				});
+			return (newMarkdowntext);
+			}
+		else {
+			return (markdowntext);
+			}
+		}
+	
 	function processPostText (token, theText, callback) {
 		theText = emojiProcess (theText); //4/15/24 by DW
+		theText = processMarkdownImages (theText); //11/16/24 by DW
 		theText = markdownProcess (theText); //4/18/24 by DW
 		getSpecialDataFile (token, "glossary.json", function (err, theGlossary) {
 			if (!err) {

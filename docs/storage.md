@@ -32,7 +32,7 @@ The relpath field is meant to be a relative path to the "home" of the user's sto
 
 #### Queries that work
 
-select id, relpath, idSite, idPost, whenCreated, whenUpdated from wpstorage order by whenUpdated desc;
+select id, username, relpath, type, idSite, idPost, whenCreated, whenUpdated, ctSaves from wpstorage order by whenUpdated desc;
 
 select filecontents from wpstorage where id = 65;
 
