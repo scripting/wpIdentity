@@ -466,7 +466,7 @@ function readConfig (f, config, callback) {
 		if (config.flConvertImagesToGutenberg) {
 			const imageRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
 			function processOneImage (alttext, url) {
-				const templatetext = "<!-- wp:image -->\n<figure class=\"wp-block-image size-large is-resized\"><a href=\"[%url%]\"><img src=\"[%url%]\" alt=\"[%alttext%]\" class=\"wp-image-4375\" style=\"width:86px;height:auto\"/></a></figure>\n<!-- /wp:image -->"
+				const templatetext = "<!-- wp:image {\"id\":4375, \"sizeSlug\": \"large\"} -->\n<figure class=\"wp-block-image size-large is-resized\"><a href=\"[%url%]\"><img src=\"[%url%]\" alt=\"[%alttext%]\" class=\"wp-image-4375\" style=\"width:86px;height:auto\"/></a></figure>\n<!-- /wp:image -->"
 				const newtext = utils.multipleReplaceAll (templatetext, {alttext, url}, false, "[%", "%]");
 				return (newtext);
 				}
