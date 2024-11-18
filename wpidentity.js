@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.5.5";
+var myProductName = "wpidentity", myVersion = "0.5.6";
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -43,10 +43,13 @@ var config = {
 	
 	flUseWhitelist: false, //10/24/24 by DW
 	authorizedAccounts: new Array (),
+	authorizedAccountsPath: "data/authorizedAccounts.json", //11/18/24 by DW
 	
 	flDeleteTempFiles: true, //11/13/24 by DW
 	flConvertImagesToGutenberg: true //11/16/24 by DW
 	};
+
+
 
 function base64UrlEncode (theData) {
 	var base64 = Buffer.from (theData).toString ('base64');
@@ -1135,6 +1138,21 @@ function readConfig (f, config, callback) {
 				}
 			});
 		}
+	function readAuthorizedAccounts () { //11/18/24 by DW
+		if (config.authorizedAccountsPath !== undefined) {
+			fs.readFile (config.authorizedAccountsPath, function (err, jsontext) {
+				if (!err) {
+					try {
+						config.authorizedAccounts = JSON.parse (jsontext);
+						console.log (new Date ().toLocaleTimeString () + ": config.authorizedAccounts == " + utils.jsonStringify (config.authorizedAccounts));
+						}
+					catch (err) {
+						console.log ("readAuthorizedAccounts: err.message == " + err.message);
+						}
+					}
+				});
+			}
+		}
 
 function handleHttpRequest (theRequest, options = new Object ()) { //returns true if request was handled
 	const params = theRequest.params;
@@ -1551,6 +1569,9 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 	}
 
 function start (options, callback) {
+	function everyMinute () {
+		readAuthorizedAccounts (); //11/18/24 by DW
+		}
 	function everySecond () { //10/24/24 by DW
 		}
 	console.log ("wpIdentity.start: options == " + utils.jsonStringify (options));
@@ -1565,6 +1586,8 @@ function start (options, callback) {
 				});
 			}
 		webSocketStartup (); //5/24/24 by DW
+		everyMinute (); //11/18/24 by DW
+		utils.runEveryMinute (everyMinute); //11/18/24 by DW
 		if (callback !== undefined) {
 			callback ();
 			}
