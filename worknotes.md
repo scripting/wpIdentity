@@ -1,3 +1,13 @@
+#### 11/18/24; 11:34:35 AM by DW
+
+Turned off config.flConvertImagesToGutenberg.
+
+From the GitHub thread, there's a little bit left to do, but they're going to try to account for images in plain HTML, so let's see how that goes. 
+
+Basically we have to get the image id to agree with WordPress's idea of what its ID is. 
+
+Really have to find and read the docs to be sure I understand how it should work.
+
 #### 11/18/24; 10:23:32 AM by DW
 
 Read authorizedAccounts every minute from the file.

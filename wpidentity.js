@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.5.6";
+var myProductName = "wpidentity", myVersion = "0.5.7";
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -46,10 +46,8 @@ var config = {
 	authorizedAccountsPath: "data/authorizedAccounts.json", //11/18/24 by DW
 	
 	flDeleteTempFiles: true, //11/13/24 by DW
-	flConvertImagesToGutenberg: true //11/16/24 by DW
+	flConvertImagesToGutenberg: false //11/16/24 by DW & 11/18/24 by DW
 	};
-
-
 
 function base64UrlEncode (theData) {
 	var base64 = Buffer.from (theData).toString ('base64');
@@ -1144,7 +1142,6 @@ function readConfig (f, config, callback) {
 				if (!err) {
 					try {
 						config.authorizedAccounts = JSON.parse (jsontext);
-						console.log (new Date ().toLocaleTimeString () + ": config.authorizedAccounts == " + utils.jsonStringify (config.authorizedAccounts));
 						}
 					catch (err) {
 						console.log ("readAuthorizedAccounts: err.message == " + err.message);
