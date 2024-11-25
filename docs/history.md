@@ -18,9 +18,15 @@ It does much more than identity. The thing I'm most proud of is the simplicity o
 
 This API is patterned after the approach Facebook took in their browser interface, which I first used about ten years go when I was working on Fargo. I was very impressed with how much easier it was to use than the Twitter API which works more or less like the WordPress API does. They all get the job done, but the FB approach factors out a lot of the code you'd have to write if you were using the "naked" WordPress API. (It's possible others have done this previously, not claiming to have invented this, I want to be sure people get that.)
 
+### WordLand (November 2024)
+
+With <a href="https://this.how/wordland/">WordLand</a> it also gets a <a href="https://github.com/scripting/wpIdentity/blob/main/wpidentity.js#L423">storage</a> component, because WordLand needs to store drafts. 
+
+Also the wpcom interface is a lot slower, since we save the draft as the user types, it needs to be pretty fast. 
+
 ### Missing functionality
 
-I still have some more functionality to cover, notably uploads of images and media objects. It's a high priority for the app I've developed that runs on top of this API. 
+I still have some more functionality to cover, notably uploads of media objects and the ability to edit categories without having to go the wordpress.com editor.
 
 ### License
 
