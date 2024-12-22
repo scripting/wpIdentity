@@ -1,3 +1,19 @@
+#### 12/21/24; 11:47:17 AM by DW
+
+Add a log table using my new <a href="https://github.com/scripting/sqlLog">sqlLog</a> package.
+
+Added config.flLogInstalled, default false. If false we won't call the log package, it should be false if you haven't created a log table in your sql database.
+
+Now let's add some logging code
+
+* on startup, log config.urlServer
+
+* on websocket connect, log username
+
+Initially I had logging in writeWholeFile but decided this was too much (for now). 
+
+May also want to add one for every http request, makes more sense, would require a slight rewrite so we could log the username making the request. 
+
 #### 11/18/24; 11:34:35 AM by DW
 
 Turned off config.flConvertImagesToGutenberg.

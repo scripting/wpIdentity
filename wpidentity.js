@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.5.7";
+var myProductName = "wpidentity", myVersion = "0.5.9";
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -14,6 +14,7 @@ const emoji = require ("node-emoji");  //4/15/24 by DW
 const marked = require ("marked");  //4/18/24 by DW
 const rss = require ("daverss"); //4/29/24 by DW
 const websocket = require ("nodejs-websocket"); //5/24/24 by DW 
+const log = require ("sqllog"); //12/21/24 by DW
 
 var config = { 
 	myRandomNumber: utils.random (1, 1000000000),
@@ -46,7 +47,9 @@ var config = {
 	authorizedAccountsPath: "data/authorizedAccounts.json", //11/18/24 by DW
 	
 	flDeleteTempFiles: true, //11/13/24 by DW
-	flConvertImagesToGutenberg: false //11/16/24 by DW & 11/18/24 by DW
+	flConvertImagesToGutenberg: false, //11/16/24 by DW & 11/18/24 by DW
+	
+	flLogInstalled: false //12/21/24 by DW
 	};
 
 function base64UrlEncode (theData) {
@@ -76,6 +79,13 @@ function readConfig (f, config, callback) {
 			}
 		callback ();
 		});
+	}
+
+
+function addToLog (eventName, err, eventData, callback) { //12/21/24 by DW
+	if (config.flLogInstalled) {
+		log.addToLog (eventName, err, eventData, callback);
+		}
 	}
 
 //wordpress
@@ -704,6 +714,12 @@ function readConfig (f, config, callback) {
 							}
 						}
 					}
+				function logWrite (verb) { //12/21/24 by DW
+					const eventData = {
+						username, relpath, iddraft
+						};
+					addToLog (verb + "File", undefined, eventData);
+					}
 				const privateval = (flprivate) ? 1 : 0;
 				var fileRec = {
 					username, 
@@ -734,6 +750,7 @@ function readConfig (f, config, callback) {
 							else {
 								fileRec.id = iddraft;
 								setUrlpublic (); //5/16/24 by DW
+								logWrite ("update"); //12/21/24 by DW
 								callback (undefined, fileRec);
 								}
 							}
@@ -751,6 +768,7 @@ function readConfig (f, config, callback) {
 						else {
 							fileRec.id = result.insertId;
 							setUrlpublic (); //5/16/24 by DW
+							logWrite ("create"); //12/21/24 by DW
 							callback (undefined, fileRec);
 							}
 						});
@@ -1084,6 +1102,14 @@ function readConfig (f, config, callback) {
 							if (!err) {
 								conn.appData.accessToken = accessToken;
 								conn.appData.wordpressUserInfo = theUserInfo;
+								
+								const eventData = { //12/21/24 by DW
+									email: theUserInfo.email, 
+									name: theUserInfo.name, 
+									username: theUserInfo.username
+									}
+								addToLog ("connect", undefined, eventData);
+								
 								kissOtherLogonsGoodnight (theUserInfo.username, conn);
 								}
 							});
@@ -1566,6 +1592,16 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 	}
 
 function start (options, callback) {
+	function startLog () { //12/21/24 by DW
+		const logOptions = {
+			};
+		log.start (logOptions, function () {
+			const eventData = {
+				urlServer: config.urlServer
+				}
+			addToLog ("start", undefined, eventData);
+			});
+		}
 	function everyMinute () {
 		readAuthorizedAccounts (); //11/18/24 by DW
 		}
@@ -1581,6 +1617,7 @@ function start (options, callback) {
 		if (options.database !== undefined) { //3/24/24 by DW
 			startStorage (options.database, function () {
 				});
+			startLog (); //12/21/24 by DW
 			}
 		webSocketStartup (); //5/24/24 by DW
 		everyMinute (); //11/18/24 by DW
