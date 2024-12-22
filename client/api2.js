@@ -10,7 +10,7 @@ function wordpress (userOptions, callback) {
 		flWebsocketEnabled: true, //5/24/24 by DW
 		urlChatLogSocket: "ws://localhost:1622/",
 		flWatchSocketForOtherCopies: true,
-		goodnightDialogMsg: "WordLand is running in another tab. You must reload this one, or -- you can safely close it."
+		goodnightDialogMsg: "WordLand is running in another tab. Click OK to reload this tab, or you can safely close it without losing any work." //12/22/24 by DW
 		};
 	if (userOptions !== undefined) { //allow caller to override defaults
 		for (x in userOptions) {

@@ -63,7 +63,6 @@ function base64UrlDecode (theData) {
 		}
 	return (Buffer.from (theData, 'base64').toString ('utf-8'));
 	}
-
 function readConfig (f, config, callback) {
 	fs.readFile (f, function (err, jsontext) {
 		if (!err) {
@@ -80,8 +79,6 @@ function readConfig (f, config, callback) {
 		callback ();
 		});
 	}
-
-
 function addToLog (eventName, err, eventData, callback) { //12/21/24 by DW
 	if (config.flLogInstalled) {
 		log.addToLog (eventName, err, eventData, callback);
