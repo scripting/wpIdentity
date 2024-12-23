@@ -1,3 +1,19 @@
+#### 12/23/24; 12:07:10 PM by DW
+
+The demo app was broken in several ways. It now works properly.
+
+* Setting serverAddress and urlChatLogSocket correctly at startup, don't depend on defaults in api2.js.
+
+* logOffWordpress was missing.
+
+* viewing the site list was broken because we weren't waiting for the site list to load in myWordpress.startup. Fixed it by reading the site list from the server when displaying the site list. I understand why I didn't want it to wait at startup, it's not something WordLand needs to display until the user asks to see the site list.
+
+* startTestPrefs call was commented out, uncommented, set number of tests to 5 instead of 60. 
+
+* There was a problem in saving prefs, something we had fixed in WordLand but the update had not made it into the demo app. 
+
+Hopefully from this point forward there will be no more breakage. We've got a good debugged app, WordLand, and it has to remain unbroken from here-out, so that bodes well, we hope, ymmv, ianal, mmlm. :-)
+
 #### 12/21/24; 11:47:17 AM by DW
 
 Add a log table using my new <a href="https://github.com/scripting/sqlLog">sqlLog</a> package.

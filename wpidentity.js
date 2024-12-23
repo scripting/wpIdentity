@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.5.9";
+var myProductName = "wpidentity", myVersion = "0.5.10";
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 

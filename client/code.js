@@ -1,7 +1,5 @@
 const flUseLocalServer = false;
 
-const myServerAddress = (flUseLocalServer) ? "http://localhost:1408/" : "https://wpidentity.scripting.com/";
-
 var myWordpress;
 
 var appPrefs = {
@@ -12,6 +10,12 @@ var appPrefs = {
 	};
 const fnamePrefs = "demo/prefs.json";
 var flPrefsChanged = false;
+
+function logOffWordpress () {
+	confirmDialog ("Log off WordPress.com?", function () {
+		myWordpress.logOffWordpress ();
+		});
+	}
 
 function addToolTip (theObject, tipText, placement="right") { //8/24/22 by DW
 	$(theObject).attr ("data-container", "body"); //10/23/22 by DW
@@ -68,11 +72,12 @@ function readPrefs (callback) {
 	}
 function savePrefs (callback) {
 	const jsontext = jsonStringify (appPrefs), whenstart = new Date ();
-	myWordpress.writeUserDataFile (fnamePrefs, jsontext, "application/json", true, function (err, data) {
+	myWordpress.writeUniqueFile (fnamePrefs, jsontext, "application/json", true, function (err, data) {
 		if (err) {
 			console.log ("savePrefs: err.message == " +  err.message);
 			}
 		else {
+			console.log ("savePrefs: " + secondsSince (whenstart) + " secs");
 			}
 		if (callback !== undefined) {
 			callback (err, data);
@@ -113,6 +118,7 @@ function sortSiteList (theSites, sortBy="name", flReverseSort=false) {
 		});
 	}
 function viewSitelist (whereToAppend) {
+	console.log ("viewSitelist");
 	var options = {
 		sortBy: "name",
 		flReverseSort: false
@@ -139,51 +145,58 @@ function viewSitelist (whereToAppend) {
 		theRow.append (getDateValue (item.whenCreated, "created"));
 		return (theRow);
 		}
-	console.log ("viewSitelist");
 	if (whereToAppend === undefined) {
 		whereToAppend = $(".divSitelistContainer");
 		}
 	
-	const theList = myWordpress.getSiteList ();
 	
-	function sortTheList () {
-		theList.sites.sort (function (a, b) {
-			switch (options.sortBy) {
-				case "name":
-					var alower = a.name.toLowerCase (), val;
-					var blower = b.name.toLowerCase ();
-					if (options.flReverseSort) { //7/11/22 by DW
-						let tmp = alower;
-						alower = blower;
-						blower = tmp;
+	myWordpress.getUserSites (function (err, theList) {
+		if (err) {
+			alertDialog (err.message);
+			}
+		else {
+			function sortTheList () {
+				theList.sites.sort (function (a, b) {
+					switch (options.sortBy) {
+						case "name":
+							var alower = a.name.toLowerCase (), val;
+							var blower = b.name.toLowerCase ();
+							if (options.flReverseSort) { //7/11/22 by DW
+								let tmp = alower;
+								alower = blower;
+								blower = tmp;
+								}
+							if (alower.length == 0) {
+								return (1);
+								}
+							if (blower.length == 0) {
+								return (-1);
+								}
+							if (alower == blower) {
+								val = 0;
+								}
+							else {
+								if (blower > alower) {
+									val = -1;
+									}
+								else {
+									val = 1;
+									}
+								}
+							return (val);
 						}
-					if (alower.length == 0) {
-						return (1);
-						}
-					if (blower.length == 0) {
-						return (-1);
-						}
-					if (alower == blower) {
-						val = 0;
-						}
-					else {
-						if (blower > alower) {
-							val = -1;
-							}
-						else {
-							val = 1;
-							}
-						}
-					return (val);
+					});
 				}
-			});
-		}
-	const divSitelist = $("<div class=\"divSitelist\"></div>");
-	sortSiteList (theList, options.sortBy, options.flReverseSort);
-	theList.forEach (function (item) {
-		divSitelist.append (getRow (item));
+			const divSitelist = $("<div class=\"divSitelist\"></div>");
+			sortSiteList (theList, options.sortBy, options.flReverseSort);
+			theList.forEach (function (item) {
+				divSitelist.append (getRow (item));
+				});
+			whereToAppend.append (divSitelist);
+			activateToolTips ();
+			}
 		});
-	whereToAppend.append (divSitelist);
+	
 	
 	}
 function reloadSitelist (callback) { //9/3/23 by DW
@@ -234,17 +247,21 @@ function updateForLogin (flConnected=userIsSignedIn ()) {
 	}
 
 function startTestPrefs () { //4/13/24 by DW
-	var ct = 0, maxct = 60;
+	var ct = 0, maxMinutes = 5;
+	function testOnce () {
+		appPrefs.ctMinutesRunning++;
+		appPrefs.whenLastMinute = new Date ();
+		appPrefs.currentSlogan = getRandomSnarkySlogan ();
+		appPrefs.localTime= new Date ().toLocaleString ();
+		prefsChanged ();
+		console.log ("testPrefs: appPrefs == " + jsonStringify (appPrefs));
+		}
 	function everyMinute () {
-		if (ct++ < maxct) {
-			appPrefs.ctMinutesRunning++;
-			appPrefs.whenLastMinute = new Date ();
-			appPrefs.currentSlogan = getRandomSnarkySlogan ();
-			appPrefs.localTime= new Date ().toLocaleString ();
-			prefsChanged ();
-			console.log ("testPrefs: " + appPrefs.localTime);
+		if (ct++ < maxMinutes) {
+			testOnce ();
 			}
 		}
+	testOnce (); 
 	runEveryMinute (everyMinute);
 	}
 
@@ -258,7 +275,9 @@ function everySecond () {
 function startup () {
 	console.log ("startup");
 	const wpOptions = {
-		serverAddress: myServerAddress
+		serverAddress: (flUseLocalServer) ? "http://localhost:1408/" : "https://wpidentity.scripting.com/",
+		urlChatLogSocket: (flUseLocalServer) ? "ws://localhost:1408/" : "wss://wpidentity.scripting.com/",
+		flWebsocketEnabled: true
 		}
 	myWordpress = new wordpress (wpOptions);
 	myWordpress.startup (function (err) {
@@ -270,8 +289,8 @@ function startup () {
 			if (userIsSignedIn ()) {
 				readPrefs (function () { //4/12/24 by DW
 					viewSitelist ();
-					activateToolTips ();
 					self.setInterval (everySecond, 1000); 
+					startTestPrefs (); //12/23/24 by DW
 					});
 				}
 			}
