@@ -908,29 +908,6 @@ function addToLog (eventName, err, eventData, callback) { //12/21/24 by DW
 				}
 			});
 		}
-	
-	function isUserWhitelisted (token, callback) { //10/24/24 by DW
-		if (config.flUseWhitelist) {
-			getUsername (token, function (err, username) {
-				if (err) {
-					callback (err);
-					}
-				else {
-					var flWhitelisted = false;
-					config.authorizedAccounts.forEach (function (item) {
-						if (item == username) {
-							flWhitelisted = true;
-							}
-						});
-					callback (undefined, flWhitelisted);
-					}
-				});
-			}
-		else {
-			callback (undefined, true); //if not using whitelist, everyone is whitelisted
-			}
-		}
-	
 	function getNextDraft (token, id, flPrev, callback) { //10/29/24 by DW
 		getUsername (token, function (err, username) {
 			if (err) {
@@ -961,7 +938,6 @@ function addToLog (eventName, err, eventData, callback) { //12/21/24 by DW
 				}
 			});
 		}
-	
 	function getNextPrevArray (token, callback) { //11/1/24 by DW
 		getUsername (token, function (err, username) {
 			if (err) {
@@ -991,9 +967,66 @@ function addToLog (eventName, err, eventData, callback) { //12/21/24 by DW
 				}
 			});
 		}
+	function isUserWhitelisted (token, callback) { //10/24/24 by DW
+		if (config.flUseWhitelist) {
+			getUsername (token, function (err, username) {
+				if (err) {
+					callback (err);
+					}
+				else {
+					var flWhitelisted = false;
+					config.authorizedAccounts.forEach (function (item) {
+						if (item == username) {
+							flWhitelisted = true;
+							}
+						});
+					callback (undefined, flWhitelisted);
+					}
+				});
+			}
+		else {
+			callback (undefined, true); //if not using whitelist, everyone is whitelisted
+			}
+		}
+	function getTopUsers (callback) { //12/23/24 by DW
+		const sqltext = "select id, username, whenCreated, whenUpdated, ctSaves from wpstorage where relpath = 'wordland/prefs.json' order by ctSaves desc limit 100;";
+		davesql.runSqltext (sqltext, function (err, result) {
+			if (err) {
+				callback (err);
+				}
+			else {
+				var theList = new Array ();
+				result.forEach (function (item) {
+					theList.push ({
+						username: item.username,
+						ctConnects: item.ctSaves,
+						whenFirstConnect: item.whenCreated,
+						whenLastConnect: item.whenUpdated
+						});
+					});
+				callback (undefined, theList);
+				}
+			});
+		}
 	
-	
-	
+	function getPublicFile (username, relpath, callback) { //1/9/25 by DW
+		const sqltext = "select * from  wpstorage where username = " + davesql.encode (username) + " and relpath = " + davesql.encode (relpath) + " and flprivate = 0;";
+		davesql.runSqltext (sqltext, function (err, result) {
+			if (err) {
+				callback (err);
+				}
+			else {
+				if (result.length == 0) {
+					const message = "Can't find the file " + relpath + " for the user " + username + ", or it may not be public.";
+					callback ({message});
+					}
+				else {
+					const theFile = result [0];
+					callback (undefined, JSON.parse (theFile.filecontents));
+					}
+				}
+			});
+		}
 	
 //sockets -- 5/24/24 by DW
 	var theWsServer = undefined;
@@ -1210,7 +1243,6 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 	
 	function servePublicFile (virtualpath, callback) { //4/30/24 by DW
 		const parts = virtualpath.split ("/");
-		
 		if (parts.length < 4) {
 			return (false);
 			}
@@ -1577,6 +1609,14 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 						getNextPrevArray (token, httpReturn);
 						});
 					return (true);
+				case "/wordpressgettopusers": //12/23/24 by DW
+					getTopUsers (httpReturn);
+					return (true);
+				
+				case "/wordpressgetpublicfile": //1/9/25 by DW
+					getPublicFile (params.username, params.relpath, httpReturn);
+					return (true);
+				
 				default:
 					if (config.flServePublicUserFiles) { //4/30/24 by DW
 						return (servePublicFile (theRequest.lowerpath)); 

@@ -1,4 +1,4 @@
-var myProductName = "wpapp", myVersion = "0.4.1";
+var myProductName = "wpapp", myVersion = "0.4.1"; 
 
 const fs = require ("fs");
 const utils = require ("daveutils");

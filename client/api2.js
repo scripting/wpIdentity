@@ -497,6 +497,15 @@ function wordpress (userOptions, callback) {
 		wpServerCall ("wordpressuseriswhitelisted", undefined, true, callback);
 		},
 	
+	this.getTopUsers = function (callback) { //12/23/24 by DW
+		wpServerCall ("wordpressgettopusers", undefined, false, callback);
+		},
+	
+	this.getAccessToken = function () { //12/24/24 by DW
+		const theToken = base64UrlEncode (wordpressMemory.accessToken);
+		return (theToken);
+		},
+	
 	//testing functions, mostly commented out -- 10/24/24 by DW
 		this.testPost = function  () { //5/9/24 by DW -- trying to figure out why POST ops don't return
 			const jstruct = {

@@ -36,3 +36,13 @@ select id, username, relpath, type, idSite, idPost, whenCreated, whenUpdated, ct
 
 select filecontents from wpstorage where id = 65;
 
+select filecontents from wpstorage where relpath = 'bingeworthy/profile.json';
+
+select id, username, whenCreated, whenUpdated, ctSaves from wpstorage where relpath = 'wordland/prefs.json' order by ctSaves desc limit 25;
+
+select * from log order by id desc limit 100;
+
+select id, eventName, whenCreated from log order by id desc limit 100;
+
+select id, eventData from log order by id desc limit 100;
+

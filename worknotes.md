@@ -1,3 +1,7 @@
+#### 12/23/24; 5:22:22 PM by DW
+
+New call -- wordpressgettopusers, returns an array of the top users ranked by number of times their WordLand prefs.json file has been read, which happens when you first load the app. It doesn't measure activity, ie editing and publishing. 
+
 #### 12/23/24; 12:07:10 PM by DW
 
 The demo app was broken in several ways. It now works properly.
