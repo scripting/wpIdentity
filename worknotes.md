@@ -1,3 +1,9 @@
+#### 1/24/25; 8:36:53 AM by DW
+
+If a user has a deleted WordPress website, convertSite will crash, trying to create a data structure for it. 
+
+Changes in getUserSites and convertSite. 
+
 #### 12/23/24; 5:22:22 PM by DW
 
 New call -- wordpressgettopusers, returns an array of the top users ranked by number of times their WordLand prefs.json file has been read, which happens when you first load the app. It doesn't measure activity, ie editing and publishing. 

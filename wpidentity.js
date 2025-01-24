@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.5.10";
+var myProductName = "wpidentity", myVersion = "0.5.11";
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -185,12 +185,14 @@ function addToLog (eventName, err, eventData, callback) { //12/21/24 by DW
 			});
 		}
 	function convertSite (theSite) {
+		const flDeleted = theSite.is_deleted; //1/24/25 by DW
 		return ({
 			idSite: theSite.ID,
 			urlSite: theSite.URL,
 			description: theSite.description,
 			name: theSite.name,
-			whenCreated: convertDate (theSite.options.created_at),
+			whenCreated: (flDeleted) ? undefined : convertDate (theSite.options.created_at), //1/24/25 by DW
+			flDeleted, //1/24/25 by DW
 			ctPosts: theSite.options.post_count
 			});
 		}
@@ -250,7 +252,9 @@ function addToLog (eventName, err, eventData, callback) { //12/21/24 by DW
 			else {
 				var theList = new Array ();
 				theSiteList.sites.forEach (function (item) {
-					theList.push (convertSite (item));
+					if (!item.is_deleted) { //1/24/25 by DW
+						theList.push (convertSite (item));
+						}
 					});
 				callback (undefined, theList);
 				}
