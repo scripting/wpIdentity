@@ -2,7 +2,7 @@
 	"name": "wpidentity",
 	"description": "Implements OAuth identity, a simple verb set with wordpress.com for Node.js apps, and a storage system for drafts and other user data.",
 	"author": "Dave Winer <dave@scripting.com>",
-	"version": "0.5.11",
+	"version": "0.5.12",
 	"license": "MIT",
 	"repository": {
 		"type": "git",

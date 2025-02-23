@@ -1,3 +1,7 @@
+#### 2/22/25; 9:08:07 AM by DW
+
+In readUserFile, we need to send a clear message back to the caller if the file they're looking for simply doesn't exist. That is not actually an error here, it happens with bookmarks.opml the first time a user signs on to WordLand. The change is in readUserFile.
+
 #### 1/24/25; 8:36:53 AM by DW
 
 If a user has a deleted WordPress website, convertSite will crash, trying to create a data structure for it. 

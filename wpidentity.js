@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.5.11";
+var myProductName = "wpidentity", myVersion = "0.5.12";
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -667,7 +667,8 @@ function addToLog (eventName, err, eventData, callback) { //12/21/24 by DW
 			else {
 				if (result.length == 0) {
 					const message = "Can't find the file " + relpath + " for the user " + username + ".";
-					callback ({message});
+					const code = 404; //2/22/25 by DW
+					callback ({message, code});
 					}
 				else {
 					const theFileRec = result [0];
@@ -1237,8 +1238,14 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 		}
 	function httpReturn (err, data) {
 		if (err) {
-			console.log ("httpReturn: err.message == " + err.message);
-			returnError (err);
+			if (err.code !== undefined) { //2/22/25 by DW -- let the caller determine the code
+				console.log ("httpReturn: err.code == " + err.code + ", err.message == " + err.message);
+				theRequest.httpReturn (err.code, "text/plain", err.message);
+				}
+			else {
+				console.log ("httpReturn: err.message == " + err.message);
+				returnError (err);
+				}
 			}
 		else {
 			returnData (data);
