@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.5.12";
+var myProductName = "wpidentity", myVersion = "0.5.12"; 
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -49,7 +49,9 @@ var config = {
 	flDeleteTempFiles: true, //11/13/24 by DW
 	flConvertImagesToGutenberg: false, //11/16/24 by DW & 11/18/24 by DW
 	
-	flLogInstalled: false //12/21/24 by DW
+	flLogInstalled: false, //12/21/24 by DW
+	
+	sysopUsername: undefined
 	};
 
 function base64UrlEncode (theData) {
@@ -473,7 +475,6 @@ function addToLog (eventName, err, eventData, callback) { //12/21/24 by DW
 		s = marked (s);
 		return (s);
 		}
-	
 	function processMarkdownImages (markdowntext) { //11/16/24 by DW
 		if (config.flConvertImagesToGutenberg) {
 			const imageRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
@@ -491,7 +492,6 @@ function addToLog (eventName, err, eventData, callback) { //12/21/24 by DW
 			return (markdowntext);
 			}
 		}
-	
 	function processPostText (token, theText, callback) {
 		theText = emojiProcess (theText); //4/15/24 by DW
 		theText = processMarkdownImages (theText); //11/16/24 by DW
@@ -502,6 +502,14 @@ function addToLog (eventName, err, eventData, callback) { //12/21/24 by DW
 				}
 			callback (undefined, theText);
 			});
+		}
+	function logPublish (verb, theData) { //2/23/25 by DW
+		const eventData = {
+			title: theData.title,
+			author: theData.author.username,
+			url: theData.url,
+			};
+		addToLog (verb + "Post", undefined, eventData);
 		}
 	
 	function addPost (accessToken, idSite, jsontext, callback) { //8/29/23 by DW
@@ -533,6 +541,7 @@ function addToLog (eventName, err, eventData, callback) { //12/21/24 by DW
 					var theConvertedPost = convertPost (theNewPost); //5/17/24 by DW
 					theConvertedPost.whenPublished = new Date ();
 					console.log ("addPost: theConvertedPost == " + utils.jsonStringify (theConvertedPost)); //5/8/24 by DW
+					logPublish ("add", theConvertedPost); //2/23/25 by DW
 					callback (undefined, theConvertedPost);
 					}
 				});
@@ -562,6 +571,7 @@ function addToLog (eventName, err, eventData, callback) { //12/21/24 by DW
 					var theConvertedPost = convertPost (theNewPost); //5/17/24 by DW
 					theConvertedPost.whenPublished = new Date ();
 					console.log ("updatePost: theConvertedPost == " + utils.jsonStringify (theConvertedPost)); //5/8/24 by DW
+					logPublish ("update", theConvertedPost); //2/23/25 by DW
 					callback (undefined, theConvertedPost);
 					}
 				});
@@ -823,7 +833,6 @@ function addToLog (eventName, err, eventData, callback) { //12/21/24 by DW
 					}
 				const maxCtDrafts = Math.min (config.maxCtDrafts, maxCtDraftsParam);
 				const sqltext = "select * from wpstorage where relpath = 'draft.json' and username = " + davesql.encode (username) +  sitepart + " order by whenUpdated desc limit " + maxCtDrafts + ";"; //10/26/24 by DW
-				console.log ("\ngetRecentUserDrafts: sqltext == " + sqltext + "\n");
 				davesql.runSqltext (sqltext, function (err, result) {
 					if (err) {
 						callback (err);
@@ -993,25 +1002,82 @@ function addToLog (eventName, err, eventData, callback) { //12/21/24 by DW
 			callback (undefined, true); //if not using whitelist, everyone is whitelisted
 			}
 		}
-	function getTopUsers (callback) { //12/23/24 by DW
-		const sqltext = "select id, username, whenCreated, whenUpdated, ctSaves from wpstorage where relpath = 'wordland/prefs.json' order by ctSaves desc limit 100;";
-		davesql.runSqltext (sqltext, function (err, result) {
-			if (err) {
-				callback (err);
-				}
-			else {
-				var theList = new Array ();
-				result.forEach (function (item) {
-					theList.push ({
-						username: item.username,
-						ctConnects: item.ctSaves,
-						whenFirstConnect: item.whenCreated,
-						whenLastConnect: item.whenUpdated
+	
+	function isUserSysop (username, callback) { 
+		if (config.sysopUsername === undefined) { //2/24/25 by DW
+			return (true); //everyone is authorized
+			}
+		if (username == config.sysopUsername) {
+			return (true); 
+			}
+		else {
+			const message = "Can't get this information because you are not authorized.";
+			callback ({message});
+			return (false);
+			}
+		}
+	
+	function getTopUsers (username, callback) { //12/23/24 by DW
+		if (isUserSysop (username, callback)) {
+			const sqltext = "select id, username, whenCreated, whenUpdated, ctSaves from wpstorage where relpath = 'wordland/prefs.json' order by ctSaves desc limit 100;";
+			davesql.runSqltext (sqltext, function (err, result) {
+				if (err) {
+					callback (err);
+					}
+				else {
+					var theList = new Array ();
+					result.forEach (function (item) {
+						theList.push ({
+							username: item.username,
+							ctConnects: item.ctSaves,
+							whenFirstConnect: item.whenCreated,
+							whenLastConnect: item.whenUpdated
+							});
 						});
-					});
-				callback (undefined, theList);
-				}
-			});
+					callback (undefined, theList);
+					}
+				});
+			}
+		}
+	function getNewPosts (username, callback) { //2/24/25 by DW
+		if (isUserSysop (username, callback)) {
+			const sqltext = `
+				select l.*
+				from log l
+				join (
+					select json_extract(eventData, '$.url') as postUrl, max(whenCreated) as latestWhenCreated
+					from log
+					where eventName in ('addPost', 'updatePost')
+					group by json_extract(eventData, '$.url')
+					order by latestWhenCreated desc
+					limit 100
+					) latest
+				on json_extract(l.eventData, '$.url') = latest.postUrl
+				and l.whenCreated = latest.latestWhenCreated
+				order by l.whenCreated desc
+				limit 100;
+				`;
+			davesql.runSqltext (sqltext, function (err, result) {
+				if (err) {
+					callback (err);
+					}
+				else {
+					var theList = new Array ();
+					result.forEach (function (item) {
+						const jstruct = JSON.parse (item.eventData);
+						theList.push ({
+							id: item.id,
+							title: (jstruct.title === undefined) ? "" : jstruct.title,
+							url: jstruct.url,
+							author: jstruct.author,
+							when: item.whenCreated,
+							event: item.eventName
+							});
+						});
+					callback (undefined, theList);
+					}
+				});
+			}
 		}
 	
 	function getPublicFile (username, relpath, callback) { //1/9/25 by DW
@@ -1097,8 +1163,6 @@ function addToLog (eventName, err, eventData, callback) { //12/21/24 by DW
 		return (theArray);
 		}
 	function handleWebSocketConnection (conn) { 
-		
-		
 		var now = new Date ();
 		conn.appData = { //initialize
 			whenStarted: now,
@@ -1116,9 +1180,11 @@ function addToLog (eventName, err, eventData, callback) { //12/21/24 by DW
 			theWsServer.connections.forEach (function (conn, ix) {
 				if (conn.appData !== undefined) { //it's one of ours
 					if (conn != theNewConnection) { //it's not the new one
-						if (conn.appData.wordpressUserInfo.username == username) {
-							console.log ("kissOtherLogonsGoodnight: \"" + conn.appData.wordpressUserInfo.username + "\" = \"" + username + "\""); 
-							conn.sendText ("goodnight");
+						if (conn.appData.wordpressUserInfo !== undefined) { //2/23/25 by DW
+							if (conn.appData.wordpressUserInfo.username == username) {
+								console.log ("kissOtherLogonsGoodnight: \"" + conn.appData.wordpressUserInfo.username + "\" = \"" + username + "\""); 
+								conn.sendText ("goodnight");
+								}
 							}
 						}
 					}
@@ -1239,11 +1305,9 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 	function httpReturn (err, data) {
 		if (err) {
 			if (err.code !== undefined) { //2/22/25 by DW -- let the caller determine the code
-				console.log ("httpReturn: err.code == " + err.code + ", err.message == " + err.message);
 				theRequest.httpReturn (err.code, "text/plain", err.message);
 				}
 			else {
-				console.log ("httpReturn: err.message == " + err.message);
 				returnError (err);
 				}
 			}
@@ -1365,6 +1429,18 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 					}
 				});
 			}
+		}
+	function callWithUsername (callback) { //2/24/25 by DW
+		tokenRequired (function (token) {
+			getUsername (token, function (err, username) {
+				if (err) {
+					returnError (err);
+					} 
+				else {
+					callback (username);
+					}
+				});
+			});
 		}
 	function unpackState (jsontext) { //9/4/23 by DW
 		var jstruct;
@@ -1621,11 +1697,17 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 						});
 					return (true);
 				case "/wordpressgettopusers": //12/23/24 by DW
-					getTopUsers (httpReturn);
+					callWithUsername (function (username) {
+						getTopUsers (username, httpReturn);
+						});
 					return (true);
-				
 				case "/wordpressgetpublicfile": //1/9/25 by DW
 					getPublicFile (params.username, params.relpath, httpReturn);
+					return (true);
+				case "/wordpressgettnewposts": //2/24/25 by DW
+					callWithUsername (function (username) {
+						getNewPosts (username, httpReturn);
+						});
 					return (true);
 				
 				default:

@@ -1,3 +1,15 @@
+#### 2/24/25; 9:26:16 AM by DW
+
+I want separate events for addPost and updatePost operations. 
+
+* Previously we were using "publish" for both events. So instead of calling both "publish" we'll just use the names of the functions that implement them.
+
+* Also want the title of the post to be included with both events. 
+
+#### 2/23/25; 12:38:27 PM by DW
+
+We now log publish operations. 
+
 #### 2/22/25; 9:08:07 AM by DW
 
 In readUserFile, we need to send a clear message back to the caller if the file they're looking for simply doesn't exist. That is not actually an error here, it happens with bookmarks.opml the first time a user signs on to WordLand. The change is in readUserFile.
