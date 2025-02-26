@@ -6,11 +6,11 @@ Every wpidentity installation has the option of providing user-level storage.
 
 1. Provide an object named <i>database</i> in config.json. There's an example in <a href="https://github.com/scripting/wpIdentity/blob/main/config.json">config.json</a> in this repo.
 
-2. In your MySQL database, create a table called wpstorage with this command. 
+2. In your MySQL database, create tables wpstorage and users with these commands. 
 
 ```SQL
 
-create table wpstorage (	id int auto_increment key, 	username varchar (255), 	relpath varchar (255), 	flprivate boolean,	idSite int unsigned not null default 0,	idPost int unsigned not null default 0,	type varchar (64),	filecontents longtext,	whenCreated datetime, 	whenUpdated datetime, 	ctSaves int unsigned not null default 0,	index draftIndex (username, relpath, flprivate, idSite, idPost)	);
+create table wpstorage (	id int auto_increment key, 	username varchar (255), 	relpath varchar (255), 	flprivate boolean,	idSite int unsigned not null default 0,	idPost int unsigned not null default 0,	type varchar (64),	filecontents longtext,	whenCreated datetime, 	whenUpdated datetime, 	ctSaves int unsigned not null default 0,	index draftIndex (username, relpath, flprivate, idSite, idPost)	);create table users (	id int auto_increment primary key,	username varchar(255) not null unique,	ctHits int unsigned not null default 0,	whenLastHit datetime not null default current_timestamp,	lastBrowser varchar(512) not null default '',	whenCreated datetime not null default current_timestamp,	metadata json not null default (json_object())	);
 
 ```
 

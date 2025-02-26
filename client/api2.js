@@ -506,6 +506,9 @@ function wordpress (userOptions, callback) {
 	this.getNewPosts = function (callback) { //2/24/25 by DW
 		wpServerCall ("wordpressgettnewposts", undefined, true, callback);
 		},
+	this.countUserHit = function (callback) { //2/26/25 by DW
+		wpServerCall ("wordpresscounthit", undefined, true, callback);
+		},
 	
 	//testing functions, mostly commented out -- 10/24/24 by DW
 		

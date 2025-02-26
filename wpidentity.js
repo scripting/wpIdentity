@@ -1240,6 +1240,30 @@ function addToLog (eventName, err, eventData, callback) { //12/21/24 by DW
 				}
 			}
 		}
+//users table -- 2/26/25 by DW
+	
+	function countUserHit (username, userAgent, callback) {
+		const sqltext = `
+			insert into users (username, ctHits, whenLastHit, lastBrowser)
+			values (${davesql.encode (username)}, 1, current_timestamp, ${davesql.encode (userAgent)})
+			on duplicate key update
+				ctHits = ctHits + 1,
+				whenLastHit = current_timestamp,
+				lastBrowser = values(lastBrowser);
+			`;
+		davesql.runSqltext (sqltext, function (err, result) {
+			if (err) {
+				callback (err);
+				}
+			else {
+				callback (undefined, result);
+				}
+			});
+		}
+	
+	
+	
+	
 //misc -- 10/28/24 by DW
 	function fixBookmarksFile () { //10/28/24 by DW
 		fs.readFile ("bookmarks.opml", function (err, opmltext) {
@@ -1707,6 +1731,11 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 				case "/wordpressgettnewposts": //2/24/25 by DW
 					callWithUsername (function (username) {
 						getNewPosts (username, httpReturn);
+						});
+					return (true);
+				case "/wordpresscounthit": //2/26/25 by DW
+					callWithUsername (function (username) {
+						countUserHit (username, theRequest.sysRequest.headers ["user-agent"], httpReturn);
 						});
 					return (true);
 				

@@ -1,3 +1,11 @@
+#### 2/26/25; 9:49:12 AM by DW
+
+Adding a users table. I want to be able to gather metadata, right now I want to know what browsers people are using, so I know how important it is to get it working in each browser. Apparently there are problems in some versions of Safari, but I only have gotten one report. I need to see what's actually going on, and to have a way to gather other data. 
+
+See countUserHit function.
+
+The users table is documented on the <a href="https://github.com/scripting/wpIdentity/blob/main/docs/storage.md">docs/storage.md page</a>.
+
 #### 2/24/25; 9:26:16 AM by DW
 
 I want separate events for addPost and updatePost operations. 
