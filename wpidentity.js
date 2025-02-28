@@ -54,6 +54,14 @@ var config = {
 	sysopUsername: undefined
 	};
 
+var stats = {
+	ctHits: 0,
+	whenLastHit: undefined,
+	whenFirstHit: undefined,
+	userAgents: {
+		}
+	};
+
 function base64UrlEncode (theData) {
 	var base64 = Buffer.from (theData).toString ('base64');
 	return (base64.replace ('+', '-').replace ('/', '_').replace (/=+$/, ''));
@@ -1302,8 +1310,58 @@ function addToLog (eventName, err, eventData, callback) { //12/21/24 by DW
 			}
 		}
 
+//stats -- 2/27/25 by DW
+	var flStatsChanged = false;
+	const statsFile = "data/stats.json";
+	
+	function startStats (callback) {
+		utils.sureFilePath (statsFile, function () {
+			utils.readConfig (statsFile, stats, function () {
+				if (callback !== undefined) {
+					callback ();
+					}
+				});
+			});
+		}
+	function statsChanged () {
+		flStatsChanged = true;
+		}
+	function getStatsFromRequest (theRequest) {
+		const now = new Date ();
+		stats.ctHits++;
+		stats.whenLastHit = now;
+		if (stats.whenFirstHit === undefined) {
+			stats.whenFirstHit = now;
+			}
+		
+		const userAgent = theRequest.sysRequest.headers ["user-agent"];
+		if (userAgent !== undefined) {
+			if (stats.userAgents [userAgent] === undefined) {
+				stats.userAgents [userAgent] = 1;
+				}
+			else {
+				stats.userAgents [userAgent]++;
+				}
+			}
+		
+		statsChanged ();
+		}
+	function checkStats () {
+		if (flStatsChanged) {
+			utils.sureFilePath (statsFile, function () {
+				fs.writeFile (statsFile, utils.jsonStringify (stats), function (err) {
+					});
+				});
+			flStatsChanged = false;
+			}
+		}
+
+
 function handleHttpRequest (theRequest, options = new Object ()) { //returns true if request was handled
 	const params = theRequest.params;
+	
+	getStatsFromRequest (theRequest); //2/27/25 by DW
+	
 	function returnRedirect (url, code) { //9/30/20 by DW
 		var headers = {
 			location: url
@@ -1547,6 +1605,9 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 				case "/now":
 					returnPlaintext (new Date ().toUTCString ());
 					return (true);
+				case "/stats": //2/27/25 by DW
+					returnPlaintext (utils.jsonStringify (stats));
+					return (true);
 				case "/connect": 
 					connectRedirect (params.urlapphomepage);
 					return (true);
@@ -1764,7 +1825,8 @@ function start (options, callback) {
 	function everyMinute () {
 		readAuthorizedAccounts (); //11/18/24 by DW
 		}
-	function everySecond () { //10/24/24 by DW
+	function everySecond () { //2/27/25 by DW
+		checkStats ();
 		}
 	console.log ("wpIdentity.start: options == " + utils.jsonStringify (options));
 	if (options !== undefined) {
@@ -1779,6 +1841,8 @@ function start (options, callback) {
 			startLog (); //12/21/24 by DW
 			}
 		webSocketStartup (); //5/24/24 by DW
+		startStats (); //2/27/25 by DW
+		setInterval (everySecond, 1000);  //2/27/25 by DW
 		everyMinute (); //11/18/24 by DW
 		utils.runEveryMinute (everyMinute); //11/18/24 by DW
 		if (callback !== undefined) {
