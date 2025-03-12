@@ -361,7 +361,21 @@ function wordpress (userOptions, callback) {
 		}
 	
 	this.getUserInfo = function (callback) {
-		callback (undefined, wordpressMemory.userinfo);
+		if (wordpressMemory.userinfo === undefined) { //3/9/25 by DW
+			getUserInfo (function (err, theUserInfo) {
+				if (err) {
+					callback (err);
+					}
+				else {
+					wordpressMemory.userinfo = theUserInfo;
+					saveWordpressMemory ();
+					callback (undefined, theUserInfo);
+					}
+				})
+			}
+		else {
+			callback (undefined, wordpressMemory.userinfo);
+			}
 		}
 	this.getUserInfoSync = function () { //10/26/24 by DW
 		return (wordpressMemory.userinfo);
@@ -456,6 +470,8 @@ function wordpress (userOptions, callback) {
 	this.getPrevDraft = getPrevDraft; //10/29/24 by DW
 	this.getNextPrevArray = getNextPrevArray; //11/1/24 by DW
 	this.uploadImageFile = uploadImageFile; //11/11/24 by DW
+	this.servercall = wpServerCall; //3/11/25 by DW
+	this.serverpost = wpServerPost; //3/11/25 by DW
 	
 	this.readUserJsonFile = function (relpath, flPrivate, callback, options) { //4/10/24 by DW
 		readUserDataFile (relpath, flPrivate, function (err, theFileData) {
@@ -477,7 +493,6 @@ function wordpress (userOptions, callback) {
 				}
 			}, options);
 		}
-	
 	this.deleteUserDataFile = function (relpath, flPrivate, callback) { //3/26/24 by DW
 		console.log ("deleteUserDataFile");
 		const whenstart = new Date ();

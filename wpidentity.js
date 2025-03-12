@@ -1,8 +1,9 @@
-var myProductName = "wpidentity", myVersion = "0.5.12"; 
+var myProductName = "wpidentity", myVersion = "0.5.15"; 
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
 exports.getUserInfo = getUserInfo; //3/23/24 by DW
+exports.callWithUsername = callWithUsernameForClient; //3/12/25 by DW
 
 const fs = require ("fs");
 const utils = require ("daveutils"); 
@@ -93,6 +94,62 @@ function addToLog (eventName, err, eventData, callback) { //12/21/24 by DW
 	if (config.flLogInstalled) {
 		log.addToLog (eventName, err, eventData, callback);
 		}
+	}
+function getUsername (token, callback) { //3/24/24 by DW
+	if (utils.secondsSince (whenLastUsernameCacheStart) > config.ctUsernameCacheSecs) {
+		usernameCache = new Object ();
+		}
+	if (usernameCache [token] !== undefined) {
+		callback (undefined, usernameCache [token]);
+		}
+	else {
+		getUserInfo (token, function (err, theUser) {
+			if (err) {
+				callback (err);
+				}
+			else {
+				const username = theUser.username;
+				usernameCache [token] = username;
+				callback (undefined, username);
+				}
+			});
+		}
+	}
+function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- special function for apps that include wpidentity
+	const params = theRequest.params;
+	function returnError (err) {
+		theRequest.httpReturn (503, "text/plain", err.message);
+		}
+	function isUserWhitelisted (token, callback) {
+		callback (undefined, true);
+		}
+	function tokenRequired (callback) {
+		const token = (params.token === undefined) ? undefined : base64UrlDecode (params.token);
+		if (token === undefined) {
+			const message = "Can't get the info because the user must be logged in.";
+			returnError ({message});
+			}
+		else {
+			isUserWhitelisted (token, function (err, flWhitelisted) { //10/24/24 by DW
+				if (err) {
+					returnError (err);
+					}
+				else {
+					callback (token);
+					}
+				});
+			}
+		}
+	tokenRequired (function (token) {
+		getUsername (token, function (err, username) {
+			if (err) {
+				returnError (err);
+				} 
+			else {
+				callback (username);
+				}
+			});
+		});
 	}
 
 //wordpress
@@ -539,7 +596,6 @@ function addToLog (eventName, err, eventData, callback) { //12/21/24 by DW
 				format: "standard",
 				comment_status: "open"
 				};
-			console.log ("addPost: thePost == " + utils.jsonStringify (thePost)); //5/8/24 by DW
 			site.addPost (thePost, function (err, theNewPost) {
 				if (err) {
 					console.log ("addPost: err.message == " + err.message); //5/8/24 by DW
@@ -612,26 +668,6 @@ function addToLog (eventName, err, eventData, callback) { //12/21/24 by DW
 				callback (undefined, theList);
 				}
 			});
-		}
-	function getUsername (token, callback) { //3/24/24 by DW
-		if (utils.secondsSince (whenLastUsernameCacheStart) > config.ctUsernameCacheSecs) {
-			usernameCache = new Object ();
-			}
-		if (usernameCache [token] !== undefined) {
-			callback (undefined, usernameCache [token]);
-			}
-		else {
-			getUserInfo (token, function (err, theUser) {
-				if (err) {
-					callback (err);
-					}
-				else {
-					const username = theUser.username;
-					usernameCache [token] = username;
-					callback (undefined, username);
-					}
-				});
-			}
 		}
 	
 	function startStorage (theDatabase, callback) { //3/24/24 by DW
@@ -918,7 +954,6 @@ function addToLog (eventName, err, eventData, callback) { //12/21/24 by DW
 				} 
 			else {
 				const sqltext = "delete from wpstorage where username = " + davesql.encode (username) + " and id = " + davesql.encode (iddraft) + ";";
-				console.log ("deleteDraft: sqltext == " + sqltext);
 				davesql.runSqltext (sqltext, function (err, result) {
 					if (err) {
 						callback (err);
@@ -939,7 +974,6 @@ function addToLog (eventName, err, eventData, callback) { //12/21/24 by DW
 				const chCompare = (flPrev) ? " < " : " > ";
 				const ascendOrDescend = (flPrev) ? " desc " : " asc ";
 				const sqltext = "select *  from wpstorage  where username = " + davesql.encode (username) + " and relpath = " + davesql.encode ("draft.json") + " and id " + chCompare + davesql.encode (id) + " order by id " + ascendOrDescend + " limit 1;";
-				console.log ("getNextDraft: sqltext == " + sqltext);
 				davesql.runSqltext (sqltext, function (err, result) {
 					if (err) {
 						callback (err);

@@ -1,3 +1,25 @@
+#### 3/12/25; 10:07:45 AM by DW
+
+getUsername, as exported on the 10th, doesn't work -- and I never figured out why. instead i created a clone of callWithUsername that can be called by an app that includes wpIdentity, just as it can call it in its http-handling function. remarkably, it does work. i can now move on.  
+
+#### 3/10/25; 3:28:48 PM by DW
+
+Exporting getUsername function, it's needed in writersweb. It could have worked with getUserInfo, which is already exported, but we have a cache on getUsername, and rather than replicate the functionality at a higher level, it's best to export it.
+
+#### 3/9/25; 1:00:40 PM by DW
+
+Update in api2.js. this.getUserInfo assumed that the server had already been called to ask for it, and cached it in wordpressMemory, and that's true in WordLand, but not true in a new app I'm working on. So we have to account for that possibility, and be ready to call the server if it isn't initialized. Fairly sure there's no chance of breakage, because we're just replacing undefined with actual data. 
+
+#### 3/7/25; 4:18:02 PM by DW
+
+I want to be able to bake wpidentity into an app, starting with writersweb. 
+
+1. I will need to call it's httpRequest handler, which is exported, so that's cool.
+
+2. I will need to be able to get information about a user, providing a token and getting back a struct. 
+
+Both these functions are already exported. Hmm. 
+
 #### 2/26/25; 9:49:12 AM by DW
 
 Adding a users table. I want to be able to gather metadata, right now I want to know what browsers people are using, so I know how important it is to get it working in each browser. Apparently there are problems in some versions of Safari, but I only have gotten one report. I need to see what's actually going on, and to have a way to gather other data. 
