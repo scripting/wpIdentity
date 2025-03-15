@@ -313,6 +313,13 @@ function wordpress (userOptions, callback) {
 			});
 		theInput.click ();
 		}
+	function addCategory (idsite, theCategory, callback) { //3/15/25 by DW
+		const jsontext = JSON.stringify (theCategory);
+		wpServerCall ("wordpressaddcategory", {idsite, jsontext}, true, callback);
+		}
+	function deleteCategory (idsite, idcategory, callback) { //3/15/25 by DW
+		wpServerCall ("wordpressdeletecategory", {idsite, idcategory}, true, callback);
+		}
 	
 	function wsConnectUserToServer () { //5/24/24 by DW
 		var flGoodnightDialogShowing = false; 
@@ -405,6 +412,7 @@ function wordpress (userOptions, callback) {
 	this.getSiteCategories = function (idsite, callback) { //10/19/24 by DW
 		wpServerCall ("wordpressgetsitecategories", {idsite}, true, callback);
 		}
+	
 	this.getPost = function (idsite, idpost, callback) { //8/28/23 by DW
 		wpServerCall ("wordpressgetpost", {idsite, idpost}, true, callback);
 		}
@@ -472,6 +480,8 @@ function wordpress (userOptions, callback) {
 	this.uploadImageFile = uploadImageFile; //11/11/24 by DW
 	this.servercall = wpServerCall; //3/11/25 by DW
 	this.serverpost = wpServerPost; //3/11/25 by DW
+	this.addCategory = addCategory; //3/15/25 by DW
+	this.deleteCategory = deleteCategory; //3/15/25 by DW
 	
 	this.readUserJsonFile = function (relpath, flPrivate, callback, options) { //4/10/24 by DW
 		readUserDataFile (relpath, flPrivate, function (err, theFileData) {

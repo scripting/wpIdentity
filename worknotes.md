@@ -1,3 +1,7 @@
+#### 3/14/25; 10:27:39 AM by DW
+
+config.homePagetable lets you add macros to the home page for the site being served through the home page. 
+
 #### 3/12/25; 10:07:45 AM by DW
 
 getUsername, as exported on the 10th, doesn't work -- and I never figured out why. instead i created a clone of callWithUsername that can be called by an app that includes wpIdentity, just as it can call it in its http-handling function. remarkably, it does work. i can now move on.  

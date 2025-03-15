@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.5.15"; 
+var myProductName = "wpidentity", myVersion = "0.5.16"; 
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -52,7 +52,9 @@ var config = {
 	
 	flLogInstalled: false, //12/21/24 by DW
 	
-	sysopUsername: undefined
+	sysopUsername: undefined, //2/24/25 by DW
+	
+	homePagetable: undefined //3/14/25 by DW
 	};
 
 var stats = {
@@ -444,6 +446,46 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 				}
 			});
 		}
+	
+	function addSiteCategory (accessToken, idSite, jsontext, callback) { //3/15/25 by DW
+		const jstruct = getObjectFromJsontext (jsontext, callback);
+		if (jstruct === undefined) {
+			return;
+			}
+		const wp = wpcom (accessToken);
+		
+		const theRequest = {
+			method: "POST",
+			path: `/sites/${idSite}/categories/new`,
+			body: jstruct
+			}
+		wp.req.post (theRequest, function (err, theCategory) {
+			if (err) {
+				callback (err);
+				}
+			else {
+				callback (undefined, convertCategory (theCategory));
+				}
+			});
+		}
+	function deleteSiteCategory (accessToken, idSite, idCategory, callback) { // 3/15/25 by DW
+		const wp = wpcom (accessToken);
+		const theRequest = {
+			apiVersion: "1.1",
+			path: `/sites/${idSite}/categories/${idCategory}`
+			}
+		wp.req.del (theRequest, function (err, response) {
+			if (err) {
+				callback (err);
+				}
+			else {
+				callback (undefined, response);
+				}
+			});
+		}
+	
+	
+	
 	function uploadImage (accessToken, base64Data, filename, mimeType, idSite, callback) { //11/10/24 by DW
 		const wp = wpcom (accessToken);
 		const site = wp.site (idSite);
@@ -1390,7 +1432,6 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 			}
 		}
 
-
 function handleHttpRequest (theRequest, options = new Object ()) { //returns true if request was handled
 	const params = theRequest.params;
 	
@@ -1497,6 +1538,9 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 			urlServer: config.urlServer,
 			urlSocketServer: config.urlSocketServer //5/25/24 by DW
 			};
+		if (config.homePagetable !== undefined) { //3/14/25 by DW
+			utils.mergeOptions (config.homePagetable, pagetable);
+			}
 		function getTemplateText (callback) {
 			request (config.urlServerHomePageSource, function (err, response, templatetext) {
 				if (err) {
@@ -1831,6 +1875,17 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 				case "/wordpresscounthit": //2/26/25 by DW
 					callWithUsername (function (username) {
 						countUserHit (username, theRequest.sysRequest.headers ["user-agent"], httpReturn);
+						});
+					return (true);
+				
+				case "/wordpressaddcategory": //3/15/25 by DW
+					tokenRequired (function (token) {
+						addSiteCategory (token, params.idsite, params.jsontext, httpReturn);
+						});
+					return (true);
+				case "/wordpressdeletecategory": //3/15/25 by DW
+					tokenRequired (function (token) {
+						deleteSiteCategory (token, params.idsite, params.idcategory, httpReturn);
 						});
 					return (true);
 				
