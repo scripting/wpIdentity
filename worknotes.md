@@ -1,3 +1,7 @@
+#### 3/15/25; by DW
+
+New category endpoints -- wordpressaddcategory, wordpressdeletecategory.
+
 #### 3/14/25; 10:27:39 AM by DW
 
 config.homePagetable lets you add macros to the home page for the site being served through the home page. 

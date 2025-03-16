@@ -468,23 +468,30 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 				}
 			});
 		}
-	function deleteSiteCategory (accessToken, idSite, idCategory, callback) { // 3/15/25 by DW
-		const wp = wpcom (accessToken);
+	function deleteSiteCategory (accessToken, idSite, slug, callback) { //3/15/25 by DW
 		const theRequest = {
-			apiVersion: "1.1",
-			path: `/sites/${idSite}/categories/${idCategory}`
-			}
-		wp.req.del (theRequest, function (err, response) {
+			url: `https://public-api.wordpress.com/rest/v1.1/sites/${idSite}/categories/slug:${slug}/delete`,
+			method: "POST",
+			headers: {
+				'Authorization': `Bearer ${accessToken}`
+				},
+			json: true
+			};
+		request (theRequest, function (err, response, body) {
 			if (err) {
 				callback (err);
 				}
 			else {
-				callback (undefined, response);
+				if ((response.statusCode >= 200) && (response.statusCode <= 299)) {
+					callback (undefined, body);
+					}
+				else {
+					const message = "Couldn't read HTML page because status code == " + response.statusCode;
+					callback ({message});
+					}
 				}
 			});
 		}
-	
-	
 	
 	function uploadImage (accessToken, base64Data, filename, mimeType, idSite, callback) { //11/10/24 by DW
 		const wp = wpcom (accessToken);
@@ -1885,7 +1892,7 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 					return (true);
 				case "/wordpressdeletecategory": //3/15/25 by DW
 					tokenRequired (function (token) {
-						deleteSiteCategory (token, params.idsite, params.idcategory, httpReturn);
+						deleteSiteCategory (token, params.idsite, params.slug, httpReturn);
 						});
 					return (true);
 				

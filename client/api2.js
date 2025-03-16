@@ -317,8 +317,8 @@ function wordpress (userOptions, callback) {
 		const jsontext = JSON.stringify (theCategory);
 		wpServerCall ("wordpressaddcategory", {idsite, jsontext}, true, callback);
 		}
-	function deleteCategory (idsite, idcategory, callback) { //3/15/25 by DW
-		wpServerCall ("wordpressdeletecategory", {idsite, idcategory}, true, callback);
+	function deleteCategory (idsite, slug, callback) { //3/15/25 by DW
+		wpServerCall ("wordpressdeletecategory", {idsite, slug}, true, callback);
 		}
 	
 	function wsConnectUserToServer () { //5/24/24 by DW
