@@ -248,7 +248,9 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 			username: theUser.username,
 			email: theUser.email,
 			idPrimaryBlog: theUser.primary_blog,
+			urlAvatar: theUser.avatar_URL, //3/17/25 by DW
 			urlPrimaryBlog: theUser.primary_blog_url,
+			urlProfile: theUser.profile_URL, //3/17/25 by DW
 			whenStarted: convertDate (theUser.date),
 			ctSites: theUser.site_count
 			});
@@ -640,6 +642,10 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 				title: jstruct.title,
 				content: theProcessedContent, //5/13/24 by DW
 				categories: jstruct.categories, //10/21/24 by DW
+				
+				excerpt: jstruct.excerpt, //3/22/25 by DW
+				featured_image: jstruct.idFeaturedImage, //3/22/25 by DW
+				
 				status: "publish",
 				date: new Date ().toGMTString (),
 				format: "standard",
@@ -674,6 +680,10 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 				title: jstruct.title,
 				content: theProcessedContent,
 				categories: jstruct.categories, //10/21/24 by DW
+				
+				excerpt: jstruct.excerpt, //3/22/25 by DW
+				featured_image: jstruct.idFeaturedImage, //3/22/25 by DW
+				
 				status: "publish"
 				};
 			post.update (thePost, function (err, theNewPost) {
@@ -1189,6 +1199,41 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 				}
 			});
 		}
+	
+	function getAllDraftsForUser (token, callback) { //3/19/25 by DW
+		getUsername (token, function (err, username) {
+			if (err) {
+				callback (err);
+				} 
+			else {
+				const relpath = "draft.json";
+				const sqltext = "select *  from wpstorage  where username = " + davesql.encode (username) + " and relpath = " + davesql.encode (relpath) + " order by id  asc;";
+				davesql.runSqltext (sqltext, function (err, result) {
+					if (err) {
+						callback (err);
+						}
+					else {
+						if (result.length == 0) {
+							const message = "Can't get the next/prevs because the user \"" + username + "\" has no drafts.";
+							callback ({message});
+							}
+						else {
+							const theArray = new Array ();
+							result.forEach (function (item) {
+								const jstruct = JSON.parse (item.filecontents)
+								theArray.push (jstruct);
+								});
+							callback (undefined, theArray);
+							}
+						}
+					});
+				}
+			});
+		}
+	
+	
+	
+	
 	
 //sockets -- 5/24/24 by DW
 	var theWsServer = undefined;
@@ -1893,6 +1938,12 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 				case "/wordpressdeletecategory": //3/15/25 by DW
 					tokenRequired (function (token) {
 						deleteSiteCategory (token, params.idsite, params.slug, httpReturn);
+						});
+					return (true);
+				
+				case "/wordpressgetalldraftsforuser": //3/19/25 by DW
+					tokenRequired (function (token) {
+						getAllDraftsForUser (token, httpReturn);
 						});
 					return (true);
 				

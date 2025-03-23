@@ -130,22 +130,17 @@ function wordpress (userOptions, callback) {
 		wpServerCall ("wordpressgetusersites", undefined, true, callback);
 		}
 	function initUserInfo (callback) {
-		if (wordpressMemory.userinfo === undefined) {
-			getUserInfo (function (err, userinfo) {
-				if (err) {
-					callback (err);
-					}
-				else {
-					wordpressMemory.userinfo = userinfo;
-					saveWordpressMemory ();
-					console.log ("initUserInfo: wordpressMemory.userinfo == " + jsonStringify (wordpressMemory.userinfo));
-					callback ();
-					}
-				});
-			}
-		else {
-			callback ();
-			}
+		getUserInfo (function (err, userinfo) { //3/17/25 by DW
+			if (err) {
+				callback (err);
+				}
+			else {
+				wordpressMemory.userinfo = userinfo;
+				saveWordpressMemory ();
+				console.log ("initUserInfo: wordpressMemory.userinfo == " + jsonStringify (wordpressMemory.userinfo));
+				callback ();
+				}
+			});
 		}
 	function initSitelist (callback) {
 		const whenstart = new Date ();
@@ -284,6 +279,9 @@ function wordpress (userOptions, callback) {
 		}
 	function getNextPrevArray (callback) { //11/1/24 by DW
 		wpServerCall ("wordpressgetnextprevarray", undefined, true, callback);
+		}
+	function getAllDraftsForUser (callback) { //3/19/25 by DW
+		wpServerCall ("wordpressgetalldraftsforuser", undefined, true, callback);
 		}
 	function uploadImageFile (idsite, callback) { //11/11/24 by DW
 		console.log ("uploadImageFile");
@@ -477,6 +475,7 @@ function wordpress (userOptions, callback) {
 	this.getNextDraft = getNextDraft; //10/29/24 by DW
 	this.getPrevDraft = getPrevDraft; //10/29/24 by DW
 	this.getNextPrevArray = getNextPrevArray; //11/1/24 by DW
+	this.getAllDraftsForUser = getAllDraftsForUser; //3/19/25 by DW
 	this.uploadImageFile = uploadImageFile; //11/11/24 by DW
 	this.servercall = wpServerCall; //3/11/25 by DW
 	this.serverpost = wpServerPost; //3/11/25 by DW

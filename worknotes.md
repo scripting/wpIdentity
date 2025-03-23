@@ -1,3 +1,7 @@
+#### 3/17/25; 12:31:15 PM by DW
+
+Add urlAvatar, urlProfile to the user info record we return via the api.
+
 #### 3/15/25; by DW
 
 New category endpoints -- wordpressaddcategory, wordpressdeletecategory.
