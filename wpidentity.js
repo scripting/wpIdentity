@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.5.16"; 
+var myProductName = "wpidentity", myVersion = "0.5.17"; 
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -496,6 +496,13 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 		}
 	
 	function uploadImage (accessToken, base64Data, filename, mimeType, idSite, callback) { //11/10/24 by DW
+		
+		if ((idSite == undefined) || (idSite == "undefined")) { //3/26/25 by DW
+			const message = "Can't upload the image because no site was specified.";
+			callback ({message});
+			return;
+			}
+		
 		const wp = wpcom (accessToken);
 		const site = wp.site (idSite);
 		
@@ -1725,6 +1732,20 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 						uploadImage (token, theRequest.postBody, params.name, params.type, params.idsite, httpReturn);
 						});
 					return (true);
+				
+				
+				case "/wordpressaddpost": //3/24/25 by DW
+					tokenRequired (function (token) {
+						addPost (token, params.idsite, theRequest.postBody, httpReturn);
+						});
+					return (true);
+				case "/wordpressupdatepost": //3/24/25 by DW
+					tokenRequired (function (token) {
+						updatePost (token, params.idsite, params.idpost, theRequest.postBody, httpReturn);
+						});
+					return (true);
+				
+				
 				default:
 					return (false);
 				}

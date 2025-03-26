@@ -181,7 +181,7 @@ function wordpress (userOptions, callback) {
 			.fail (function (jqXHR, textStatus, errorThrown) {
 				if (callback !== undefined) {
 					let err = {
-						message: textStatus
+						message: jqXHR.responseText || textStatus //3/26/25 by DW
 						}
 					callback (err);
 					}
@@ -319,6 +319,21 @@ function wordpress (userOptions, callback) {
 		wpServerCall ("wordpressdeletecategory", {idsite, slug}, true, callback);
 		}
 	
+	function addPost (idsite, thepost, callback) { //3/24/25 by DW
+		if (options.flMarkdownProcess) {
+			thepost.content = markdownProcess (thepost.content);
+			}
+		const jsontext = JSON.stringify (thepost);
+		wpServerPost ("wordpressaddpost", {idsite}, true, jsontext, callback);
+		}
+	function updatePost (idsite, idpost, thepost, callback) { //3/24/25 by DW
+		if (options.flMarkdownProcess) {
+			thepost.content = markdownProcess (thepost.content);
+			}
+		const jsontext = JSON.stringify (thepost);
+		wpServerPost ("wordpressupdatepost", {idsite, idpost}, true, jsontext, callback);
+		}
+	
 	function wsConnectUserToServer () { //5/24/24 by DW
 		var flGoodnightDialogShowing = false; 
 		if (options.flWebsocketEnabled) { //2/8/23 by DW
@@ -414,20 +429,6 @@ function wordpress (userOptions, callback) {
 	this.getPost = function (idsite, idpost, callback) { //8/28/23 by DW
 		wpServerCall ("wordpressgetpost", {idsite, idpost}, true, callback);
 		}
-	this.addPost = function (idsite, thepost, callback) { //8/29/23 by DW
-		if (options.flMarkdownProcess) {
-			thepost.content = markdownProcess (thepost.content);
-			}
-		const jsontext = JSON.stringify (thepost);
-		wpServerCall ("wordpressaddpost", {idsite, jsontext}, true, callback);
-		}
-	this.updatePost = function (idsite, idpost, thepost, callback) { //8/29/23 by DW
-		if (options.flMarkdownProcess) {
-			thepost.content = markdownProcess (thepost.content);
-			}
-		const jsontext = JSON.stringify (thepost);
-		wpServerCall ("wordpressupdatepost", {idsite, idpost, jsontext}, true, callback);
-		}
 	this.deletePost = function (idsite, idpost, callback) { //9/4/23 by DW
 		wpServerCall ("wordpressdeletepost", {idsite, idpost}, true, callback);
 		}
@@ -481,6 +482,8 @@ function wordpress (userOptions, callback) {
 	this.serverpost = wpServerPost; //3/11/25 by DW
 	this.addCategory = addCategory; //3/15/25 by DW
 	this.deleteCategory = deleteCategory; //3/15/25 by DW
+	this.addPost = addPost; //3/24/25 by DW
+	this.updatePost = updatePost; //3/24/25 by DW
 	
 	this.readUserJsonFile = function (relpath, flPrivate, callback, options) { //4/10/24 by DW
 		readUserDataFile (relpath, flPrivate, function (err, theFileData) {

@@ -1,3 +1,13 @@
+#### 3/26/25; 9:49:16 AM by DW
+
+In uploadImage, check for idSite == "undefined" -- return an error, don't try to upload. 
+
+But it's even worse than it appears. In api2.js, there is new code for my codebase for doing a POST using jQuery. And it hadn't been tested with errors returned from a POST operation. The bug in the new code was that it always reported "error" even though the server had returned a more meaningful message. It took me a while to look at the client. 
+
+#### 3/24/25; 5:53:10 PM by DW
+
+We were adding posts and updating posts via HTTP GET and we have to use POST. Hit the limit today on a post I was updating. Made the switch. 
+
 #### 3/17/25; 12:31:15 PM by DW
 
 Add urlAvatar, urlProfile to the user info record we return via the api.
