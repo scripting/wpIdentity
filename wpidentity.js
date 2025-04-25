@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.5.17"; 
+var myProductName = "wpidentity", myVersion = "0.5.18"; 
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -430,24 +430,41 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 			return (catstruct);
 			}
 		}
+	
+	
 	function getSiteCategories (accessToken, idSite, callback) { //10/19/24 by DW
 		const wp = wpcom (accessToken);
 		const site = wp.site (idSite);
-		site.categoriesList (function (err, theCategories) { 
-			if (err) {
-				callback (err);
-				}
-			else {
-				var returnedCats = new Array ();
-				theCategories.categories.forEach (function (item) {
-					if (item.slug != "uncategorized") { //10/21/24 by DW
-						returnedCats.push (convertCategory (item));
+		const catsPerPage = 100; 
+		var returnedCats = new Array ();
+		function nextPage (ixCat) {
+			const options = {
+				number: catsPerPage,
+				offset: ixCat
+				};
+			site.categoriesList (options, function (err, data) { 
+				if (err) {
+					callback (err);
+					}
+				else {
+					data.categories.forEach (function (item) {
+						if (item.slug != "uncategorized") { //10/21/24 by DW
+							returnedCats.push (convertCategory (item));
+							}
+						});
+					if (data.categories.length === catsPerPage) {
+						nextPage (ixCat + catsPerPage);
 						}
-					});
-				callback (undefined, returnedCats);
-				}
-			});
+					else {
+						callback (undefined, returnedCats);
+						}
+					}
+				});
+			}
+		nextPage (0);
 		}
+	
+	
 	
 	function addSiteCategory (accessToken, idSite, jsontext, callback) { //3/15/25 by DW
 		const jstruct = getObjectFromJsontext (jsontext, callback);
