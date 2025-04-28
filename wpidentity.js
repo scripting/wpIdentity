@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.5.20"; 
+var myProductName = "wpidentity", myVersion = "0.5.21"; 
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -14,7 +14,7 @@ const davesql = require ("davesql"); //3/24/24 by DW
 const emoji = require ("node-emoji");  //4/15/24 by DW
 const marked = require ("marked");  //4/18/24 by DW
 const rss = require ("daverss"); //4/29/24 by DW
-const websocket = require ("nodejs-websocket"); //5/24/24 by DW 
+const websocket = require ("ws"); //4/28/25 by DW
 const log = require ("sqllog"); //12/21/24 by DW
 
 var config = { 
@@ -1281,7 +1281,7 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 					payload = utils.jsonStringify (payload);
 					}
 				}
-			theWsServer.connections.forEach (function (conn, ix) {
+			theWsServer.clients.forEach (function (conn, ix) {
 				ctTotalSockets++;
 				if (conn.appData !== undefined) { //it's one of ours
 					var flnotify = true;
@@ -1310,12 +1310,12 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 			return (0);
 			}
 		else {
-			return (theWsServer.connections.length);
+			return (theWsServer.clients.length);
 			}
 		}
 	function getOpenSocketsArray () { //return an array with data about open sockets
 		var theArray = new Array ();
-		theWsServer.connections.forEach (function (conn, ix) {
+		theWsServer.clients.forEach (function (conn, ix) {
 			if (conn.appData !== undefined) { //it's one of ours
 				theArray.push ({
 					arrayIndex: ix,
@@ -1331,6 +1331,7 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 		}
 	function handleWebSocketConnection (conn) { 
 		var now = new Date ();
+		console.log ("handleWebSocketConnection");
 		conn.appData = { //initialize
 			whenStarted: now,
 			ctUpdates: 0,
@@ -1342,15 +1343,14 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 		
 		function logToConsole (conn, verb, value) {
 			}
-		
 		function kissOtherLogonsGoodnight (username, theNewConnection) {
-			theWsServer.connections.forEach (function (conn, ix) {
+			theWsServer.clients.forEach (function (conn, ix) {
 				if (conn.appData !== undefined) { //it's one of ours
 					if (conn != theNewConnection) { //it's not the new one
 						if (conn.appData.wordpressUserInfo !== undefined) { //2/23/25 by DW
 							if (conn.appData.wordpressUserInfo.username == username) {
 								console.log ("kissOtherLogonsGoodnight: \"" + conn.appData.wordpressUserInfo.username + "\" = \"" + username + "\""); 
-								conn.sendText ("goodnight");
+								conn.send ("goodnight");
 								}
 							}
 						}
@@ -1358,7 +1358,8 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 				});
 			}
 		
-		conn.on ("text", function (s) {
+		conn.on ("message", function (theMessage) {
+			const s = theMessage.toString ();
 			var words = s.split (" ");
 			if (words.length > 1) { //new protocol as of 11/29/15 by DW
 				conn.appData.whenLastUpdate = now;
@@ -1370,6 +1371,7 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 							if (!err) {
 								conn.appData.accessToken = accessToken;
 								conn.appData.wordpressUserInfo = theUserInfo;
+								console.log ("handleWebSocketConnection: conn.appData == " + utils.jsonStringify (conn.appData));
 								
 								const eventData = { //12/21/24 by DW
 									email: theUserInfo.email, 
@@ -1395,15 +1397,15 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 			});
 		}
 	function webSocketStartup () {
-		console.log ("webSocketStartup: config.flWebsocketEnabled == " + config.flWebsocketEnabled);
 		if (config.flWebsocketEnabled) {
 			try {
 				console.log ("webSocketStartup: config.websocketPort == " + config.websocketPort);
-				theWsServer = websocket.createServer (handleWebSocketConnection);
+				theWsServer = new websocket.Server ({port: config.websocketPort});
+				theWsServer.on ("connection", handleWebSocketConnection);
 				theWsServer.on ("error", function (err) {
-					console.log ("webSocketStartup: err.message == " + err.message);
+					console.log ("webSocketStartup: server error == " + err.message);
 					});
-				theWsServer.listen (config.websocketPort);
+				console.log ("webSocketStartup: websocket server successfully listening on port " + config.websocketPort);
 				}
 			catch (err) {
 				console.log ("webSocketStartup: err.message == " + err.message);

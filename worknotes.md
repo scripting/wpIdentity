@@ -1,5 +1,7 @@
 #### 4/28/25; 9:02:20 AM by DW
 
+Rewrote the websocket code to use the <a href="https://www.npmjs.com/package/ws">ws package</a> instead of the "nodejs-websocket". As promised by all my chatbot ai friends, it fixed a big problem, and promises to work better with everything. Esp important for networking software. ;-)
+
 Fixed a problem in convertSite where the server would crash if it was converting a site that was not running on wordpress.com. The problem is that such sites don't contain an options object. 
 
 #### 4/27/25; 4:57:44 PM by DW
