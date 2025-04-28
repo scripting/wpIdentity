@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.5.18"; 
+var myProductName = "wpidentity", myVersion = "0.5.20"; 
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -257,14 +257,21 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 		}
 	function convertSite (theSite) {
 		const flDeleted = theSite.is_deleted; //1/24/25 by DW
+		var whenCreated = undefined, ctPosts = undefined; //4/28/25 by DW
+		if (!flDeleted) {
+			if (theSite.options !== undefined) { //4/28/25 by DW
+				whenCreated = convertDate (theSite.options.created_at);
+				ctPosts = theSite.options.post_count;
+				}
+			}
 		return ({
 			idSite: theSite.ID,
 			urlSite: theSite.URL,
 			description: theSite.description,
 			name: theSite.name,
-			whenCreated: (flDeleted) ? undefined : convertDate (theSite.options.created_at), //1/24/25 by DW
+			whenCreated, //4/28/25 by DW
 			flDeleted, //1/24/25 by DW
-			ctPosts: theSite.options.post_count
+			ctPosts //4/28/25 by DW
 			});
 		}
 	function convertSubscription (theSubscription) {
@@ -1391,8 +1398,11 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 		console.log ("webSocketStartup: config.flWebsocketEnabled == " + config.flWebsocketEnabled);
 		if (config.flWebsocketEnabled) {
 			try {
-				theWsServer = websocket.createServer (handleWebSocketConnection);
 				console.log ("webSocketStartup: config.websocketPort == " + config.websocketPort);
+				theWsServer = websocket.createServer (handleWebSocketConnection);
+				theWsServer.on ("error", function (err) {
+					console.log ("webSocketStartup: err.message == " + err.message);
+					});
 				theWsServer.listen (config.websocketPort);
 				}
 			catch (err) {
