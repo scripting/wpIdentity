@@ -1,3 +1,19 @@
+#### 5/4/25; 8:58:10 AM by DW
+
+in api2.js
+
+* When we startup do an initial websocket checkConnection after 1/10th second. 
+
+* Then we check every 10 seconds.
+
+* I didn't like the lag at startup, having to wait 10 secs before we start the connection.
+
+* All the complexity is for when it doesn't work. What about when it does?
+
+#### 5/1/25; 4:43:06 PM by DW
+
+Rewrote wsConnectUserToServer in api2.js. It was retrying a failed connection once a second and never terminates. Now it tries once every ten seconds and gives up after 100 tries. I think this is still pretty generous and the number of tries could be reduced without giving up anything. 
+
 #### 4/28/25; 9:02:20 AM by DW
 
 Rewrote the websocket code to use the <a href="https://www.npmjs.com/package/ws">ws package</a> instead of the "nodejs-websocket". As promised by all my chatbot ai friends, it fixed a big problem, and promises to work better with everything. Esp important for networking software. ;-)

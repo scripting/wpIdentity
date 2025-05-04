@@ -2,6 +2,8 @@
 
 A <a href="https://www.npmjs.com/package/wpidentity">package</a> that implements <a href="https://developer.wordpress.com/docs/wpcc/">OAuth identity</a> and a simple verb set with wordpress.com for Node.js apps.
 
+It's used in FeedLand for WordPress identity and it's the complete backend for WordLand.
+
 ### It works
 
 You can try it out <a href="http://scripting.com/code/wpidentity/client/">here</a>.

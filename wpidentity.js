@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.5.21"; 
+var myProductName = "wpidentity", myVersion = "0.5.22"; 
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -1736,6 +1736,7 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 			doRedirect (state);
 			}
 		}
+	
 	
 	switch (theRequest.lowermethod) {
 		case "post":

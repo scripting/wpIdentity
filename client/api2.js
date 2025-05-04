@@ -335,6 +335,11 @@ function wordpress (userOptions, callback) {
 		}
 	
 	function wsConnectUserToServer () { //5/24/24 by DW
+		var ctRetries = 0, idSocketChecker;
+		const ctSecsBetwRetries = 10;
+		const maxRetries = 100; 
+		const initialCheckTimeout = 100; //5/4/25 by DW
+		
 		var flGoodnightDialogShowing = false; 
 		if (options.flWebsocketEnabled) { //2/8/23 by DW
 			var mySocket = undefined;
@@ -353,8 +358,10 @@ function wordpress (userOptions, callback) {
 				if ((mySocket === undefined) && (!flGoodnightDialogShowing)) { //5/25/24 by  DW -- don't reopen socket after being told to go away
 					mySocket = new WebSocket (options.urlChatLogSocket); 
 					mySocket.onopen = function (evt) {
+						ctRetries = 0; //5/1/25 by DW -- we got through
 						if (userIsSignedIn ()) { //2/8/23 by DW
 							const msg = "greetings " + wordpressMemory.accessToken;
+							console.log ("wsConnectToServer: connection open, sending greetings to server.");
 							mySocket.send (msg);
 							}
 						};
@@ -370,13 +377,19 @@ function wordpress (userOptions, callback) {
 						};
 					mySocket.onclose = function (evt) {
 						mySocket = undefined;
+						if (ctRetries++ >= maxRetries) { //5/1/25 by DW
+							clearInterval (idSocketChecker);
+							}
 						};
 					mySocket.onerror = function (evt) {
 						console.log ("wsConnectToServer: socket received an error.");
 						};
 					}
 				}
-			self.setInterval (checkConnection, 1000);
+			setTimeout (function () { //5/4/25 by DW
+				checkConnection ();
+				console.log ("wsConnectToServer: idSocketChecker == " + idSocketChecker);
+				}, initialCheckTimeout);
 			}
 		}
 	
