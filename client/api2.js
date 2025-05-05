@@ -361,7 +361,7 @@ function wordpress (userOptions, callback) {
 						ctRetries = 0; //5/1/25 by DW -- we got through
 						if (userIsSignedIn ()) { //2/8/23 by DW
 							const msg = "greetings " + wordpressMemory.accessToken;
-							console.log ("wsConnectToServer: connection open, sending greetings to server.");
+							console.log ("wsConnectToServer: connection open, sending greetings to wpIdentity server.");
 							mySocket.send (msg);
 							}
 						};
@@ -388,6 +388,7 @@ function wordpress (userOptions, callback) {
 				}
 			setTimeout (function () { //5/4/25 by DW
 				checkConnection ();
+				idSocketChecker = setInterval (checkConnection, 1000 * ctSecsBetwRetries);
 				console.log ("wsConnectToServer: idSocketChecker == " + idSocketChecker);
 				}, initialCheckTimeout);
 			}
