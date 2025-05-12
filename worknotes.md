@@ -1,3 +1,7 @@
+#### 5/11/25; 11:00:38 AM by DW
+
+A new endpoint to update a category: updateSiteCategory.
+
 #### 5/4/25; 8:58:10 AM by DW
 
 in api2.js

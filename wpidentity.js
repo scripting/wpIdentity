@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.5.22"; 
+var myProductName = "wpidentity", myVersion = "0.5.23"; 
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -437,8 +437,6 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 			return (catstruct);
 			}
 		}
-	
-	
 	function getSiteCategories (accessToken, idSite, callback) { //10/19/24 by DW
 		const wp = wpcom (accessToken);
 		const site = wp.site (idSite);
@@ -470,9 +468,6 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 			}
 		nextPage (0);
 		}
-	
-	
-	
 	function addSiteCategory (accessToken, idSite, jsontext, callback) { //3/15/25 by DW
 		const jstruct = getObjectFromJsontext (jsontext, callback);
 		if (jstruct === undefined) {
@@ -518,7 +513,26 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 				}
 			});
 		}
-	
+	function updateSiteCategory (accessToken, idSite, slug, jsontext, callback) { //5/11/25 by DW
+		const jstruct = getObjectFromJsontext (jsontext, callback);
+		if (jstruct === undefined) {
+			return;
+			}
+		const wp = wpcom (accessToken);
+		const theRequest = {
+			method: "POST",
+			path: `/sites/${idSite}/categories/slug:${slug}`,
+			body: jstruct
+			}
+		wp.req.post (theRequest, function (err, theCategory) {
+			if (err) {
+				callback (err);
+				}
+			else {
+				callback (undefined, convertCategory (theCategory));
+				}
+			});
+		}
 	function uploadImage (accessToken, base64Data, filename, mimeType, idSite, callback) { //11/10/24 by DW
 		
 		if ((idSite == undefined) || (idSite == "undefined")) { //3/26/25 by DW
@@ -1989,6 +2003,11 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 				case "/wordpressdeletecategory": //3/15/25 by DW
 					tokenRequired (function (token) {
 						deleteSiteCategory (token, params.idsite, params.slug, httpReturn);
+						});
+					return (true);
+				case "/wordpressupdatecategory": //5/11/25 by DW
+					tokenRequired (function (token) {
+						updateSiteCategory (token, params.idsite, params.slug, params.jsontext, httpReturn);
 						});
 					return (true);
 				

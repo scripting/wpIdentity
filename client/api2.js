@@ -318,6 +318,10 @@ function wordpress (userOptions, callback) {
 	function deleteCategory (idsite, slug, callback) { //3/15/25 by DW
 		wpServerCall ("wordpressdeletecategory", {idsite, slug}, true, callback);
 		}
+	function updateCategory (idsite, slug, theCategory, callback) { //5/11/25 by DW
+		const jsontext = JSON.stringify (theCategory);
+		wpServerCall ("wordpressupdatecategory", {idsite, slug, jsontext}, true, callback);
+		}
 	
 	function addPost (idsite, thepost, callback) { //3/24/25 by DW
 		if (options.flMarkdownProcess) {
@@ -496,6 +500,7 @@ function wordpress (userOptions, callback) {
 	this.serverpost = wpServerPost; //3/11/25 by DW
 	this.addCategory = addCategory; //3/15/25 by DW
 	this.deleteCategory = deleteCategory; //3/15/25 by DW
+	this.updateCategory = updateCategory; //5/11/25 by DW
 	this.addPost = addPost; //3/24/25 by DW
 	this.updatePost = updatePost; //3/24/25 by DW
 	
