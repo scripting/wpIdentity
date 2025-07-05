@@ -14,7 +14,9 @@ The values we add to the metadata for the post:
 
 * wordland_title: the title of the post, the empty string if the post doesn't have a title.
 
-There are limits to where this works, I will try to find out exactly where that is. ;-)
+There are limits to where this works, I will try to find out exactly where they are. ;-)
+
+A <a href="https://github.com/scripting/wpIdentity/issues/6">place</a> for questions and comments.
 
 #### 5/11/25; 11:00:38 AM by DW
 
