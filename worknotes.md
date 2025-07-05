@@ -6,7 +6,7 @@ The values we add to the metadata for the post:
 
 * wordland_apiVersion: the version number of the metadata we include, starting with 0.4.0 today.
 
-* wordland_linksTo: the value of the item-level <link> element in WordLand's RSS feed for the site, if there is one, the empty string if not. It's used in linkblog posts. 
+* wordland_linksTo: the value of the item-level &lt;link> element in WordLand's RSS feed for the site, if there is one, the empty string if not. It's used in linkblog posts. 
 
 * wordland_idDraft: a unique id for this post in WordLand's database. It is only unique to this instance of the server. 
 
