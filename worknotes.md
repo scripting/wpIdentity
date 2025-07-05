@@ -1,3 +1,21 @@
+#### 7/5/25; 10:11:12 AM by DW
+
+Add metadata to post, basically send through a few bits of info we have in the WordLand's draft object. 
+
+The values we add to the metadata for the post:
+
+* wordland_apiVersion: the version number of the metadata we include, starting with 0.4.0 today.
+
+* wordland_linksTo: the value of the item-level <link> element in WordLand's RSS feed for the site, if there is one, the empty string if not. It's used in linkblog posts. 
+
+* wordland_idDraft: a unique id for this post in WordLand's database. It is only unique to this instance of the server. 
+
+* wordland_markdowntext: WordLand stores the post in Markdown format. We like to include it along with the rendered text whenever we can, encouraging broader use of Markdown. 
+
+* wordland_title: the title of the post, the empty string if the post doesn't have a title.
+
+There are limits to where this works, I will try to find out exactly where that is. ;-)
+
 #### 5/11/25; 11:00:38 AM by DW
 
 A new endpoint to update a category: updateSiteCategory.

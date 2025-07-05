@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.5.23"; 
+var myProductName = "wpidentity", myVersion = "0.5.24"; 
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -54,7 +54,9 @@ var config = {
 	
 	sysopUsername: undefined, //2/24/25 by DW
 	
-	homePagetable: undefined //3/14/25 by DW
+	homePagetable: undefined, //3/14/25 by DW
+	
+	postMetadataPrefix: "wordland" //7/5/25 by DW
 	};
 
 var stats = {
@@ -223,6 +225,13 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 				}
 			return (catstring);
 			}
+		function getMetadataObject (theArray) { //7/5/25 by DW
+			var theObject = new Object ();
+			theArray.forEach (function (item) {
+				theObject [item.key] = item.value;
+				});
+			return (theObject);
+			}
 		return ({
 			idPost: item.ID,
 			idSite: item.site_ID,
@@ -231,6 +240,7 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 			content: item.content,
 			type: item.type,
 			categories: getCatArray (),
+			metadata: getMetadataObject (item.metadata), //7/5/25 by DW
 			url: item.URL,
 			urlShort: item.short_URL,
 			whenCreated: convertDate (item.date),
@@ -238,7 +248,7 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 				id: item.author.ID,
 				username: item.author.login,
 				name: item.author.name
-				}
+				},
 			});
 		}
 	function convertUser (theUser) {
@@ -673,6 +683,34 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 		addToLog (verb + "Post", undefined, eventData);
 		}
 	
+	function getMetadataForPost (theDraft) { //7/5/25 by DW -- xxx
+		var theMetadata = {
+			apiVersion: "0.4.0",
+			title: theDraft.title,
+			linksTo: "",
+			markdowntext: "",
+			idDraft: theDraft.idDraft,
+			};
+		if (theDraft.linkblogLink !== undefined) {
+			theMetadata.linksTo = theDraft.linkblogLink;
+			}
+		if (theDraft.contentType == "markdown") {
+			theMetadata.markdowntext = theDraft.content;
+			}
+		
+		var theArray = new Array ();
+		for (var key in theMetadata) {
+			theArray.push ({
+				key: config.postMetadataPrefix + "_" + key, //wordlandTitle for example
+				value: theMetadata [key]
+				});
+			}
+		
+		console.log ("getMetadataForPost: theArray == " + utils.jsonStringify (theArray));
+		
+		return (theArray);
+		}
+	
 	function addPost (accessToken, idSite, jsontext, callback) { //8/29/23 by DW
 		const jstruct = getObjectFromJsontext (jsontext, callback);
 		if (jstruct === undefined) {
@@ -694,7 +732,9 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 				status: "publish",
 				date: new Date ().toGMTString (),
 				format: "standard",
-				comment_status: "open"
+				comment_status: "open",
+				
+				metadata: getMetadataForPost (jstruct) //7/5/25 by DW
 				};
 			site.addPost (thePost, function (err, theNewPost) {
 				if (err) {
@@ -729,7 +769,9 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 				excerpt: jstruct.excerpt, //3/22/25 by DW
 				featured_image: jstruct.idFeaturedImage, //3/22/25 by DW
 				
-				status: "publish"
+				status: "publish",
+				
+				metadata: getMetadataForPost (jstruct) //7/5/25 by DW
 				};
 			post.update (thePost, function (err, theNewPost) {
 				if (err) {

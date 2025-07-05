@@ -61,6 +61,10 @@ function wordpress (userOptions, callback) {
 	function getServerAddress () {
 		return (options.serverAddress); 
 		}
+	function getFeedUrl (username, idsite) { //5/15/25 by DW
+		const feedUrl = options.serverAddress +  username + "/" + idsite + "/rss.xml"; //https://wordland.social/scripting/237777565/rss.xml
+		return (feedUrl);
+		}
 	function markdownProcess (mdtext) {
 		const replacetable = {
 			"\\.": ".",
@@ -555,6 +559,7 @@ function wordpress (userOptions, callback) {
 	this.countUserHit = function (callback) { //2/26/25 by DW
 		wpServerCall ("wordpresscounthit", undefined, true, callback);
 		},
+	this.getFeedUrl = getFeedUrl; //5/15/25 by DW
 	
 	//testing functions, mostly commented out -- 10/24/24 by DW
 		
