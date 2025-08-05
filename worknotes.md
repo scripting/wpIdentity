@@ -1,3 +1,7 @@
+#### 8/5/25; 10:37:13 AM by DW
+
+New endpoint -- getrangeofdraftsforuser, calls new function -- getRangeOfDraftsForUser.
+
 #### 7/5/25; 10:11:12 AM by DW
 
 Add metadata to post, basically send through a few bits of info we have in the WordLand's draft object. 

@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.5.24"; 
+var myProductName = "wpidentity", myVersion = "0.5.25"; 
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -1204,7 +1204,6 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 			return (false);
 			}
 		}
-	
 	function getTopUsers (username, callback) { //12/23/24 by DW
 		if (isUserSysop (username, callback)) {
 			const sqltext = "select id, username, whenCreated, whenUpdated, ctSaves from wpstorage where relpath = 'wordland/prefs.json' order by ctSaves desc limit 100;";
@@ -1267,7 +1266,6 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 				});
 			}
 		}
-	
 	function getPublicFile (username, relpath, callback) { //1/9/25 by DW
 		const sqltext = "select * from  wpstorage where username = " + davesql.encode (username) + " and relpath = " + davesql.encode (relpath) + " and flprivate = 0;";
 		davesql.runSqltext (sqltext, function (err, result) {
@@ -1308,6 +1306,8 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 							const theArray = new Array ();
 							result.forEach (function (item) {
 								const jstruct = JSON.parse (item.filecontents)
+								jstruct.idDraft = item.id;
+								jstruct.ctSaves = item.ctSaves; 
 								theArray.push (jstruct);
 								});
 							callback (undefined, theArray);
@@ -1317,9 +1317,40 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 				}
 			});
 		}
-	
-	
-	
+	function getRangeOfDraftsForUser (token, idLowest, ct, callback) { //8/5/25 by DW
+		getUsername (token, function (err, username) {
+			if (err) {
+				callback (err);
+				} 
+			else {
+				const relpath = "draft.json";
+				const extrabit = (idLowest === undefined) ? "" : ` and id < ${idLowest} `;
+				const sqltext = "select *  from wpstorage  where username = " + davesql.encode (username) + " and relpath = " + davesql.encode (relpath) + extrabit + " order by id  desc limit " + ct + ";";
+				console.log ("getRangeOfDraftsForUser: sqltext == " + sqltext);
+				davesql.runSqltext (sqltext, function (err, result) {
+					if (err) {
+						callback (err);
+						}
+					else {
+						if (result.length == 0) {
+							const message = "There aren't any more drafts.";
+							callback ({message});
+							}
+						else {
+							const theArray = new Array ();
+							result.forEach (function (item) {
+								const jstruct = JSON.parse (item.filecontents);
+								jstruct.idDraft = item.id;
+								jstruct.ctSaves = item.ctSaves; 
+								theArray.push (jstruct);
+								});
+							callback (undefined, theArray);
+							}
+						}
+					});
+				}
+			});
+		}
 	
 	
 //sockets -- 5/24/24 by DW
@@ -1469,7 +1500,6 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 			}
 		}
 //users table -- 2/26/25 by DW
-	
 	function countUserHit (username, userAgent, callback) {
 		const sqltext = `
 			insert into users (username, ctHits, whenLastHit, lastBrowser)
@@ -1488,10 +1518,6 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 				}
 			});
 		}
-	
-	
-	
-	
 //misc -- 10/28/24 by DW
 	function fixBookmarksFile () { //10/28/24 by DW
 		fs.readFile ("bookmarks.opml", function (err, opmltext) {
@@ -2052,13 +2078,17 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 						updateSiteCategory (token, params.idsite, params.slug, params.jsontext, httpReturn);
 						});
 					return (true);
-				
 				case "/wordpressgetalldraftsforuser": //3/19/25 by DW
 					tokenRequired (function (token) {
 						getAllDraftsForUser (token, httpReturn);
 						});
 					return (true);
 				
+				case "/wordpressgetrangeofdraftsforuser": //8/5/25 by DW
+					tokenRequired (function (token) {
+						getRangeOfDraftsForUser (token, params.idlowestinlastpage, params.ct, httpReturn);
+						});
+					return (true);
 				default:
 					if (config.flServePublicUserFiles) { //4/30/24 by DW
 						return (servePublicFile (theRequest.lowerpath)); 

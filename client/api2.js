@@ -287,6 +287,33 @@ function wordpress (userOptions, callback) {
 	function getAllDraftsForUser (callback) { //3/19/25 by DW
 		wpServerCall ("wordpressgetalldraftsforuser", undefined, true, callback);
 		}
+	
+	var idLowestInLastPage = undefined; //8/5/25 by DW
+	
+	function getNextRangeOfDraftsForUser (callback) { //8/5/25 by DW
+		var params = {
+			ct: 50
+			}
+		if (idLowestInLastPage !== undefined) {
+			params.idlowestinlastpage = idLowestInLastPage;
+			}
+		wpServerCall ("wordpressgetrangeofdraftsforuser", params, true, function (err, theDrafts) {
+			if (err) {
+				callback (err);
+				}
+			else {
+				var idLowest = (idLowestInLastPage === undefined) ? Infinity : idLowestInLastPage;
+				theDrafts.forEach (function (theDraft) {
+					if (theDraft.idDraft < idLowest) {
+						idLowest = theDraft.idDraft;
+						}
+					});
+				idLowestInLastPage = idLowest;
+				callback (undefined, theDrafts);
+				}
+			});
+		}
+	
 	function uploadImageFile (idsite, callback) { //11/11/24 by DW
 		console.log ("uploadImageFile");
 		const theInput = $("<input type=\"file\" id=\"idImageFileInput\" accept=\"image/*\" style=\"display: none;\">");
@@ -499,6 +526,9 @@ function wordpress (userOptions, callback) {
 	this.getPrevDraft = getPrevDraft; //10/29/24 by DW
 	this.getNextPrevArray = getNextPrevArray; //11/1/24 by DW
 	this.getAllDraftsForUser = getAllDraftsForUser; //3/19/25 by DW
+	
+	this.getNextRangeOfDraftsForUser = getNextRangeOfDraftsForUser; //8/5/25 by DW
+	
 	this.uploadImageFile = uploadImageFile; //11/11/24 by DW
 	this.servercall = wpServerCall; //3/11/25 by DW
 	this.serverpost = wpServerPost; //3/11/25 by DW
@@ -563,15 +593,31 @@ function wordpress (userOptions, callback) {
 	
 	//testing functions, mostly commented out -- 10/24/24 by DW
 		
-		this.testGetNewPosts = function () { //2/24/25 by DW
-			this.getNewPosts (function (err, data) {
-				if (err) {
-					console.log (err.message);
+		this.testGetNextRangeOfDraftsForUser = function () { //8/5/25 by DW
+			const maxcalls = 20;
+			
+			function nextcall (ix) {
+				if (ix < maxcalls) {
+					getNextRangeOfDraftsForUser (function (err, data) {
+						if (err) {
+							console.log (err.message);
+							}
+						else {
+							console.log ("\n\nix == " + ix);
+							data.forEach (function (item) {
+								console.log (item.idDraft + ": " + new Date (item.whenCreated).toLocaleString ());
+								});
+							if (ix < maxcalls) {
+								nextcall (ix + 1);
+								}
+							}
+						});
 					}
-				else {
-					console.log (jsonStringify (data));
-					}
-				});
+				}
+			
+			nextcall (1);
+			
+			
 			}
 		
 	
