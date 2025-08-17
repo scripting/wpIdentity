@@ -10,7 +10,8 @@ function wordpress (userOptions, callback) {
 		flWebsocketEnabled: true, //5/24/24 by DW
 		urlChatLogSocket: "ws://localhost:1622/",
 		flWatchSocketForOtherCopies: true,
-		goodnightDialogMsg: "WordLand is running in another tab. Click OK to reload this tab, or you can safely close it without losing any work." //12/22/24 by DW
+		goodnightDialogMsg: "WordLand is running in another tab. Click OK to reload this tab, or you can safely close it without losing any work.", //12/22/24 by DW
+		ctDraftsPerPage: 250 //8/5/25 by DW
 		};
 	if (userOptions !== undefined) { //allow caller to override defaults
 		for (x in userOptions) {
@@ -289,31 +290,39 @@ function wordpress (userOptions, callback) {
 		}
 	
 	var idLowestInLastPage = undefined; //8/5/25 by DW
+	var flAllDraftsLoaded = false;
 	
 	function getNextRangeOfDraftsForUser (callback) { //8/5/25 by DW
-		var params = {
-			ct: 50
+		if (flAllDraftsLoaded) {
+			callback (undefined, new Array ());
 			}
-		if (idLowestInLastPage !== undefined) {
-			params.idlowestinlastpage = idLowestInLastPage;
-			}
-		wpServerCall ("wordpressgetrangeofdraftsforuser", params, true, function (err, theDrafts) {
-			if (err) {
-				callback (err);
+		else {
+			var params = {
+				ct: options.ctDraftsPerPage
 				}
-			else {
-				var idLowest = (idLowestInLastPage === undefined) ? Infinity : idLowestInLastPage;
-				theDrafts.forEach (function (theDraft) {
-					if (theDraft.idDraft < idLowest) {
-						idLowest = theDraft.idDraft;
+			if (idLowestInLastPage !== undefined) {
+				params.idlowestinlastpage = idLowestInLastPage;
+				}
+			wpServerCall ("wordpressgetrangeofdraftsforuser", params, true, function (err, theDrafts) {
+				if (err) {
+					callback (err);
+					}
+				else {
+					if (theDrafts.length == 0) {
+						flAllDraftsLoaded = true;
 						}
-					});
-				idLowestInLastPage = idLowest;
-				callback (undefined, theDrafts);
-				}
-			});
+					var idLowest = (idLowestInLastPage === undefined) ? Infinity : idLowestInLastPage;
+					theDrafts.forEach (function (theDraft) {
+						if (theDraft.idDraft < idLowest) {
+							idLowest = theDraft.idDraft;
+							}
+						});
+					idLowestInLastPage = idLowest;
+					callback (undefined, theDrafts);
+					}
+				});
+			}
 		}
-	
 	function uploadImageFile (idsite, callback) { //11/11/24 by DW
 		console.log ("uploadImageFile");
 		const theInput = $("<input type=\"file\" id=\"idImageFileInput\" accept=\"image/*\" style=\"display: none;\">");
@@ -353,7 +362,6 @@ function wordpress (userOptions, callback) {
 		const jsontext = JSON.stringify (theCategory);
 		wpServerCall ("wordpressupdatecategory", {idsite, slug, jsontext}, true, callback);
 		}
-	
 	function addPost (idsite, thepost, callback) { //3/24/25 by DW
 		if (options.flMarkdownProcess) {
 			thepost.content = markdownProcess (thepost.content);
@@ -429,7 +437,8 @@ function wordpress (userOptions, callback) {
 			}
 		}
 	
-	this.getUserInfo = function (callback) {
+	
+	function getUserInfo (callback) {
 		if (wordpressMemory.userinfo === undefined) { //3/9/25 by DW
 			getUserInfo (function (err, theUserInfo) {
 				if (err) {
@@ -446,17 +455,16 @@ function wordpress (userOptions, callback) {
 			callback (undefined, wordpressMemory.userinfo);
 			}
 		}
-	this.getUserInfoSync = function () { //10/26/24 by DW
+	function getUserInfoSync () { //10/26/24 by DW
 		return (wordpressMemory.userinfo);
 		}
-	this.getUserSites = getUserSites;
-	this.getSitePosts = function (idsite, callback) { //8/28/23 by DW
+	function getSitePosts (idsite, callback) { //8/28/23 by DW
 		wpServerCall ("wordpressgetsiteposts", {idsite}, true, callback);
 		}
-	this.getSiteUsers = function (idsite, callback) { //8/28/23 by DW
+	function getSiteUsers (idsite, callback) { //8/28/23 by DW
 		wpServerCall ("wordpressgetsiteusers", {idsite}, true, callback);
 		}
-	this.getSiteInfo = function (idsite, callback) { //8/29/23 by DW
+	function getSiteInfo (idsite, callback) { //8/29/23 by DW
 		var flfound = false;
 		wordpressMemory.sitelist.forEach (function (item) {
 			if (item.idSite == idsite) {
@@ -468,23 +476,22 @@ function wordpress (userOptions, callback) {
 			wpServerCall ("wordpressgetsiteinfo", {idsite}, true, callback);
 			}
 		}
-	this.getSiteMedialist = function (idsite, callback) { //8/29/23 by DW
+	function getSiteMedialist (idsite, callback) { //8/29/23 by DW
 		wpServerCall ("wordpressgetsitemedialist", {idsite}, true, callback);
 		}
-	this.getSiteCategories = function (idsite, callback) { //10/19/24 by DW
+	function getSiteCategories (idsite, callback) { //10/19/24 by DW
 		wpServerCall ("wordpressgetsitecategories", {idsite}, true, callback);
 		}
-	
-	this.getPost = function (idsite, idpost, callback) { //8/28/23 by DW
+	function getPost (idsite, idpost, callback) { //8/28/23 by DW
 		wpServerCall ("wordpressgetpost", {idsite, idpost}, true, callback);
 		}
-	this.deletePost = function (idsite, idpost, callback) { //9/4/23 by DW
+	function deletePost (idsite, idpost, callback) { //9/4/23 by DW
 		wpServerCall ("wordpressdeletepost", {idsite, idpost}, true, callback);
 		}
-	this.getSubscriptions = function (callback) { //9/5/23 by DW
+	function getSubscriptions (callback) { //9/5/23 by DW
 		wpServerCall ("wordpressgetsubscriptions", undefined, true, callback);
 		}
-	this.getRecentUserDrafts = function (idsite, callback) { //4/27/24 by DW
+	function getRecentUserDrafts (idsite, callback) { //4/27/24 by DW
 		var params = {
 			maxdrafts: options.maxCtUserDraftFiles,
 			};
@@ -503,7 +510,7 @@ function wordpress (userOptions, callback) {
 				}
 			});
 		}
-	this.getUserFileInfo = function (callback) { //5/16/24 by DW
+	function getUserFileInfo (callback) { //5/16/24 by DW
 		var params = {
 			maxfiles: options.maxCtUserDraftFiles,
 			};
@@ -517,6 +524,19 @@ function wordpress (userOptions, callback) {
 			});
 		}
 	
+	this.getUserInfo = getUserInfo;
+	this.getUserInfoSync = getUserInfoSync;
+	this.getUserSites = getUserSites;
+	this.getSitePosts = getSitePosts; //8/28/23 by DW
+	this.getSiteUsers = getSiteUsers; //8/29/23 by DW
+	this.getSiteInfo = getSiteInfo; //8/29/23 by DW
+	this.getSiteMedialist = getSiteMedialist; //8/29/23 by DW
+	this.getSiteCategories = getSiteCategories; //10/19/24 by DW
+	this.getPost = getPost; //8/28/23 by DW
+	this.deletePost = deletePost;  //9/5/23 by DW
+	this.getSubscriptions = getSubscriptions;   //9/5/23 by DW
+	this.getRecentUserDrafts = getRecentUserDrafts;   //4/27/24 by DW
+	this.getUserFileInfo = getUserFileInfo;  //5/16/24 by DW
 	this.readUserDataFile = readUserDataFile;
 	this.writeUserDataFile = writeUserDataFile;
 	this.writeUniqueFile = writeUniqueFile; //5/12/24 by DW
@@ -526,9 +546,7 @@ function wordpress (userOptions, callback) {
 	this.getPrevDraft = getPrevDraft; //10/29/24 by DW
 	this.getNextPrevArray = getNextPrevArray; //11/1/24 by DW
 	this.getAllDraftsForUser = getAllDraftsForUser; //3/19/25 by DW
-	
 	this.getNextRangeOfDraftsForUser = getNextRangeOfDraftsForUser; //8/5/25 by DW
-	
 	this.uploadImageFile = uploadImageFile; //11/11/24 by DW
 	this.servercall = wpServerCall; //3/11/25 by DW
 	this.serverpost = wpServerPost; //3/11/25 by DW
@@ -537,7 +555,6 @@ function wordpress (userOptions, callback) {
 	this.updateCategory = updateCategory; //5/11/25 by DW
 	this.addPost = addPost; //3/24/25 by DW
 	this.updatePost = updatePost; //3/24/25 by DW
-	
 	this.readUserJsonFile = function (relpath, flPrivate, callback, options) { //4/10/24 by DW
 		readUserDataFile (relpath, flPrivate, function (err, theFileData) {
 			if (err) {
@@ -590,37 +607,6 @@ function wordpress (userOptions, callback) {
 		wpServerCall ("wordpresscounthit", undefined, true, callback);
 		},
 	this.getFeedUrl = getFeedUrl; //5/15/25 by DW
-	
-	//testing functions, mostly commented out -- 10/24/24 by DW
-		
-		this.testGetNextRangeOfDraftsForUser = function () { //8/5/25 by DW
-			const maxcalls = 20;
-			
-			function nextcall (ix) {
-				if (ix < maxcalls) {
-					getNextRangeOfDraftsForUser (function (err, data) {
-						if (err) {
-							console.log (err.message);
-							}
-						else {
-							console.log ("\n\nix == " + ix);
-							data.forEach (function (item) {
-								console.log (item.idDraft + ": " + new Date (item.whenCreated).toLocaleString ());
-								});
-							if (ix < maxcalls) {
-								nextcall (ix + 1);
-								}
-							}
-						});
-					}
-				}
-			
-			nextcall (1);
-			
-			
-			}
-		
-	
 	this.userIsSignedIn = userIsSignedIn;
 	this.connectWithWordpress = function () {
 		const url = getServerAddress () + "connect?urlapphomepage=" + encodeURIComponent (location.href); //9/4/23 by DW
@@ -644,4 +630,31 @@ function wordpress (userOptions, callback) {
 			callback (undefined);
 			}
 		}
+	
+	//testing functions, mostly commented out -- 10/24/24 by DW
+		this.testGetNextRangeOfDraftsForUser = function () { //8/5/25 by DW
+			const maxcalls = 200;
+			function nextcall (ix) {
+				if (ix < maxcalls) {
+					getNextRangeOfDraftsForUser (function (err, theArray) {
+						if (err) {
+							console.log (err.message);
+							}
+						else {
+							console.log ("\n\nix == " + ix + ", theArray.length == " + theArray.length);
+							theArray.forEach (function (item) {
+								console.log (item.idDraft + ": " + new Date (item.whenCreated).toLocaleString ());
+								});
+							if (theArray.length == 0) {
+								console.log ("bing!");
+								}
+							if ((ix < maxcalls) && (theArray.length > 0)) {
+								nextcall (ix + 1);
+								}
+							}
+						});
+					}
+				}
+			nextcall (1); //get drafts until there aren't any more
+			}
 	}

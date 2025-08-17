@@ -1,3 +1,7 @@
+#### 8/17/25; 11:39:28 AM by DW
+
+New endpoint -- getDraftFromUrl. On second thought decided to do it another way, in the client app, where we have a list of all the drafts that the user can edit via another call. Keep remembering that text is small, and we can afford to transmit an array with lots of elements in it. 
+
 #### 8/5/25; 10:37:13 AM by DW
 
 New endpoint -- getrangeofdraftsforuser, calls new function -- getRangeOfDraftsForUser.

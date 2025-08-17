@@ -1324,33 +1324,27 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 				} 
 			else {
 				const relpath = "draft.json";
-				const extrabit = (idLowest === undefined) ? "" : ` and id < ${idLowest} `;
+				const extrabit = (idLowest === undefined) ? "" : ` and id < ${davesql.encode (idLowest)} `;
 				const sqltext = "select *  from wpstorage  where username = " + davesql.encode (username) + " and relpath = " + davesql.encode (relpath) + extrabit + " order by id  desc limit " + ct + ";";
-				console.log ("getRangeOfDraftsForUser: sqltext == " + sqltext);
 				davesql.runSqltext (sqltext, function (err, result) {
 					if (err) {
 						callback (err);
 						}
 					else {
-						if (result.length == 0) {
-							const message = "There aren't any more drafts.";
-							callback ({message});
-							}
-						else {
-							const theArray = new Array ();
-							result.forEach (function (item) {
-								const jstruct = JSON.parse (item.filecontents);
-								jstruct.idDraft = item.id;
-								jstruct.ctSaves = item.ctSaves; 
-								theArray.push (jstruct);
-								});
-							callback (undefined, theArray);
-							}
+						const theArray = new Array ();
+						result.forEach (function (item) {
+							const jstruct = JSON.parse (item.filecontents);
+							jstruct.idDraft = item.id;
+							jstruct.ctSaves = item.ctSaves; 
+							theArray.push (jstruct);
+							});
+						callback (undefined, theArray);
 						}
 					});
 				}
 			});
 		}
+	
 	
 	
 //sockets -- 5/24/24 by DW
@@ -1555,7 +1549,6 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 				});
 			}
 		}
-
 //stats -- 2/27/25 by DW
 	var flStatsChanged = false;
 	const statsFile = "data/stats.json";
@@ -2083,7 +2076,6 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 						getAllDraftsForUser (token, httpReturn);
 						});
 					return (true);
-				
 				case "/wordpressgetrangeofdraftsforuser": //8/5/25 by DW
 					tokenRequired (function (token) {
 						getRangeOfDraftsForUser (token, params.idlowestinlastpage, params.ct, httpReturn);
