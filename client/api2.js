@@ -476,6 +476,15 @@ function wordpress (userOptions, callback) {
 			wpServerCall ("wordpressgetsiteinfo", {idsite}, true, callback);
 			}
 		}
+	function getSiteInfoSync (idsite) { //8/18/25 by DW
+		var siteinfo = undefined;
+		wordpressMemory.sitelist.forEach (function (item) {
+			if (item.idSite == idsite) {
+				siteinfo = item;
+				}
+			});
+		return (siteinfo);
+		}
 	function getSiteMedialist (idsite, callback) { //8/29/23 by DW
 		wpServerCall ("wordpressgetsitemedialist", {idsite}, true, callback);
 		}
@@ -530,6 +539,7 @@ function wordpress (userOptions, callback) {
 	this.getSitePosts = getSitePosts; //8/28/23 by DW
 	this.getSiteUsers = getSiteUsers; //8/29/23 by DW
 	this.getSiteInfo = getSiteInfo; //8/29/23 by DW
+	this.getSiteInfoSync = getSiteInfoSync; //8/18/25 by DW
 	this.getSiteMedialist = getSiteMedialist; //8/29/23 by DW
 	this.getSiteCategories = getSiteCategories; //10/19/24 by DW
 	this.getPost = getPost; //8/28/23 by DW
@@ -657,4 +667,5 @@ function wordpress (userOptions, callback) {
 				}
 			nextcall (1); //get drafts until there aren't any more
 			}
+	//old stuff, all commented out -- 8/18/25 by DW
 	}

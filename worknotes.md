@@ -1,6 +1,12 @@
+#### 8/18/25; 8:56:52 PM by DW
+
+New api endpoint -- getSiteInfoSync. Gets the info about the site from a local in-memory cache. 
+
 #### 8/17/25; 11:39:28 AM by DW
 
-New endpoint -- getDraftFromUrl. On second thought decided to do it another way, in the client app, where we have a list of all the drafts that the user can edit via another call. Keep remembering that text is small, and we can afford to transmit an array with lots of elements in it. 
+New endpoint -- <s>getDraftFromUrl</s>. 
+
+On second thought decided to do it another way, in the client app, where we have a list of all the drafts that the user can edit via another call. Keep remembering that text is small, and we can afford to transmit an array with lots of elements in it. 
 
 #### 8/5/25; 10:37:13 AM by DW
 
@@ -74,7 +80,7 @@ We were adding posts and updating posts via HTTP GET and we have to use POST. Hi
 
 Add urlAvatar, urlProfile to the user info record we return via the api.
 
-#### 3/15/25; by DW
+#### 3/15/25 by DW
 
 New category endpoints -- wordpressaddcategory, wordpressdeletecategory.
 
