@@ -1,3 +1,21 @@
+#### 9/18/25; 10:13:11 AM by DW
+
+Fixed an infinite loop at startup if you didn't have your userinfo in wordpressmemory. 
+
+* This was one of the changes in the big new version, and it hadn't gotten tested, but it's one of hte pieces of code that's shared between all versions of wordland, so it broke users of the old version. 
+
+* Have to get this part straightend out, there has to be a place to store the old frozen version so we can't accidentally break it like this. But this problem should be fixed now. 
+
+There were two functions called getUserInfo. I changed the lower-level one to getUserInfoFromServer.
+
+#### 9/5/25; 9:58:55 AM by DW
+
+Released v0.5.25 so it can be used by FeedLand. 
+
+#### 8/29/25; 5:26:07 PM by DW
+
+In the API, getFeedUrl, if username is undefined, use the current user's name.
+
 #### 8/18/25; 8:56:52 PM by DW
 
 New api endpoint -- getSiteInfoSync. Gets the info about the site from a local in-memory cache. 

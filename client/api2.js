@@ -62,7 +62,11 @@ function wordpress (userOptions, callback) {
 	function getServerAddress () {
 		return (options.serverAddress); 
 		}
+	function getUsername () { //8/29/25 by DW
+		return (wordpressMemory.userinfo.username);
+		}
 	function getFeedUrl (username, idsite) { //5/15/25 by DW
+		username = (username === undefined) ? getUsername () : username;  //8/29/25 by DW
 		const feedUrl = options.serverAddress +  username + "/" + idsite + "/rss.xml"; //https://wordland.social/scripting/237777565/rss.xml
 		return (feedUrl);
 		}
@@ -128,14 +132,14 @@ function wordpress (userOptions, callback) {
 	function userIsSignedIn () {
 		return (wordpressMemory.accessToken !== undefined);
 		}
-	function getUserInfo (callback) { //8/26/23 by DW
+	function getUserInfoFromServer (callback) { //8/26/23 by DW
 		wpServerCall ("wordpressgetuserinfo", undefined, true, callback);
 		}
 	function getUserSites (callback) { //8/26/23 by DW
 		wpServerCall ("wordpressgetusersites", undefined, true, callback);
 		}
 	function initUserInfo (callback) {
-		getUserInfo (function (err, userinfo) { //3/17/25 by DW
+		getUserInfoFromServer (function (err, userinfo) { //3/17/25 by DW
 			if (err) {
 				callback (err);
 				}
@@ -436,11 +440,9 @@ function wordpress (userOptions, callback) {
 				}, initialCheckTimeout);
 			}
 		}
-	
-	
 	function getUserInfo (callback) {
 		if (wordpressMemory.userinfo === undefined) { //3/9/25 by DW
-			getUserInfo (function (err, theUserInfo) {
+			getUserInfoFromServer (function (err, theUserInfo) {
 				if (err) {
 					callback (err);
 					}
@@ -565,6 +567,7 @@ function wordpress (userOptions, callback) {
 	this.updateCategory = updateCategory; //5/11/25 by DW
 	this.addPost = addPost; //3/24/25 by DW
 	this.updatePost = updatePost; //3/24/25 by DW
+	this.getUsername = getUsername; //8/29/25 by DW
 	this.readUserJsonFile = function (relpath, flPrivate, callback, options) { //4/10/24 by DW
 		readUserDataFile (relpath, flPrivate, function (err, theFileData) {
 			if (err) {
