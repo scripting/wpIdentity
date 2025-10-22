@@ -535,6 +535,79 @@ function wordpress (userOptions, callback) {
 			});
 		}
 	
+	function readUserJsonFile (relpath, flPrivate, callback, options) { //4/10/24 by DW
+		readUserDataFile (relpath, flPrivate, function (err, theFileData) {
+			if (err) {
+				callback (err);
+				}
+			else {
+				var theJsonData = new Object (), flJsonError = false;
+				try {
+					theJsonData = JSON.parse (theFileData.filecontents);
+					}
+				catch (err) {
+					callback (err);
+					flJsonError = true;
+					}
+				if (!flJsonError) {
+					callback (undefined, theJsonData);
+					}
+				}
+			}, options);
+		}
+	function deleteUserDataFile (relpath, flPrivate, callback) { //3/26/24 by DW
+		console.log ("deleteUserDataFile");
+		const whenstart = new Date ();
+		var params = {
+			relpath
+			}
+		if (flPrivate) {
+			params.flprivate = true;
+			}
+		wpServerCall ("wordpressdeletefile", params, true, callback);
+		}
+	function isUserWhitelisted (callback) { //10/24/24 by DW
+		wpServerCall ("wordpressuseriswhitelisted", undefined, true, callback);
+		}
+	function getAccessToken () { //12/24/24 by DW
+		const theToken = base64UrlEncode (wordpressMemory.accessToken);
+		return (theToken);
+		}
+	function getSiteList () {
+		return (wordpressMemory.sitelist);
+		}
+	function getTopUsers (callback) { //12/23/24 by DW
+		wpServerCall ("wordpressgettopusers", undefined, true, callback);
+		}
+	function getNewPosts (callback) { //2/24/25 by DW
+		wpServerCall ("wordpressgettnewposts", undefined, true, callback);
+		}
+	function countUserHit (callback) { //2/26/25 by DW
+		wpServerCall ("wordpresscounthit", undefined, true, callback);
+		}
+	function connectWithWordpress () {
+		const url = getServerAddress () + "connect?urlapphomepage=" + encodeURIComponent (location.href); //9/4/23 by DW
+		console.log ("connectWithWordpress: url == " + url);
+		location.href = url;
+		}
+	function logOffWordpress () {
+		delete localStorage.wordpressMemory;
+		location.reload ();
+		}
+	function startup (callback) {
+		if (userIsSignedIn ()) {
+			initSitelist (function (err) {
+				initUserInfo (function (err) {
+					wsConnectUserToServer (); //5/24/24 by DW
+					callback ();
+					});
+				});
+			}
+		else {
+			callback (undefined);
+			}
+		}
+	
 	this.getUserInfo = getUserInfo;
 	this.getUserInfoSync = getUserInfoSync;
 	this.getUserSites = getUserSites;
@@ -568,107 +641,21 @@ function wordpress (userOptions, callback) {
 	this.addPost = addPost; //3/24/25 by DW
 	this.updatePost = updatePost; //3/24/25 by DW
 	this.getUsername = getUsername; //8/29/25 by DW
-	this.readUserJsonFile = function (relpath, flPrivate, callback, options) { //4/10/24 by DW
-		readUserDataFile (relpath, flPrivate, function (err, theFileData) {
-			if (err) {
-				callback (err);
-				}
-			else {
-				var theJsonData = new Object (), flJsonError = false;
-				try {
-					theJsonData = JSON.parse (theFileData.filecontents);
-					}
-				catch (err) {
-					callback (err);
-					flJsonError = true;
-					}
-				if (!flJsonError) {
-					callback (undefined, theJsonData);
-					}
-				}
-			}, options);
-		}
-	this.deleteUserDataFile = function (relpath, flPrivate, callback) { //3/26/24 by DW
-		console.log ("deleteUserDataFile");
-		const whenstart = new Date ();
-		var params = {
-			relpath
-			}
-		if (flPrivate) {
-			params.flprivate = true;
-			}
-		wpServerCall ("wordpressdeletefile", params, true, callback);
-		}
-	this.getSiteList = function () {
-		return (wordpressMemory.sitelist);
-		}
+	this.readUserJsonFile = readUserJsonFile;  //4/10/24 by DW
+	this.deleteUserDataFile = deleteUserDataFile; //3/26/24 by DW
+	this.getSiteList = getSiteList;
 	this.markdownProcess = markdownProcess;
-	this.isUserWhitelisted = function (callback) { //10/24/24 by DW
-		wpServerCall ("wordpressuseriswhitelisted", undefined, true, callback);
-		},
-	this.getAccessToken = function () { //12/24/24 by DW
-		const theToken = base64UrlEncode (wordpressMemory.accessToken);
-		return (theToken);
-		},
-	this.getTopUsers = function (callback) { //12/23/24 by DW
-		wpServerCall ("wordpressgettopusers", undefined, true, callback);
-		},
-	this.getNewPosts = function (callback) { //2/24/25 by DW
-		wpServerCall ("wordpressgettnewposts", undefined, true, callback);
-		},
-	this.countUserHit = function (callback) { //2/26/25 by DW
-		wpServerCall ("wordpresscounthit", undefined, true, callback);
-		},
+	this.isUserWhitelisted = isUserWhitelisted; //10/24/24 by DW
+	this.getAccessToken = getAccessToken; //12/24/24 by DW
+	this.getTopUsers = getTopUsers; //12/23/24 by DW
+	this.getNewPosts = getNewPosts; //2/24/25 by DW
+	this.countUserHit = countUserHit; //2/26/25 by DW
 	this.getFeedUrl = getFeedUrl; //5/15/25 by DW
 	this.userIsSignedIn = userIsSignedIn;
-	this.connectWithWordpress = function () {
-		const url = getServerAddress () + "connect?urlapphomepage=" + encodeURIComponent (location.href); //9/4/23 by DW
-		console.log ("connectWithWordpress: url == " + url);
-		location.href = url;
-		}
-	this.logOffWordpress = function () {
-		delete localStorage.wordpressMemory;
-		location.reload ();
-		}
-	this.startup = function (callback) {
-		if (userIsSignedIn ()) {
-			initSitelist (function (err) {
-				initUserInfo (function (err) {
-					wsConnectUserToServer (); //5/24/24 by DW
-					callback ();
-					});
-				});
-			}
-		else {
-			callback (undefined);
-			}
-		}
+	this.connectWithWordpress = connectWithWordpress;
+	this.logOffWordpress = logOffWordpress;
+	this.startup = startup;
 	
 	//testing functions, mostly commented out -- 10/24/24 by DW
-		this.testGetNextRangeOfDraftsForUser = function () { //8/5/25 by DW
-			const maxcalls = 200;
-			function nextcall (ix) {
-				if (ix < maxcalls) {
-					getNextRangeOfDraftsForUser (function (err, theArray) {
-						if (err) {
-							console.log (err.message);
-							}
-						else {
-							console.log ("\n\nix == " + ix + ", theArray.length == " + theArray.length);
-							theArray.forEach (function (item) {
-								console.log (item.idDraft + ": " + new Date (item.whenCreated).toLocaleString ());
-								});
-							if (theArray.length == 0) {
-								console.log ("bing!");
-								}
-							if ((ix < maxcalls) && (theArray.length > 0)) {
-								nextcall (ix + 1);
-								}
-							}
-						});
-					}
-				}
-			nextcall (1); //get drafts until there aren't any more
-			}
 	//old stuff, all commented out -- 8/18/25 by DW
 	}

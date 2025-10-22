@@ -1,3 +1,9 @@
+#### 10/22/25; 10:50:57 AM by DW
+
+Finished basic cleanup of api2.js at a source level. 
+
+Updated the home page of the repo to make it more clear that it is much more than identity. 
+
 #### 9/18/25; 10:13:11 AM by DW
 
 Fixed an infinite loop at startup if you didn't have your userinfo in wordpressmemory. 

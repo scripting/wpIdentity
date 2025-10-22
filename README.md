@@ -4,6 +4,8 @@ A <a href="https://www.npmjs.com/package/wpidentity">package</a> that implements
 
 It's used in FeedLand for WordPress identity and it's the complete backend for WordLand.
 
+In October 2024, I wrote a brief doc about the <a href="https://github.com/scripting/wpIdentity/blob/main/docs/history.md">history of wpIdentity</a>, its purpose, where it came from, how to explore. 
+
 ### It works
 
 You can try it out <a href="http://scripting.com/code/wpidentity/client/">here</a>.
@@ -27,10 +29,6 @@ Here's a <a href="https://imgs.scripting.com/2023/09/05/wpsitelist.png">screen s
 5. node wpidentity.js
 
 6. If you want to use the storage feature, you'll need to <a href="https://github.com/scripting/wpIdentity/blob/main/docs/storage.md">set up the database</a>. 
-
-### History
-
-In October 2024, I wrote a brief doc about the <a href="https://github.com/scripting/wpIdentity/blob/main/docs/history.md">history of wpIdentity</a>, its purpose, where it came from , how to explore. 
 
 ### Check out worknotes
 
@@ -58,5 +56,5 @@ These docs proved useful at different points in this project.
 
 ### Other pointers
 
-I am using this site for testing. https://scripting4.wordpress.com/
+I am using this site for testing. https://daveverse.org/.
 

@@ -26,7 +26,7 @@ Also the wpcom interface is a lot slower, since we save the draft as the user ty
 
 ### Missing functionality
 
-I still have some more functionality to cover, notably uploads of media objects and the ability to edit categories without having to go the wordpress.com editor.
+I still have some more functionality to cover, notably uploads of media objects.
 
 ### License
 
