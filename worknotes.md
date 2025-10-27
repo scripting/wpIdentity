@@ -1,3 +1,11 @@
+#### 10/27/25; 9:55:18 AM by DW -- v0.5.26
+
+Trying to install the updated feedland app on feedland.org, and believe there's a bug in the new release of wpcom package, it uses but does not include in its dependencies the babel runtime. 
+
+I'm working around it by adding a dependency on babel runtime here, bumping the version number of wpidentity, and requiring at least that version in feedlandserver (which is feedland package), 
+
+I got help from claude.ai in piecing this together. I don't like having to work at this level. 
+
 #### 10/22/25; 10:50:57 AM by DW
 
 Finished basic cleanup of api2.js at a source level. 

@@ -2,7 +2,7 @@
 	"name": "wpidentity",
 	"description": "Implements OAuth identity, a simple verb set with wordpress.com for Node.js apps, and a storage system for drafts and other user data. It's used in FeedLand for WordPress identity and it's the backend of WordLand.",
 	"author": "Dave Winer <dave@scripting.com>",
-	"version": "0.5.25",
+	"version": "0.5.26",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
@@ -13,6 +13,7 @@
 		"wpidentity.js"
 		],
 	"dependencies" : {
+		"@babel/runtime": "*",
 		"wpcom": "*",
 		"request": "*",
 		"daveutils": "*",
