@@ -1,3 +1,15 @@
+#### 10/31/25; 6:44:10 AM by DW -- v0.5.27
+
+Another breaking change from the new version of wpcom package. 
+
+They changed the way it interfaces, so the way we call it here no longer works.
+
+We could easily convert to the new way, but I decided not to, and to require the previous version, 5.4.2, which we developed around.
+
+Since there have been two breaking changes, that says to me the probability of a third is pretty high. ;-)
+
+And with this change we can now comment out the requirement of babel in package.json.
+
 #### 10/27/25; 9:55:18 AM by DW -- v0.5.26
 
 Trying to install the updated feedland app on feedland.org, and believe there's a bug in the new release of wpcom package, it uses but does not include in its dependencies the babel runtime. 
