@@ -36,7 +36,7 @@ I've been narrating my work in the <a href="https://github.com/scripting/wordpre
 
 ### Demo apps
 
-There's a very simple demo app in the <a href="https://github.com/scripting/wpIdentity/tree/main/client">client folder</a> here. 
+There's a very simple <a href="http://scripting.com/code/wpidentity/client/">demo app</a> in the <a href="https://github.com/scripting/wpIdentity/tree/main/client">client folder</a> here. 
 
 In November 2025 I wrote a <a href="https://github.com/scripting/wpEditorDemo">simple editor</a> that works through wpIdentity. 
 
