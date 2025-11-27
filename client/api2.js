@@ -5,7 +5,7 @@ function wordpress (userOptions, callback) {
 		};
 	var options = {
 		serverAddress: undefined,
-		flMarkdownProcess: true,
+		flMarkdownProcess: false, //11/15/25 by DW -- changed to false
 		maxCtUserDraftFiles: 1000, //10/31/24 by DW
 		flWebsocketEnabled: true, //5/24/24 by DW
 		urlChatLogSocket: "ws://localhost:1622/",

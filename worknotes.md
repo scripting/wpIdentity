@@ -1,3 +1,7 @@
+#### 11/15/25; 9:45:43 AM by DW
+
+In api2.js, set options.flMarkdownProcess to false by default. The option was created before we established that the server would only store markdown text for posts. To set it true would probably break that, so it made no sense for it to default to false. 
+
 #### 10/31/25; 6:44:10 AM by DW -- v0.5.27
 
 Another breaking change from the new version of wpcom package. 
