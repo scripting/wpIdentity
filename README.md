@@ -54,6 +54,12 @@ These docs proved useful at different points in this project.
 
 * https://github.com/Automattic/wpcom-connect-examples
 
+### Demo apps
+
+There's a very simple demo app in the <a href="https://github.com/scripting/wpIdentity/tree/main/client">client folder</a> here. 
+
+In November 2025 I wrote a <a href="https://github.com/scripting/wpEditorDemo">simple editor</a> that works through wpIdentity. This is code you can copy if you have an editor and want to configure it to work alongside WordLand. 
+
 ### Other pointers
 
 I am using this site for testing. https://daveverse.org/.
