@@ -34,6 +34,16 @@ Here's a <a href="https://imgs.scripting.com/2023/09/05/wpsitelist.png">screen s
 
 I've been narrating my work in the <a href="https://github.com/scripting/wordpressIdentity/blob/main/worknotes.md">worknotes</a>. 
 
+### Demo apps
+
+There's a very simple demo app in the <a href="https://github.com/scripting/wpIdentity/tree/main/client">client folder</a> here. 
+
+In November 2025 I wrote a <a href="https://github.com/scripting/wpEditorDemo">simple editor</a> that works through wpIdentity. 
+
+This is <a href="https://github.com/scripting/wpEditorDemo/blob/main/code.js">code</a> you can copy if you have an editor and want to configure it to work alongside WordLand.  
+
+You can also <a href="https://demo.wpidentity.org/">try out the editor</a> here. 
+
 ### Automattic docs
 
 These docs proved useful at different points in this project.
@@ -53,12 +63,6 @@ These docs proved useful at different points in this project.
 * https://github.com/Automattic/wp-calypso/tree/trunk/packages/wpcom.js/docs
 
 * https://github.com/Automattic/wpcom-connect-examples
-
-### Demo apps
-
-There's a very simple demo app in the <a href="https://github.com/scripting/wpIdentity/tree/main/client">client folder</a> here. 
-
-In November 2025 I wrote a <a href="https://github.com/scripting/wpEditorDemo">simple editor</a> that works through wpIdentity. This is code you can copy if you have an editor and want to configure it to work alongside WordLand. 
 
 ### Other pointers
 
