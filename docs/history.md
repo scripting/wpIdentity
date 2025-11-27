@@ -20,9 +20,9 @@ This API is patterned after the approach Facebook took in their browser interfac
 
 ### WordLand (November 2024)
 
-With <a href="https://this.how/wordland/">WordLand</a> it also gets a <a href="https://github.com/scripting/wpIdentity/blob/main/wpidentity.js#L423">storage</a> component, because WordLand needs to store drafts. 
+With <a href="https://this.how/wordland/">WordLand</a> it also gets a <a href="https://github.com/scripting/wpIdentity/blob/main/wpidentity.js#L423">storage</a> component, because WordLand needs to store drafts and user preferences. And may want to implement more storage functions in the future. 
 
-Also the wpcom interface is a lot slower, since we save the draft as the user types, it needs to be pretty fast. 
+Also the wpcom interface is slower, since we save the draft as the user types, it needs to be pretty fast. 
 
 ### Missing functionality
 
