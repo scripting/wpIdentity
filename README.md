@@ -40,9 +40,9 @@ There's a very simple demo app in the <a href="https://github.com/scripting/wpId
 
 In November 2025 I wrote a <a href="https://github.com/scripting/wpEditorDemo">simple editor</a> that works through wpIdentity. 
 
-This is <a href="https://github.com/scripting/wpEditorDemo/blob/main/code.js">code</a> you can copy if you have an editor and want to configure it to work alongside WordLand.  
+* This is <a href="https://github.com/scripting/wpEditorDemo/blob/main/code.js">code</a> you can copy if you have an editor and want to configure it to work alongside WordLand.  
 
-You can also <a href="https://demo.wpidentity.org/">try out the editor</a> here. 
+* You can also <a href="https://demo.wpidentity.org/">try out the editor</a> here. 
 
 ### Automattic docs
 
