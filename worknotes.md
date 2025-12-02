@@ -1,3 +1,25 @@
+#### 12/1/25; 9:13:45 AM by DW
+
+Working on discourse features. 
+
+New function -- getPostAuthorInfo.
+
+New function -- getWordlandPrefs, takes a username and returns their prefs. 
+
+this allows us to find out if they've enabled notification on replies.
+
+that means that in order to be part of this system they must have used this WordLand once to set that up.
+
+Include davemail, start it at startup to use SES.
+
+When a message is posted or updated that is in response to another post, if enabled, send an email with a link to the author of the original email.
+
+Not sure where that link will point to, probably back to WordLand? We'll see when we get there. ;-)
+
+#### 11/28/25; 11:48:22 AM by DW
+
+Added queriesthatwork.md in docs folder. 
+
 #### 11/15/25; 9:45:43 AM by DW
 
 In api2.js, set options.flMarkdownProcess to false by default. The option was created before we established that the server would only store markdown text for posts. To set it true would probably break that, so it made no sense for it to default to false. 

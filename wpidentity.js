@@ -421,6 +421,16 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 				}
 			});
 		}
+	function getPostAuthorInfo (idSite, idPost, callback) { //11/30/25 by DW
+		getPost (undefined, idSite, idPost, function (err, thePost) {
+			if (err) {
+				callback (err);
+				}
+			else {
+				callback (undefined, thePost.author);
+				}
+			});
+		}
 	function getObjectFromJsontext (jsontext, callback) {
 		var theObject;
 		try {
@@ -711,11 +721,66 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 		return (theArray);
 		}
 	
+	
+	
+	
+	function getWordlandPrefs (username, callback) { //12/1/25 by DW
+		const fname = "wordland/prefs.json";
+		const flprivate = true;
+		readUserFile (username, fname, flprivate, 0, 0, function (err, theFile) {
+			if (err) {
+				callback (err);
+				}
+			else {
+				var flerror = false;
+				try {
+					theData = JSON.parse (theFile.filecontents);
+					}
+				catch (err) {
+					callback (err);
+					flerror = true;
+					}
+				if (!flerror) {
+					callback (undefined, theData);
+					}
+				}
+			});
+		}
+	function testNotification (inReplyTo) { //12/1/25 by DW
+		if (inReplyTo !== undefined) {
+			getPostAuthorInfo (inReplyTo.idSite, inReplyTo.idPost, function (err, theAuthor) {
+				if (err) {
+					console.log ("testNotification: err.message == " + err.message);
+					}
+				else {
+					console.log ("testNotification: theAuthor == " + utils.jsonStringify (theAuthor));
+					getWordlandPrefs (theAuthor.username, function (err, thePrefs) {
+						if (err) {
+							console.log ("testNotification: err.message == " + err.message);
+							}
+						else {
+							console.log ("testNotification: thePrefs == " + utils.jsonStringify (thePrefs));
+							if (utils.getBoolean (thePrefs.flNotifyForReplies)) {
+								const email = utils.trimWhitespace (thePrefs.emailForNotification);
+								if (email.length > 0) {
+									console.log ("testNotification: email == " + email);
+									}
+								}
+							}
+						});
+					}
+				});
+			}
+		}
+	
+	
 	function addPost (accessToken, idSite, jsontext, callback) { //8/29/23 by DW
 		const jstruct = getObjectFromJsontext (jsontext, callback);
 		if (jstruct === undefined) {
 			return;
 			}
+		
+		testNotification (jstruct.inReplyTo); //12/1/25 by DW -- testing
 		
 		const wp = wpcom (accessToken);
 		const site = wp.site (idSite);
@@ -756,6 +821,9 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 		if (jstruct === undefined) {
 			return;
 			}
+		
+		testNotification (jstruct.inReplyTo); //12/1/25 by DW -- testing
+		
 		const wp = wpcom (accessToken);
 		const site = wp.site (idSite);
 		const post = site.post (idPost);
