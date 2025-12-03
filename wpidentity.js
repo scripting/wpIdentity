@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.5.27"; 
+var myProductName = "wpidentity", myVersion = "0.5.30"; 
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -16,6 +16,7 @@ const marked = require ("marked");  //4/18/24 by DW
 const rss = require ("daverss"); //4/29/24 by DW
 const websocket = require ("ws"); //4/28/25 by DW
 const log = require ("sqllog"); //12/21/24 by DW
+const mail = require ("davemail"); //12/2/25 by DW
 
 var config = { 
 	myRandomNumber: utils.random (1, 1000000000),
@@ -56,7 +57,7 @@ var config = {
 	
 	homePagetable: undefined, //3/14/25 by DW
 	
-	postMetadataPrefix: "wordland" //7/5/25 by DW
+	postMetadataPrefix: "wordland", //7/5/25 by DW
 	};
 
 var stats = {
@@ -692,7 +693,6 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 			};
 		addToLog (verb + "Post", undefined, eventData);
 		}
-	
 	function getMetadataForPost (theDraft) { //7/5/25 by DW -- xxx
 		var theMetadata = {
 			apiVersion: "0.4.0",
@@ -720,10 +720,6 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 		
 		return (theArray);
 		}
-	
-	
-	
-	
 	function getWordlandPrefs (username, callback) { //12/1/25 by DW
 		const fname = "wordland/prefs.json";
 		const flprivate = true;
@@ -746,8 +742,41 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 				}
 			});
 		}
-	function testNotification (inReplyTo) { //12/1/25 by DW
-		if (inReplyTo !== undefined) {
+	
+	function testNotification (theDraft) { //12/1/25 by DW
+		function sendNotification (email, theDraft) {
+			const inReplyTo = theDraft.inReplyTo;
+			const mailtext = `
+				<div>
+					<blockquote>
+						<p>idSite: ${theDraft.idSite}</p>
+						<p>idPost: ${theDraft.idPost}</p>
+						<p>url: ${theDraft.url}</p>
+						<p>content: ${theDraft.content}</p>
+						<p>title: ${theDraft.title}</p>
+						<p>author.id: ${theDraft.author.id}</p>
+						<p>author.name: ${theDraft.author.name}</p>
+						<p>author.username: ${theDraft.author.username}</p>
+						<p>inReplyTo.idSite: ${inReplyTo.idSite}</p>
+						<p>inReplyTo.idPost: ${inReplyTo.idPost}</p>
+						<p>inReplyTo.urlPost: ${inReplyTo.urlPost}</p>
+						</blockquote>
+					</div>
+				`;
+			const title = "wpIdentity: " + nowstring ();
+			const mailsender = "dave@scripting.com";
+			console.log ("sendNotification: mailtext == " + mailtext);
+			mail.send (email, title, mailtext, mailsender, function (err, data) {
+				if (err) {
+					console.log ("sendNotification: err.message == " + err.message);
+					}
+				else {
+					console.log ("sendNotification: data == " + utils.jsonStringify (data));
+					}
+				});
+			}
+		if (theDraft.inReplyTo !== undefined) {
+			const inReplyTo = theDraft.inReplyTo;
 			getPostAuthorInfo (inReplyTo.idSite, inReplyTo.idPost, function (err, theAuthor) {
 				if (err) {
 					console.log ("testNotification: err.message == " + err.message);
@@ -764,6 +793,18 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 								const email = utils.trimWhitespace (thePrefs.emailForNotification);
 								if (email.length > 0) {
 									console.log ("testNotification: email == " + email);
+									sendNotification (email, theDraft);
+									
+									const idSourceSite = theDraft.idSite, idSourcePost = theDraft.idPost;
+									const idDestSite = inReplyTo.idSite, idDestPost = inReplyTo.idPost;
+									addEdge (idSourceSite, idSourcePost, idDestSite, idDestPost, function (err, data) {
+										if (err) {
+											console.log ("addEdge: err.message == " + err.message);
+											}
+										else {
+											console.log ("addEdge: data == " + utils.jsonStringify (data));
+											}
+										});
 									}
 								}
 							}
@@ -773,14 +814,13 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 			}
 		}
 	
-	
 	function addPost (accessToken, idSite, jsontext, callback) { //8/29/23 by DW
 		const jstruct = getObjectFromJsontext (jsontext, callback);
 		if (jstruct === undefined) {
 			return;
 			}
 		
-		testNotification (jstruct.inReplyTo); //12/1/25 by DW -- testing
+		testNotification (jstruct); //12/1/25 by DW -- testing
 		
 		const wp = wpcom (accessToken);
 		const site = wp.site (idSite);
@@ -822,7 +862,7 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 			return;
 			}
 		
-		testNotification (jstruct.inReplyTo); //12/1/25 by DW -- testing
+		testNotification (jstruct); //12/1/25 by DW -- testing
 		
 		const wp = wpcom (accessToken);
 		const site = wp.site (idSite);
@@ -1581,6 +1621,9 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 			});
 		}
 //misc -- 10/28/24 by DW
+	function nowstring () { //12/2/25 by DW
+		return (new Date ().toLocaleTimeString ());
+		}
 	function fixBookmarksFile () { //10/28/24 by DW
 		fs.readFile ("bookmarks.opml", function (err, opmltext) {
 			if (err) {
@@ -1616,6 +1659,38 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 					}
 				});
 			}
+		}
+	function startMail () { //12/2/25 by DW
+		var options;
+		if (config.smtpHost === undefined) {
+			options = {
+				flUseSes: true
+				};
+			}
+		else {
+			options = {
+				flUseSes: false,
+				smtpHost: config.smtpHost,
+				port: config.smtpPort,
+				username: config.smtpUsername,
+				password: config.smtpPassword
+				};
+			}
+		mail.start (options);
+		}
+	function testMailsend () { //12/2/25 by DW
+		const email = "dave.winer@gmail.com";
+		const mailSender = "dave@scripting.com";
+		const title = "wpIdentity: " + nowstring ();
+		const mailtext = "It's just a test to see if mail sending works from wpIdentity.";
+		mail.send (email, title, mailtext, mailSender, function (err, data) {
+			if (err) {
+				console.log ("testMailsend: err.message == " + err.message);
+				}
+			else {
+				console.log ("testMailsend: data == " + utils.jsonStringify (data));
+				}
+			});
 		}
 //stats -- 2/27/25 by DW
 	var flStatsChanged = false;
@@ -1661,6 +1736,39 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 				});
 			flStatsChanged = false;
 			}
+		}
+//edges -- 12/2/25 by DW
+	function addEdge (idSourceSite, idSourcePost, idDestSite, idDestPost, callback) {
+		const sqltext = `
+			insert into edges (idSourceSite, idSourcePost, idDestSite, idDestPost)
+			values (${davesql.encode (idSourceSite)}, ${davesql.encode (idSourcePost)}, ${davesql.encode (idDestSite)}, ${davesql.encode (idDestPost)})
+			`;
+		davesql.runSqltext (sqltext, function (err, result) {
+			if (err) {
+				callback (err);
+				}
+			else {
+				callback (undefined, result.insertId);
+				}
+			});
+		}
+	function getEdgesForPost (idSite, idPost, callback) {
+		const sqltext = "select * from edges where idDestSite = " + davesql.encode (idSite) + " and idDestPost = " + davesql.encode (idPost) + ";";
+		davesql.runSqltext (sqltext, function (err, result) {
+			if (err) {
+				callback (err);
+				}
+			else {
+				if (result.length == 0) {
+					const message = "Can't find the file " + relpath + " for the user " + username + ".";
+					const code = 404; //2/22/25 by DW
+					callback ({message, code});
+					}
+				else {
+					callback (undefined, result);
+					}
+				}
+			});
 		}
 
 function handleHttpRequest (theRequest, options = new Object ()) { //returns true if request was handled
@@ -2191,6 +2299,8 @@ function start (options, callback) {
 			}
 		webSocketStartup (); //5/24/24 by DW
 		startStats (); //2/27/25 by DW
+		startMail (); //12/2/25 by DW
+		testMailsend (); //12/2/25 by DW
 		setInterval (everySecond, 1000);  //2/27/25 by DW
 		everyMinute (); //11/18/24 by DW
 		utils.runEveryMinute (everyMinute); //11/18/24 by DW

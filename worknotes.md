@@ -1,4 +1,34 @@
-#### 12/1/25; 9:13:45 AM by DW
+#### 12/2/25; 9:21:41 AM by DW
+
+Slowly and carefully adding mail back in. 
+
+Getting started with edges.
+
+create table edges (
+
+id int auto_increment primary key,
+
+idSourceSite int not null,
+
+idSourcePost int not null,
+
+idDestSite int not null,
+
+idDestPost int not null,
+
+sourceAuthor varchar (255)  not null default '',
+
+destAuthor  varchar (255)  not null default '',
+
+whenCreated datetime not null default current_timestamp, 
+
+approved boolean default false,
+
+unique key sourceDest (idSourceSite, idSourcePost, idDestSite, idDestPost)
+
+);
+
+#### 12/1/25; 9:13:45 AM by DW -- v0.5.28
 
 Working on discourse features. 
 
@@ -6,15 +36,13 @@ New function -- getPostAuthorInfo.
 
 New function -- getWordlandPrefs, takes a username and returns their prefs. 
 
-this allows us to find out if they've enabled notification on replies.
+* this allows us to find out if they've enabled notification on replies.
 
-that means that in order to be part of this system they must have used this WordLand once to set that up.
+* that means that in order to be part of this system they must have used this WordLand once to set that up.
 
-Include davemail, start it at startup to use SES.
+New function -- testNotification -- leaving it in there for now, not sure how we're going to interface from wpIdentity to where ever the linkage between posts is stored. 
 
-When a message is posted or updated that is in response to another post, if enabled, send an email with a link to the author of the original email.
-
-Not sure where that link will point to, probably back to WordLand? We'll see when we get there. ;-)
+I started to include davemail here, but that causes all the problems that adding a feature to reallysimple caused. It's probably better to make it a separate app, connected by HTTP.
 
 #### 11/28/25; 11:48:22 AM by DW
 
