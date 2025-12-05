@@ -743,9 +743,8 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 			});
 		}
 	
-	function testNotification (theDraft) { //12/1/25 by DW
-		function sendNotification (email, theDraft) {
-			const inReplyTo = theDraft.inReplyTo;
+	function processReply (inReplyTo, theDraft) { //12/1/25 by DW
+		function sendNotification (email, inReplyTo, theDraft) {
 			const mailtext = `
 				<div>
 					<blockquote>
@@ -775,8 +774,7 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 					}
 				});
 			}
-		if (theDraft.inReplyTo !== undefined) {
-			const inReplyTo = theDraft.inReplyTo;
+		if (inReplyTo !== undefined) {
 			getPostAuthorInfo (inReplyTo.idSite, inReplyTo.idPost, function (err, theAuthor) {
 				if (err) {
 					console.log ("testNotification: err.message == " + err.message);
@@ -793,16 +791,18 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 								const email = utils.trimWhitespace (thePrefs.emailForNotification);
 								if (email.length > 0) {
 									console.log ("testNotification: email == " + email);
-									sendNotification (email, theDraft);
+									sendNotification (email, inReplyTo, theDraft);
 									
 									const idSourceSite = theDraft.idSite, idSourcePost = theDraft.idPost;
 									const idDestSite = inReplyTo.idSite, idDestPost = inReplyTo.idPost;
-									addEdge (idSourceSite, idSourcePost, idDestSite, idDestPost, function (err, data) {
+									const sourceAuthor = theDraft.author.username, destAuthor = theAuthor.username;
+									
+									addEdge (idSourceSite, idSourcePost, sourceAuthor, idDestSite, idDestPost, destAuthor, function (err, insertId) {
 										if (err) {
 											console.log ("addEdge: err.message == " + err.message);
 											}
 										else {
-											console.log ("addEdge: data == " + utils.jsonStringify (data));
+											console.log ("addEdge: insertId == " + insertId);
 											}
 										});
 									}
@@ -819,8 +819,6 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 		if (jstruct === undefined) {
 			return;
 			}
-		
-		testNotification (jstruct); //12/1/25 by DW -- testing
 		
 		const wp = wpcom (accessToken);
 		const site = wp.site (idSite);
@@ -851,6 +849,7 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 					theConvertedPost.whenPublished = new Date ();
 					console.log ("addPost: theConvertedPost == " + utils.jsonStringify (theConvertedPost)); //5/8/24 by DW
 					logPublish ("add", theConvertedPost); //2/23/25 by DW
+					processReply (jstruct.inReplyTo, theConvertedPost); //12/3/25 by DW
 					callback (undefined, theConvertedPost);
 					}
 				});
@@ -861,8 +860,6 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 		if (jstruct === undefined) {
 			return;
 			}
-		
-		testNotification (jstruct); //12/1/25 by DW -- testing
 		
 		const wp = wpcom (accessToken);
 		const site = wp.site (idSite);
@@ -890,6 +887,7 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 					theConvertedPost.whenPublished = new Date ();
 					console.log ("updatePost: theConvertedPost == " + utils.jsonStringify (theConvertedPost)); //5/8/24 by DW
 					logPublish ("update", theConvertedPost); //2/23/25 by DW
+					processReply (jstruct.inReplyTo, theConvertedPost); //12/3/25 by DW
 					callback (undefined, theConvertedPost);
 					}
 				});
@@ -1737,11 +1735,11 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 			flStatsChanged = false;
 			}
 		}
-//edges -- 12/2/25 by DW
-	function addEdge (idSourceSite, idSourcePost, idDestSite, idDestPost, callback) {
+//edges -- 12/5/25 by DW
+	function addEdge (idSourceSite, idSourcePost, sourceAuthor, idDestSite, idDestPost, destAuthor, callback) {
 		const sqltext = `
-			insert into edges (idSourceSite, idSourcePost, idDestSite, idDestPost)
-			values (${davesql.encode (idSourceSite)}, ${davesql.encode (idSourcePost)}, ${davesql.encode (idDestSite)}, ${davesql.encode (idDestPost)})
+			insert ignore into edges (idSourceSite, idSourcePost, sourceAuthor, idDestSite, idDestPost, destAuthor)
+			values (${davesql.encode (idSourceSite)}, ${davesql.encode (idSourcePost)}, ${davesql.encode (sourceAuthor)}, ${davesql.encode (idDestSite)}, ${davesql.encode (idDestPost)}, ${davesql.encode (destAuthor)})
 			`;
 		davesql.runSqltext (sqltext, function (err, result) {
 			if (err) {
@@ -1752,20 +1750,42 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 				}
 			});
 		}
-	function getEdgesForPost (idSite, idPost, callback) {
+	function edgesToPostsArray (edges, callback) {
+		if (edges.length == 0) {
+			callback (undefined, new Array ());
+			}
+		else {
+			var posts = new Array (), ctRemaining = edges.length, whenLoopStarts = new Date ();
+			edges.forEach (function (edge) {
+				const whenstart = new Date ();
+				getPost (undefined, edge.idSourceSite, edge.idSourcePost, function (err, thePost) {
+					if (!err) {
+						posts.push (thePost);
+						console.log ("edgesToPostsArray: thePost.url == " + thePost.url + ", " + utils.secondsSince (whenstart) + " secs.");
+						}
+					ctRemaining--;
+					if (ctRemaining == 0) {
+						callback (undefined, posts);
+						console.log ("edgesToPostsArray: " + utils.secondsSince (whenLoopStarts) + " secs for all to run.");
+						}
+					});
+				});
+			}
+		}
+	function getEdges (idSite, idPost, callback) {
 		const sqltext = "select * from edges where idDestSite = " + davesql.encode (idSite) + " and idDestPost = " + davesql.encode (idPost) + ";";
-		davesql.runSqltext (sqltext, function (err, result) {
+		davesql.runSqltext (sqltext, function (err, edges) {
 			if (err) {
 				callback (err);
 				}
 			else {
-				if (result.length == 0) {
+				if (edges.length == 0) {
 					const message = "Can't find the file " + relpath + " for the user " + username + ".";
 					const code = 404; //2/22/25 by DW
 					callback ({message, code});
 					}
 				else {
-					callback (undefined, result);
+					edgesToPostsArray (edges, callback);
 					}
 				}
 			});
@@ -2257,6 +2277,10 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 						getRangeOfDraftsForUser (token, params.idlowestinlastpage, params.ct, httpReturn);
 						});
 					return (true);
+				
+				case "/wordpressggetedges": //12/4/25 by DW
+					getEdges (params.idsite, params.idpost, httpReturn);
+					return (true);
 				default:
 					if (config.flServePublicUserFiles) { //4/30/24 by DW
 						return (servePublicFile (theRequest.lowerpath)); 
@@ -2300,7 +2324,6 @@ function start (options, callback) {
 		webSocketStartup (); //5/24/24 by DW
 		startStats (); //2/27/25 by DW
 		startMail (); //12/2/25 by DW
-		testMailsend (); //12/2/25 by DW
 		setInterval (everySecond, 1000);  //2/27/25 by DW
 		everyMinute (); //11/18/24 by DW
 		utils.runEveryMinute (everyMinute); //11/18/24 by DW

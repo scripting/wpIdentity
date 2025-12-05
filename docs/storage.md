@@ -10,11 +10,11 @@ Every wpidentity installation has the option of providing user-level storage.
 
 ```SQL
 
-create table wpstorage (	id int auto_increment key, 	username varchar (255), 	relpath varchar (255), 	flprivate boolean,	idSite int unsigned not null default 0,	idPost int unsigned not null default 0,	type varchar (64),	filecontents longtext,	whenCreated datetime, 	whenUpdated datetime, 	ctSaves int unsigned not null default 0,	index draftIndex (username, relpath, flprivate, idSite, idPost)	);create table users (	id int auto_increment primary key,	username varchar(255) not null unique,	ctHits int unsigned not null default 0,	whenLastHit datetime not null default current_timestamp,	lastBrowser varchar(512) not null default '',	whenCreated datetime not null default current_timestamp,	metadata json not null default (json_object())	);
+create table wpstorage (	id int auto_increment key, 	username varchar (255), 	relpath varchar (255), 	flprivate boolean,	idSite int unsigned not null default 0,	idPost int unsigned not null default 0,	type varchar (64),	filecontents longtext,	whenCreated datetime, 	whenUpdated datetime, 	ctSaves int unsigned not null default 0,	index draftIndex (username, relpath, flprivate, idSite, idPost)	);create table users (	id int auto_increment primary key,	username varchar(255) not null unique,	ctHits int unsigned not null default 0,	whenLastHit datetime not null default current_timestamp,	lastBrowser varchar(512) not null default '',	whenCreated datetime not null default current_timestamp,	metadata json not null default (json_object())	);create table edges (	id int auto_increment primary key,	idSourceSite int not null,	idSourcePost int not null,	idDestSite int not null,	idDestPost int not null,	sourceAuthor varchar (255)  not null default '',	destAuthor  varchar (255)  not null default '',	whenCreated datetime not null default current_timestamp, 	approved boolean default false,	}
 
 ```
 
-3. If you put this table in its own database you should create the database with:
+3. If you put these tables in its own database you should create the database with:
 
 `create database wpidentity character set utf8mb4 collate utf8mb4_unicode_ci;`
 
@@ -32,17 +32,5 @@ The relpath field is meant to be a relative path to the "home" of the user's sto
 
 #### Queries that work
 
-select id, username, relpath, type, idSite, idPost, whenCreated, whenUpdated, ctSaves from wpstorage order by whenUpdated desc;
-
-select filecontents from wpstorage where id = 65; 
-
-select filecontents from wpstorage where relpath = 'bingeworthy/profile.json';
-
-select id, username, whenCreated, whenUpdated, ctSaves from wpstorage where relpath = 'wordland/prefs.json' order by ctSaves desc limit 25;
-
-select * from log order by id desc limit 100;
-
-select id, eventName, whenCreated from log order by id desc limit 100;
-
-select id, eventData from log order by id desc limit 100;
+Are now on <a href="queriesthatwork.md">their own page</a>. 
 

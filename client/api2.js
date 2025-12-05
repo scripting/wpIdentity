@@ -215,6 +215,7 @@ function wordpress (userOptions, callback) {
 				}
 			});
 		}
+	
 	function readUserDataFile (relpath, flPrivate, callback, options) { //3/25/24 by DW
 		const whenstart = new Date ();
 		var params = {
@@ -585,6 +586,11 @@ function wordpress (userOptions, callback) {
 	function countUserHit (callback) { //2/26/25 by DW
 		wpServerCall ("wordpresscounthit", undefined, true, callback);
 		}
+	
+	function getEdges (idsite, idpost, callback) { //12/4/25 by DW
+		wpServerCall ("wordpressggetedges", {idsite, idpost}, undefined, callback);
+		}
+	
 	function connectWithWordpress () {
 		const url = getServerAddress () + "connect?urlapphomepage=" + encodeURIComponent (location.href); //9/4/23 by DW
 		console.log ("connectWithWordpress: url == " + url);
@@ -651,6 +657,7 @@ function wordpress (userOptions, callback) {
 	this.getNewPosts = getNewPosts; //2/24/25 by DW
 	this.countUserHit = countUserHit; //2/26/25 by DW
 	this.getFeedUrl = getFeedUrl; //5/15/25 by DW
+	this.getEdges = getEdges; //12/4/25 by DW
 	this.userIsSignedIn = userIsSignedIn;
 	this.connectWithWordpress = connectWithWordpress;
 	this.logOffWordpress = logOffWordpress;

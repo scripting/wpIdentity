@@ -1,3 +1,33 @@
+#### 12/5/25; 12:07:39 PM by DW
+
+Edges are in, and working. 
+
+```sql
+
+create table edges (
+
+id int auto_increment primary key,
+
+idSourceSite int not null,
+
+idSourcePost int not null,
+
+idDestSite int not null,
+
+idDestPost int not null,
+
+sourceAuthor varchar (255)  not null default '',
+
+destAuthor  varchar (255)  not null default '',
+
+whenCreated datetime not null default current_timestamp, 
+
+approved boolean default false,
+
+}
+
+```
+
 #### 12/2/25; 9:21:41 AM by DW
 
 Slowly and carefully adding mail back in. 
@@ -16,9 +46,9 @@ idDestSite int not null,
 
 idDestPost int not null,
 
-sourceAuthor varchar (255)  not null default '',
+sourceAuthor varchar (255)  not null default'',
 
-destAuthor  varchar (255)  not null default '',
+destAuthor  varchar (255)  not null default'',
 
 whenCreated datetime not null default current_timestamp, 
 
