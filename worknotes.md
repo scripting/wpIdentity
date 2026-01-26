@@ -1,6 +1,12 @@
+#### 12/15/25; 9:56:20 AM by DW
+
+In getEdges, return the array sorted by whenCreated.
+
 #### 12/5/25; 12:07:39 PM by DW
 
 Edges are in, and working. 
+
+In getEdges in api2.js, added reverse chronologic sort to the array we return.
 
 #### 12/2/25; 9:21:41 AM by DW
 

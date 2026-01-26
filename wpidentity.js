@@ -1690,6 +1690,14 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 				}
 			});
 		}
+	function getDateForSorting (theDate) { //6/3/23 by DW
+		if (theDate === undefined) {
+			return (new Date (0));
+			}
+		else {
+			return (new Date (theDate));
+			}
+		}
 //stats -- 2/27/25 by DW
 	var flStatsChanged = false;
 	const statsFile = "data/stats.json";
@@ -1751,6 +1759,20 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 			});
 		}
 	function edgesToPostsArray (edges, callback) {
+		function reverseChronologicSort (posts) { //12/15/25 by DW
+			const flReverseSort = true;
+			posts.sort (function (a, b) { //reverse chronologic sort
+				var adate = getDateForSorting (a.whenCreated);
+				var bdate = getDateForSorting (b.whenCreated);
+				if (flReverseSort) {
+					const tmp = adate;
+					adate = bdate;
+					bdate = tmp;
+					}
+				return (bdate - adate);
+				});
+			return (posts);
+			}
 		if (edges.length == 0) {
 			callback (undefined, new Array ());
 			}
@@ -1765,8 +1787,9 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 						}
 					ctRemaining--;
 					if (ctRemaining == 0) {
-						callback (undefined, posts);
 						console.log ("edgesToPostsArray: " + utils.secondsSince (whenLoopStarts) + " secs for all to run.");
+						posts = reverseChronologicSort (posts); //12/15/25 by DW
+						callback (undefined, posts);
 						}
 					});
 				});
@@ -1780,7 +1803,7 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 				}
 			else {
 				if (edges.length == 0) {
-					const message = "Can't find the file " + relpath + " for the user " + username + ".";
+					const message = "There aren't any edges for this post."
 					const code = 404; //2/22/25 by DW
 					callback ({message, code});
 					}

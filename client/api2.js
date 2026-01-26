@@ -100,6 +100,14 @@ function wordpress (userOptions, callback) {
 			}
 		return (btoa (binary));
 		}
+	function getDateForSorting (theDate) { //6/3/23 by DW
+		if (theDate === undefined) {
+			return (new Date (0));
+			}
+		else {
+			return (new Date (theDate));
+			}
+		}
 	function httpRequest (url, timeout, headers, callback) { 
 		timeout = (timeout === undefined) ? 30000 : timeout;
 		var jxhr = $.ajax ({ 
@@ -588,7 +596,25 @@ function wordpress (userOptions, callback) {
 		}
 	
 	function getEdges (idsite, idpost, callback) { //12/4/25 by DW
-		wpServerCall ("wordpressggetedges", {idsite, idpost}, undefined, callback);
+		wpServerCall ("wordpressggetedges", {idsite, idpost}, undefined, function (err, edges) {
+			if (err) {
+				callback (err);
+				}
+			else {
+				const flReverseSort = true;
+				edges.sort (function (a, b) { //reverse chronologic sort
+					var adate = getDateForSorting (a.whenCreated);
+					var bdate = getDateForSorting (b.whenCreated);
+					if (flReverseSort) {
+						const tmp = adate;
+						adate = bdate;
+						bdate = tmp;
+						}
+					return (bdate - adate);
+					});
+				callback (undefined, edges);
+				}
+			});
 		}
 	
 	function connectWithWordpress () {
