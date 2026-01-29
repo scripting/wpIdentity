@@ -596,7 +596,7 @@ function wordpress (userOptions, callback) {
 		}
 	
 	function getEdges (idsite, idpost, callback) { //12/4/25 by DW
-		wpServerCall ("wordpressggetedges", {idsite, idpost}, undefined, function (err, edges) {
+		wpServerCall ("wordpressgetedges", {idsite, idpost}, undefined, function (err, edges) {
 			if (err) {
 				callback (err);
 				}

@@ -1,3 +1,37 @@
+#### 1/29/26; 10:01:56 AM by DW -- v0.5.32
+
+typo, changed wordpressggetedges to wordpressgetedges.
+
+when i updated to v0.5.31 the getEdges call stopped working. 
+
+* i got the url and tried to open it in the browser
+
+* it hung there, eventually with an error to localhost
+
+* i was talking to wordland.dev
+
+* so i added debugging code, and everything worked perfectly
+
+* the only diff is that it was running wpidentity from the npm install command and the new version with debugging code came through a testing update, manually copying to the right location in wpIdentity folder
+
+* i expect this to surface again at some point, so wanted to leave a note here
+
+now I'm going to comment the debugging code, create v0.5.32, and repeat the update process on the wordland.dev server (maine)
+
+
+
+#### 1/28/26; 10:18:30 AM by DW -- v0.5.31
+
+getEdges now includes the number of edges pointing to each of the edges we return. allows me to parenthetically include how many replies there are for each reply.
+
+added to the definition of the edges table in the docs
+
+* key edgesToPost (idDestSite, idDestPost)
+
+ran this in mysql
+
+* create index edgesToPost on edges (idDestSite, idDestPost);
+
 #### 12/15/25; 9:56:20 AM by DW
 
 In getEdges, return the array sorted by whenCreated.

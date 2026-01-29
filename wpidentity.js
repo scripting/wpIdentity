@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.5.30"; 
+var myProductName = "wpidentity", myVersion = "0.5.32"; 
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -1782,6 +1782,7 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 				const whenstart = new Date ();
 				getPost (undefined, edge.idSourceSite, edge.idSourcePost, function (err, thePost) {
 					if (!err) {
+						thePost.ctInbound = edge.ctInbound; //1/28/26 by DW
 						posts.push (thePost);
 						console.log ("edgesToPostsArray: thePost.url == " + thePost.url + ", " + utils.secondsSince (whenstart) + " secs.");
 						}
@@ -1796,9 +1797,14 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 			}
 		}
 	function getEdges (idSite, idPost, callback) {
-		const sqltext = "select * from edges where idDestSite = " + davesql.encode (idSite) + " and idDestPost = " + davesql.encode (idPost) + ";";
+		function encode (s) {
+			return (davesql.encode (s));
+			}
+		const sqltext = "select edges.*, (select count(*) from edges e2 where e2.idDestSite = edges.idSourceSite and e2.idDestPost = edges.idSourcePost) as ctInbound from edges where idDestSite = " + encode (idSite) + " and idDestPost = " + encode (idPost) + ";";
+		
 		davesql.runSqltext (sqltext, function (err, edges) {
 			if (err) {
+				console.log ("getEdges err.message == " + err.message); //1/29/26 by DW
 				callback (err);
 				}
 			else {
@@ -2301,7 +2307,7 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 						});
 					return (true);
 				
-				case "/wordpressggetedges": //12/4/25 by DW
+				case "/wordpressgetedges": //12/4/25 by DW
 					getEdges (params.idsite, params.idpost, httpReturn);
 					return (true);
 				default:
