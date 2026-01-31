@@ -24,9 +24,9 @@ We use WordPress for identity.
 
 Each user has their own set of files. For example, you could keep a prefs.json file for each user, or a bookmarks.opml file. 
 
-A file can be attached to a specific WP post, identified by site and post id's. This can be used for per-post prefs, or using a different kind of editor to write a post. It basically allows you to store data alongside a post. It could also be that the post is sort of a home page for a data set that's attached to the page. It's basically viewing WordPress as a database that has publishing built-in. 
+A file can be attached to a specific WordPress post, identified by site and post id's. This can be used for per-post prefs, or using a different kind of editor to write a post. It basically allows you to store data alongside a post. It could also be that the post is sort of a home page for a data set that's attached to the page. It's basically viewing WordPress as a database that has publishing built-in. 
 
-Files can be public or private. At this point there's no functionality for public files.
+Files can be public or private. Most files are private, an example of a public file is the RSS feed we keep for each site you update via wpIdentity. An <a href="https://wordland.social/scripting/41915670/rss.xml">example</a> from a test site. This allows us to experiment with new feed features without having to change WordPress. 
 
 The relpath field is meant to be a relative path to the "home" of the user's storage, but it's really just a string. You can use slashes to create structure, so for example there could be prefs files for different apps, with the first part of the path being the name of the app. The demo app stores its prefs file in demo/prefs.json. 
 

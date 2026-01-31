@@ -1,3 +1,7 @@
+#### 1/31/26; 10:04:41 AM by DW
+
+Added a note to the <a href="https://github.com/scripting/wpIdentity/blob/main/docs/storage.md#how-it-works">storage docs page</a>, explaining that most files we serve are private, but there are examples of files we manage that are public. 
+
 #### 1/29/26; 10:01:56 AM by DW -- v0.5.32
 
 typo, changed wordpressggetedges to wordpressgetedges.
