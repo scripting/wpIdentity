@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.5.32"; 
+var myProductName = "wpidentity", myVersion = "0.5.33"; 
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -850,6 +850,9 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 					console.log ("addPost: theConvertedPost == " + utils.jsonStringify (theConvertedPost)); //5/8/24 by DW
 					logPublish ("add", theConvertedPost); //2/23/25 by DW
 					processReply (jstruct.inReplyTo, theConvertedPost); //12/3/25 by DW
+					if (jstruct.inReplyTo !== undefined) { //2/9/26 by DW
+						theConvertedPost.inReplyTo = jstruct.inReplyTo;
+						}
 					callback (undefined, theConvertedPost);
 					}
 				});
@@ -1784,11 +1787,9 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 					if (!err) {
 						thePost.ctInbound = edge.ctInbound; //1/28/26 by DW
 						posts.push (thePost);
-						console.log ("edgesToPostsArray: thePost.url == " + thePost.url + ", " + utils.secondsSince (whenstart) + " secs.");
 						}
 					ctRemaining--;
 					if (ctRemaining == 0) {
-						console.log ("edgesToPostsArray: " + utils.secondsSince (whenLoopStarts) + " secs for all to run.");
 						posts = reverseChronologicSort (posts); //12/15/25 by DW
 						callback (undefined, posts);
 						}
@@ -1801,21 +1802,13 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 			return (davesql.encode (s));
 			}
 		const sqltext = "select edges.*, (select count(*) from edges e2 where e2.idDestSite = edges.idSourceSite and e2.idDestPost = edges.idSourcePost) as ctInbound from edges where idDestSite = " + encode (idSite) + " and idDestPost = " + encode (idPost) + ";";
-		
 		davesql.runSqltext (sqltext, function (err, edges) {
 			if (err) {
 				console.log ("getEdges err.message == " + err.message); //1/29/26 by DW
 				callback (err);
 				}
 			else {
-				if (edges.length == 0) {
-					const message = "There aren't any edges for this post."
-					const code = 404; //2/22/25 by DW
-					callback ({message, code});
-					}
-				else {
-					edgesToPostsArray (edges, callback);
-					}
+				edgesToPostsArray (edges, callback); //2/1/26 by DW
 				}
 			});
 		}

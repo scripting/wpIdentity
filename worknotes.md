@@ -1,3 +1,11 @@
+#### 2/9/26; 5:33:34 PM by DW
+
+In addPost, if the jsontext obj has an inReplyTo object, we copy it into the draft we return.
+
+#### 2/1/26; 10:20:24 AM by DW
+
+In getEdges, having no edges is not an error, just return an empty array.
+
 #### 1/31/26; 10:04:41 AM by DW
 
 Added a note to the <a href="https://github.com/scripting/wpIdentity/blob/main/docs/storage.md#how-it-works">storage docs page</a>, explaining that most files we serve are private, but there are examples of files we manage that are public. 
