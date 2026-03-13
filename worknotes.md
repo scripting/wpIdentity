@@ -1,3 +1,7 @@
+#### 3/13/26; 9:17:34 AM by DW
+
+In convertPost, we normalize guids that come from the API to agree with the format for guids in WordPress feeds.
+
 #### 2/9/26; 5:33:34 PM by DW
 
 In addPost, if the jsontext obj has an inReplyTo object, we copy it into the draft we return.

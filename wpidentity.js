@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.5.33"; 
+var myProductName = "wpidentity", myVersion = "0.5.34"; 
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -233,11 +233,14 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 				});
 			return (theObject);
 			}
+		function normalizeGuid (guid) { //3/13/26 by DW
+			return guid.replace (/^https:\/\//i, 'http://');
+			}
 		return ({
 			idPost: item.ID,
 			idSite: item.site_ID,
 			title: item.title,
-			guid: item.guid,
+			guid: normalizeGuid (item.guid), //3/13/26 by DW
 			content: item.content,
 			type: item.type,
 			categories: getCatArray (),
