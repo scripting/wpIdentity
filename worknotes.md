@@ -1,6 +1,20 @@
+#### 3/28/26; 11:03:08 AM by DW
+
+New function saveFeed. 
+
+Call via api2.js as myWordpress.saveFeed (idSite).
+
+We now do rss building here. Used to be in WordLand.
+
+Added turndown as a dependency.
+
+#### 3/16/26; 11:06:01 AM by DW
+
+new endpoint, getWordlandDraft. 
+
 #### 3/13/26; 9:17:34 AM by DW
 
-In convertPost, we normalize guids that come from the API to agree with the format for guids in WordPress feeds.
+In convertPost, we normalize guids that come from the API to agree with the format for guids in WordPress feeds. Wrote it up <a href="https://github.com/Automattic/wp-calypso/issues/109266">here</a>. 
 
 #### 2/9/26; 5:33:34 PM by DW
 

@@ -1,0 +1,36 @@
+:root {
+	--avatar-col: 76px;   /* 64px avatar + 12px gap */
+	--max-height-text-boxes: 10em;
+	--default-font-family: "Ubuntu";
+	--default-font-size: 16px;
+	}
+
+body {
+	background-color: white;
+	}
+.divPageBody {
+	width: 750px;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 50px;
+	margin-bottom: 400px;
+	min-height: 400px;
+	font-family: Arial, sans-serif;
+	font-size: 24px;
+	}
+
+.divJsonTextarea {
+	width: 105%;
+	height: 500px;
+	font-family: "Ubuntu";
+	font-size: 15px;
+	line-height: 140%;
+	border: 1px solid #ccc;
+	padding: 10px;
+	background: white;
+	white-space: pre;
+	overflow-x: auto;
+	word-wrap: normal;
+	tab-size: 6;
+	margin-bottom: 5px;
+	}

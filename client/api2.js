@@ -616,6 +616,12 @@ function wordpress (userOptions, callback) {
 				}
 			});
 		}
+	function getWordlandDraft (idsite, idpost, callback) { //3/16/26 by DW
+		wpServerCall ("wordpressgetwordlanddraft", {idsite, idpost}, false, callback);
+		}
+	function saveFeed (idsite, callback) { //3/28/26 by DW
+		wpServerCall ("wordpresssavefeed", {idsite}, true, callback);
+		}
 	
 	function connectWithWordpress () {
 		const url = getServerAddress () + "connect?urlapphomepage=" + encodeURIComponent (location.href); //9/4/23 by DW
@@ -684,6 +690,9 @@ function wordpress (userOptions, callback) {
 	this.countUserHit = countUserHit; //2/26/25 by DW
 	this.getFeedUrl = getFeedUrl; //5/15/25 by DW
 	this.getEdges = getEdges; //12/4/25 by DW
+	this.getWordlandDraft = getWordlandDraft; //3/16/26 by DW
+	this.saveFeed = saveFeed; //3/28/26 by DW
+	
 	this.userIsSignedIn = userIsSignedIn;
 	this.connectWithWordpress = connectWithWordpress;
 	this.logOffWordpress = logOffWordpress;

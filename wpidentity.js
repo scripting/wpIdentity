@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.5.34"; 
+var myProductName = "wpidentity", myVersion = "0.5.36"; 
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -17,6 +17,7 @@ const rss = require ("daverss"); //4/29/24 by DW
 const websocket = require ("ws"); //4/28/25 by DW
 const log = require ("sqllog"); //12/21/24 by DW
 const mail = require ("davemail"); //12/2/25 by DW
+const turndown = require ("turndown"); //3/28/26 by DW
 
 var config = { 
 	myRandomNumber: utils.random (1, 1000000000),
@@ -58,6 +59,9 @@ var config = {
 	homePagetable: undefined, //3/14/25 by DW
 	
 	postMetadataPrefix: "wordland", //7/5/25 by DW
+	
+	maxFeedItems: 25, //3/28/26 by DW
+	feedPingUrl: "https://rpc.rsscloud.io/ping", //3/28/26 by DW
 	};
 
 var stats = {
@@ -155,6 +159,11 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 				}
 			});
 		});
+	}
+function getMarkdownFromHtml (htmltext) { //3/28/26 by DW
+	const myTurndown = new turndown ();
+	const markdowntext = myTurndown.turndown (htmltext);
+	return (markdowntext);
 	}
 
 //wordpress
@@ -1457,7 +1466,23 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 			});
 		}
 	
-	
+	function getWordlandDraft (idSite, idPost, callback) { //3/16/26 by DW
+		const sqltext = "select * from wpstorage where idSite = " + davesql.encode (idSite) + " and idPost = " + davesql.encode (idPost) + " and relpath = 'draft.json' limit 1;";
+		davesql.runSqltext (sqltext, function (err, result) {
+			if (err) {
+				callback (err);
+				}
+			else {
+				if (result.length == 0) {
+					const message = "No draft found for this post.";
+					callback ({message});
+					}
+				else {
+					callback (undefined, convertStorageItem (result [0]));
+					}
+				}
+			});
+		}
 	
 //sockets -- 5/24/24 by DW
 	var theWsServer = undefined;
@@ -1812,6 +1837,120 @@ function callWithUsernameForClient (theRequest, callback) { //3/12/25 by DW -- s
 				}
 			else {
 				edgesToPostsArray (edges, callback); //2/1/26 by DW
+				}
+			});
+		}
+//rss -- 3/28/26 by DW
+	function  saveFeed (accessToken, idSite, callback) {
+		console.log ("saveFeed: idSite == " + idSite);
+		getSiteInfo (accessToken, idSite, function (err, theSite) {
+			if (err) {
+				callback (err);
+				}
+			else {
+				getRecentUserDrafts (accessToken, config.maxFeedItems, idSite, function (err, theDrafts) {
+					if (err) {
+						callback (err);
+						}
+					else {
+						function ifNotEmpty (val) {
+							if (val === undefined) {
+								return (undefined)
+								}
+							else {
+								if (val.length == 0) {
+									return (undefined)
+									}
+								else {
+									return (val);
+									}
+								}
+							}
+						
+						const title = ifNotEmpty (theSite.name);
+						const link = ifNotEmpty (theSite.urlSite);
+						const description = ifNotEmpty (theSite.description);
+						
+						const urlSelf = "https://testing.com/feed/";
+						
+						const headElements = { 
+							title,
+							link,
+							description,
+							language: "en-us",
+							generator: myProductName + " v" + myVersion,
+							docs: "https://cyber.law.harvard.edu/rss/rss.html",
+							maxFeedItems: config.maxFeedItems,
+							flRssCloudEnabled: true,
+							rssCloudDomain: "rpc.rsscloud.io",
+							rssCloudPort: 5337,
+							rssCloudPath: "/pleaseNotify",
+							rssCloudRegisterProcedure: "",
+							rssCloudProtocol: "http-post",
+							idWordpressSite: idSite, //5/16/24 by DW
+							urlSelf, //6/14/25 by DW
+							image: {
+								url: "https://imgs.scripting.com/2025/06/13/tomatoSoup.png",
+								title,
+								link,
+								description
+								}
+							};
+						var historyArray = new Array ();
+						theDrafts.forEach (function (item) {
+							if (item.idPost !== undefined) { //7/3/25 by DW
+								var description = undefined, markdowntext = undefined; //10/19/24 by DW
+								if (item.content !== undefined) {
+									if (item.contentType == "markdown") {
+										description = markdownProcess (item.content);
+										markdowntext = item.content;
+										}
+									else {
+										description = item.content;
+										markdowntext = getMarkdownFromHtml (item.content);
+										}
+									}
+								historyArray.push ({
+									title: ifNotEmpty (item.title),
+									text: description, //10/19/24 by DW
+									markdowntext, //10/19/24 by DW
+									link: (item.linkblogLink === undefined) ? item.url : item.linkblogLink, //6/12/25 by DW
+									when: item.whenCreated,
+									guid: {
+										value: item.url,
+										flPermalink: true
+										},
+									idWordpressPost: ifNotEmpty (item.idPost)
+									});
+								}
+							});
+						const xmltext = rss.buildRssFeed (headElements, historyArray); 
+						
+						writeUniqueFile (accessToken, "rss.xml", "text/xml", false, xmltext, idSite, undefined, function (err, data) {
+							if (!err) {
+								if (data.urlPublic !== undefined) {
+									console.log ("saveFeed: data.urlPublic == " + data.urlPublic); //5/16/24 by DW
+									rss.cloudPing (config.feedPingUrl, data.urlPublic); //5/23/24 by DW & 5/30/24 by DW
+									}
+								}
+							if (callback !== undefined) {
+								if (err) {
+									callback (err);
+									}
+								else {
+									const returnedData = {
+										username: data.username, 
+										relpath: data.relpath,
+										type: data.type,
+										flprivate: data.flprivate !== 0,
+										url: data.urlPublic,
+										};
+									callback (undefined, returnedData);
+									}
+								}
+							});
+						}
+					});
 				}
 			});
 		}
@@ -2302,10 +2441,19 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 						getRangeOfDraftsForUser (token, params.idlowestinlastpage, params.ct, httpReturn);
 						});
 					return (true);
-				
 				case "/wordpressgetedges": //12/4/25 by DW
 					getEdges (params.idsite, params.idpost, httpReturn);
 					return (true);
+				case "/wordpressgetwordlanddraft": //3/16/26 by DW
+					getWordlandDraft (params.idsite, params.idpost, httpReturn);
+					return (true);
+				
+				case "/wordpresssavefeed": //3/28/26 by DW
+					tokenRequired (function (token) {
+						saveFeed (token, params.idsite, httpReturn);
+						});
+					return (true);
+				
 				default:
 					if (config.flServePublicUserFiles) { //4/30/24 by DW
 						return (servePublicFile (theRequest.lowerpath)); 
