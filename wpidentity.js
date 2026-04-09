@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.5.36"; 
+var myProductName = "wpidentity", myVersion = "0.5.37"; 
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -1814,6 +1814,14 @@ function getMarkdownFromHtml (htmltext) { //3/28/26 by DW
 				getPost (undefined, edge.idSourceSite, edge.idSourcePost, function (err, thePost) {
 					if (!err) {
 						thePost.ctInbound = edge.ctInbound; //1/28/26 by DW
+						
+						if (edge.idDraft !== null) { //4/9/26 by DW
+							thePost.idDraft = edge.idDraft;
+							}
+						else {
+							thePost.idDraft = undefined;
+							}
+						
 						posts.push (thePost);
 						}
 					ctRemaining--;
@@ -1825,11 +1833,17 @@ function getMarkdownFromHtml (htmltext) { //3/28/26 by DW
 				});
 			}
 		}
-	function getEdges (idSite, idPost, callback) {
+	function getEdges (username, idSite, idPost, callback) {
 		function encode (s) {
 			return (davesql.encode (s));
 			}
-		const sqltext = "select edges.*, (select count(*) from edges e2 where e2.idDestSite = edges.idSourceSite and e2.idDestPost = edges.idSourcePost) as ctInbound from edges where idDestSite = " + encode (idSite) + " and idDestPost = " + encode (idPost) + ";";
+		var sqltext;
+		if (username === undefined) { //4/9/26 by DW
+			sqltext = "select edges.*, (select count(*) from edges e2 where e2.idDestSite = edges.idSourceSite and e2.idDestPost = edges.idSourcePost) as ctInbound from edges where idDestSite = " + encode (idSite) + " and idDestPost = " + encode (idPost) + ";";
+			}
+		else {
+			sqltext = "select edges.*, wpstorage.id as idDraft, (select count(*) from edges e2 where e2.idDestSite = edges.idSourceSite and e2.idDestPost = edges.idSourcePost) as ctInbound from edges left join wpstorage on wpstorage.idSite = edges.idSourceSite and wpstorage.idPost = edges.idSourcePost and wpstorage.username = " + encode (username) + " and wpstorage.relpath = 'draft.json' where idDestSite = " + encode (idSite) + " and idDestPost = " + encode (idPost) + ";";
+			}
 		davesql.runSqltext (sqltext, function (err, edges) {
 			if (err) {
 				console.log ("getEdges err.message == " + err.message); //1/29/26 by DW
@@ -2442,12 +2456,18 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 						});
 					return (true);
 				case "/wordpressgetedges": //12/4/25 by DW
-					getEdges (params.idsite, params.idpost, httpReturn);
+					getEdges (undefined, params.idsite, params.idpost, httpReturn);
 					return (true);
+				
+				case "/wordpressgetedgesforuser": //4/9/26 by DW
+					callWithUsername (function (username) {
+						getEdges (username, params.idsite, params.idpost, httpReturn);
+						});
+					return (true);
+				
 				case "/wordpressgetwordlanddraft": //3/16/26 by DW
 					getWordlandDraft (params.idsite, params.idpost, httpReturn);
 					return (true);
-				
 				case "/wordpresssavefeed": //3/28/26 by DW
 					tokenRequired (function (token) {
 						saveFeed (token, params.idsite, httpReturn);

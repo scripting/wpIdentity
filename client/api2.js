@@ -596,26 +596,43 @@ function wordpress (userOptions, callback) {
 		}
 	
 	function getEdges (idsite, idpost, callback) { //12/4/25 by DW
-		wpServerCall ("wordpressgetedges", {idsite, idpost}, undefined, function (err, edges) {
-			if (err) {
-				callback (err);
-				}
-			else {
-				const flReverseSort = true;
-				edges.sort (function (a, b) { //reverse chronologic sort
-					var adate = getDateForSorting (a.whenCreated);
-					var bdate = getDateForSorting (b.whenCreated);
-					if (flReverseSort) {
-						const tmp = adate;
-						adate = bdate;
-						bdate = tmp;
-						}
-					return (bdate - adate);
-					});
-				callback (undefined, edges);
-				}
-			});
+		function sortEdges (edges) { //4/9/26 by DW
+			const flReverseSort = true;
+			edges.sort (function (a, b) { //reverse chronologic sort
+				var adate = getDateForSorting (a.whenCreated);
+				var bdate = getDateForSorting (b.whenCreated);
+				if (flReverseSort) {
+					const tmp = adate;
+					adate = bdate;
+					bdate = tmp;
+					}
+				return (bdate - adate);
+				});
+			return (edges);
+			}
+		if (userIsSignedIn ()) {
+			wpServerCall ("wordpressgetedgesforuser", {idsite, idpost}, true, function (err, edges) {
+				if (err) {
+					callback (err);
+					}
+				else {
+					callback (undefined, sortEdges (edges));
+					}
+				});
+			}
+		else {
+			wpServerCall ("wordpressgetedges", {idsite, idpost}, false, function (err, edges) {
+				if (err) {
+					callback (err);
+					}
+				else {
+					callback (undefined, sortEdges (edges));
+					}
+				});
+			}
 		}
+	
+	
 	function getWordlandDraft (idsite, idpost, callback) { //3/16/26 by DW
 		wpServerCall ("wordpressgetwordlanddraft", {idsite, idpost}, false, callback);
 		}
