@@ -714,6 +714,7 @@ function wordpress (userOptions, callback) {
 	this.getWordlandDraft = getWordlandDraft; //3/16/26 by DW
 	this.saveFeed = saveFeed; //3/28/26 by DW
 	this.getSourceFiles = getSourceFiles; //4/11/26 by DW
+	this.deleteSourceFiles = deleteSourceFiles; //4/11/26 by DW
 	
 	this.userIsSignedIn = userIsSignedIn;
 	this.connectWithWordpress = connectWithWordpress;
