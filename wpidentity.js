@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.5.37"; 
+var myProductName = "wpidentity", myVersion = "0.5.38"; 
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -1484,6 +1484,27 @@ function getMarkdownFromHtml (htmltext) { //3/28/26 by DW
 			});
 		}
 	
+	function getSourceFiles (username, idsite, idpost, callback) { //4/11/26 by DW
+		const sqltext = "select * from wpstorage where username = " + davesql.encode (username) + " and relpath like 'source.%' and idsite = " + davesql.encode (idsite) + " and idpost = " + davesql.encode (idpost) + ";";
+		davesql.runSqltext (sqltext, function (err, result) {
+			if (err) {
+				callback (err);
+				}
+			else {
+				const theFiles = result.map (function (row) {
+					return ({
+						relpath: row.relpath,
+						filecontents: row.filecontents,
+						type: row.type,
+						whenCreated: row.whenCreated,
+						whenUpdated: row.whenUpdated
+						});
+					});
+				callback (undefined, theFiles);
+				}
+			});
+		}
+	
 //sockets -- 5/24/24 by DW
 	var theWsServer = undefined;
 	
@@ -2458,13 +2479,11 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 				case "/wordpressgetedges": //12/4/25 by DW
 					getEdges (undefined, params.idsite, params.idpost, httpReturn);
 					return (true);
-				
 				case "/wordpressgetedgesforuser": //4/9/26 by DW
 					callWithUsername (function (username) {
 						getEdges (username, params.idsite, params.idpost, httpReturn);
 						});
 					return (true);
-				
 				case "/wordpressgetwordlanddraft": //3/16/26 by DW
 					getWordlandDraft (params.idsite, params.idpost, httpReturn);
 					return (true);
@@ -2473,6 +2492,14 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 						saveFeed (token, params.idsite, httpReturn);
 						});
 					return (true);
+				
+				
+				case "/wordpressgetsourcefiles": //4/11/26 by DW
+					callWithUsername (function (username) {
+						getSourceFiles (username, params.idsite, params.idpost, httpReturn);
+						});
+					return (true);
+				
 				
 				default:
 					if (config.flServePublicUserFiles) { //4/30/24 by DW

@@ -594,7 +594,6 @@ function wordpress (userOptions, callback) {
 	function countUserHit (callback) { //2/26/25 by DW
 		wpServerCall ("wordpresscounthit", undefined, true, callback);
 		}
-	
 	function getEdges (idsite, idpost, callback) { //12/4/25 by DW
 		function sortEdges (edges) { //4/9/26 by DW
 			const flReverseSort = true;
@@ -631,13 +630,15 @@ function wordpress (userOptions, callback) {
 				});
 			}
 		}
-	
-	
 	function getWordlandDraft (idsite, idpost, callback) { //3/16/26 by DW
 		wpServerCall ("wordpressgetwordlanddraft", {idsite, idpost}, false, callback);
 		}
 	function saveFeed (idsite, callback) { //3/28/26 by DW
 		wpServerCall ("wordpresssavefeed", {idsite}, true, callback);
+		}
+	
+	function getSourceFiles (idsite, idpost, callback) { //4/11/26 by DW
+		wpServerCall ("wordpressgetsourcefiles", {idsite, idpost}, true, callback);
 		}
 	
 	function connectWithWordpress () {
@@ -709,6 +710,7 @@ function wordpress (userOptions, callback) {
 	this.getEdges = getEdges; //12/4/25 by DW
 	this.getWordlandDraft = getWordlandDraft; //3/16/26 by DW
 	this.saveFeed = saveFeed; //3/28/26 by DW
+	this.getSourceFiles = getSourceFiles; //4/11/26 by DW
 	
 	this.userIsSignedIn = userIsSignedIn;
 	this.connectWithWordpress = connectWithWordpress;
