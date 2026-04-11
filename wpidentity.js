@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.5.39"; 
+var myProductName = "wpidentity", myVersion = "0.5.40"; 
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -1504,9 +1504,21 @@ function getMarkdownFromHtml (htmltext) { //3/28/26 by DW
 				}
 			});
 		}
-	
-	function deleteSourceFiles (username, idsite, idpost, callback) { //4/11/26 by DW
-		var sqltext = "delete from wpstorage where username = " + davesql.encode (username) + " and relpath like 'source.%' and idsite = " + davesql.encode (idsite) + " and idpost = " + davesql.encode (idpost) + ";";
+	function deleteSourceFiles (username, idsite, idpost, pathsToDelete, callback) { //4/11/26 by DW
+		var sqltext = "delete from wpstorage where username = " + davesql.encode (username) + " and idsite = " + davesql.encode (idsite) + " and idpost = " + davesql.encode (idpost);
+		if ((pathsToDelete !== undefined) && (pathsToDelete.length > 0)) {
+			var encodedNames = "";
+			pathsToDelete.forEach (function (item) {
+				if (encodedNames.length > 0) {
+					encodedNames += ", ";
+					}
+				encodedNames += davesql.encode (item);
+				});
+			sqltext += " and relpath in (" + encodedNames + ");";
+			}
+		else {
+			sqltext += " and relpath like 'source.%';";
+			}
 		davesql.runSqltext (sqltext, function (err, result) {
 			if (err) {
 				callback (err);
@@ -2516,7 +2528,7 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 					return (true);
 				case "/wordpressdeletesourcefiles": //4/11/26 by DW
 					callWithUsername (function (username) {
-						deleteSourceFiles (username, params.idsite, params.idpost, httpReturn);
+						deleteSourceFiles (username, params.idsite, params.idpost, params.paths, httpReturn);
 						});
 					return (true);
 				
