@@ -640,6 +640,9 @@ function wordpress (userOptions, callback) {
 	function getSourceFiles (idsite, idpost, callback) { //4/11/26 by DW
 		wpServerCall ("wordpressgetsourcefiles", {idsite, idpost}, true, callback);
 		}
+	function deleteSourceFiles (idsite, idpost, callback) { //4/11/26 by DW
+		wpServerCall ("wordpressdeletesourcefiles", {idsite, idpost}, true, callback);
+		}
 	
 	function connectWithWordpress () {
 		const url = getServerAddress () + "connect?urlapphomepage=" + encodeURIComponent (location.href); //9/4/23 by DW

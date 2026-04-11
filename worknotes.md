@@ -1,12 +1,6 @@
+#### 4/11/26; 12:29:00 PM by DW -- v0.5.39
 
-
-#### 4/11/26; 12:29:00 PM by DW
-
-
-
-
-
-
+getSourceFiles and deleteSourceFiles, needed for wpEditorDemo. 
 
 #### 3/28/26; 11:03:08 AM by DW
 

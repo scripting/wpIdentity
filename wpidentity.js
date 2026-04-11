@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.5.38"; 
+var myProductName = "wpidentity", myVersion = "0.5.39"; 
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -1505,6 +1505,21 @@ function getMarkdownFromHtml (htmltext) { //3/28/26 by DW
 			});
 		}
 	
+	function deleteSourceFiles (username, idsite, idpost, callback) { //4/11/26 by DW
+		var sqltext = "delete from wpstorage where username = " + davesql.encode (username) + " and relpath like 'source.%' and idsite = " + davesql.encode (idsite) + " and idpost = " + davesql.encode (idpost) + ";";
+		davesql.runSqltext (sqltext, function (err, result) {
+			if (err) {
+				callback (err);
+				}
+			else {
+				callback (undefined, result.affectedRows);
+				}
+			});
+		}
+	
+	
+	
+	
 //sockets -- 5/24/24 by DW
 	var theWsServer = undefined;
 	
@@ -2497,6 +2512,11 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 				case "/wordpressgetsourcefiles": //4/11/26 by DW
 					callWithUsername (function (username) {
 						getSourceFiles (username, params.idsite, params.idpost, httpReturn);
+						});
+					return (true);
+				case "/wordpressdeletesourcefiles": //4/11/26 by DW
+					callWithUsername (function (username) {
+						deleteSourceFiles (username, params.idsite, params.idpost, httpReturn);
 						});
 					return (true);
 				
