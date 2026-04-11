@@ -641,6 +641,9 @@ function wordpress (userOptions, callback) {
 		wpServerCall ("wordpressgetsourcefiles", {idsite, idpost}, true, callback);
 		}
 	function deleteSourceFiles (idsite, idpost, paths, callback) { //4/11/26 by DW
+		if (paths !== undefined) {
+			paths = JSON.stringify (paths);
+			}
 		wpServerCall ("wordpressdeletesourcefiles", {idsite, idpost, paths}, true, callback);
 		}
 	

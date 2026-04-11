@@ -2520,7 +2520,6 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 						});
 					return (true);
 				
-				
 				case "/wordpressgetsourcefiles": //4/11/26 by DW
 					callWithUsername (function (username) {
 						getSourceFiles (username, params.idsite, params.idpost, httpReturn);
@@ -2528,10 +2527,10 @@ function handleHttpRequest (theRequest, options = new Object ()) { //returns tru
 					return (true);
 				case "/wordpressdeletesourcefiles": //4/11/26 by DW
 					callWithUsername (function (username) {
-						deleteSourceFiles (username, params.idsite, params.idpost, params.paths, httpReturn);
+						const paths = (params.paths === undefined) ? undefined : JSON.parse (params.paths);
+						deleteSourceFiles (username, params.idsite, params.idpost, paths, httpReturn);
 						});
 					return (true);
-				
 				
 				default:
 					if (config.flServePublicUserFiles) { //4/30/24 by DW
