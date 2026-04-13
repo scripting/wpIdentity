@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.5.40"; 
+var myProductName = "wpidentity", myVersion = "0.5.41"; 
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -62,6 +62,8 @@ var config = {
 	
 	maxFeedItems: 25, //3/28/26 by DW
 	feedPingUrl: "https://rpc.rsscloud.io/ping", //3/28/26 by DW
+	
+	flUseGlossary: false, //4/13/26 by DW
 	};
 
 var stats = {
@@ -686,16 +688,26 @@ function getMarkdownFromHtml (htmltext) { //3/28/26 by DW
 			return (markdowntext);
 			}
 		}
-	function processPostText (token, theText, callback) {
-		theText = emojiProcess (theText); //4/15/24 by DW
-		theText = processMarkdownImages (theText); //11/16/24 by DW
-		theText = markdownProcess (theText); //4/18/24 by DW
-		getSpecialDataFile (token, "glossary.json", function (err, theGlossary) {
-			if (!err) {
-				theText = utils.multipleReplaceAll (theText, theGlossary, false);
+	function processPostText (token, theText, theType, callback) {
+		if (utils.stringLower (theType) == "markdown") { //4/13/26 by DW
+			theText = emojiProcess (theText); //4/15/24 by DW
+			theText = processMarkdownImages (theText); //11/16/24 by DW
+			theText = markdownProcess (theText); //4/18/24 by DW
+			if (config.flUseGlossary) { //4/13/26 by DW
+				getSpecialDataFile (token, "glossary.json", function (err, theGlossary) {
+					if (!err) {
+						theText = utils.multipleReplaceAll (theText, theGlossary, false);
+						}
+					callback (undefined, theText);
+					});
 				}
-			callback (undefined, theText);
-			});
+			else {
+				callback (undefined, theText);
+				}
+			}
+		else {
+			callback (undefined, theText); //return text unprocessed
+			}
 		}
 	function logPublish (verb, theData) { //2/23/25 by DW
 		const eventData = {
@@ -835,7 +847,7 @@ function getMarkdownFromHtml (htmltext) { //3/28/26 by DW
 		const wp = wpcom (accessToken);
 		const site = wp.site (idSite);
 		
-		processPostText (accessToken, jstruct.content, function (err, theProcessedContent) { //5/13/24 by DW
+		processPostText (accessToken, jstruct.content, jstruct.contentType, function (err, theProcessedContent) { //5/13/24 by DW
 			const thePost = {
 				title: jstruct.title,
 				content: theProcessedContent, //5/13/24 by DW
@@ -880,7 +892,7 @@ function getMarkdownFromHtml (htmltext) { //3/28/26 by DW
 		const site = wp.site (idSite);
 		const post = site.post (idPost);
 		
-		processPostText (accessToken, jstruct.content, function (err, theProcessedContent) {
+		processPostText (accessToken, jstruct.content, jstruct.contentType, function (err, theProcessedContent) {
 			const thePost = {
 				title: jstruct.title,
 				content: theProcessedContent,

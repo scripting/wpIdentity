@@ -1,3 +1,13 @@
+#### 4/13/26; 7:44:46 AM by DW -- v0.5.41
+
+addPost and updatePost pass the contentType to processPostText and only does the processing if it's markdown.
+
+new config -- flUseGlossary, default false
+
+* we haven't documented the glossary feature, and it slows down an already too-slow process
+
+* we will put it in for real at some point, until then, it's disabled
+
 #### 4/11/26; 12:29:00 PM by DW -- v0.5.39
 
 getSourceFiles and deleteSourceFiles, needed for wpEditorDemo. 
