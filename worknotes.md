@@ -1,3 +1,7 @@
+#### 4/18/26; 10:42:58 AM by DW
+
+Added links to demo apps up front in the main readme. 
+
 #### 4/13/26; 7:44:46 AM by DW -- v0.5.41
 
 addPost and updatePost pass the contentType to processPostText and only does the processing if it's markdown.
