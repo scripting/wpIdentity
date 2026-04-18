@@ -6,13 +6,15 @@ It's used in FeedLand for WordPress identity and it's the complete backend for W
 
 In October 2024, I wrote a brief doc about the <a href="https://github.com/scripting/wpIdentity/blob/main/docs/history.md">history of wpIdentity</a>, its purpose, where it came from, how to explore. 
 
-### It works
+### Demo apps
 
-You can try it out <a href="http://scripting.com/code/wpidentity/client/">here</a>.
+* A basic <a href="https://github.com/scripting/wpIdentity/tree/main/client">hello world</a> type demo. You can log on, and see a list of your sites, when each was created and modified. You can try it out <a href="http://scripting.com/code/wpidentity/client/">here</a>. <a href="https://imgs.scripting.com/2023/09/05/wpsitelist.png">Screenshot</a>.
 
-You can log on, and see a list of your sites, when each was created and modified. 
+* A simple <a href="https://github.com/scripting/wpEditorDemo/blob/main/README.md">Markdown editor</a> that publishes to WordPress sites. All the basic features with easy-to-read and crib code from. 
 
-Here's a <a href="https://imgs.scripting.com/2023/09/05/wpsitelist.png">screen shot</a>. 
+* A <a href="https://github.com/scripting/wpEditorDemo/blob/main/apps/gutenberg/README.md">variant</a> of the Markdown editor, above, that edits posts in Gutenberg. 
+
+* <a href="https://wordland.social/">WordLand</a>, an editor that's designed for social applications built on a wpIdentity backend. 
 
 ### How to set up a server
 
@@ -33,16 +35,6 @@ Here's a <a href="https://imgs.scripting.com/2023/09/05/wpsitelist.png">screen s
 ### Check out worknotes
 
 I've been narrating my work in the <a href="https://github.com/scripting/wordpressIdentity/blob/main/worknotes.md">worknotes</a>. 
-
-### Demo apps
-
-There's a very simple <a href="http://scripting.com/code/wpidentity/client/">demo app</a> in the <a href="https://github.com/scripting/wpIdentity/tree/main/client">client folder</a> here. 
-
-In November 2025 I wrote a <a href="https://github.com/scripting/wpEditorDemo">simple editor</a> that works through wpIdentity. 
-
-* This is <a href="https://github.com/scripting/wpEditorDemo/blob/main/code.js">code</a> you can copy if you have an editor and want to configure it to work alongside WordLand.  
-
-* You can also <a href="https://demo.wpidentity.org/">try out the editor</a> here. 
 
 ### Automattic docs
 
