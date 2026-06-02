@@ -24,10 +24,6 @@ With <a href="https://this.how/wordland/">WordLand</a> it also gets a <a href="h
 
 Also the wpcom interface is slower, since we save the draft as the user types, it needs to be pretty fast. 
 
-### Missing functionality
-
-I still have some more functionality to cover, notably uploads of media objects.
-
 ### License
 
 <a href="https://github.com/scripting/wpIdentity">wpIdentity</a> is licensed under the most liberal MIT license. So if Automattic or the foundation or whoever (I'm confused about who's who in this world) wants to adopt it, they can -- or any developer is free to use it however they like. As a personal favor, I would like to be credited personally as the initial author if you choose to use it, and please point back to my GitHub project. But you are not <i>required</i> to do all this. 

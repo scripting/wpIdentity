@@ -1,3 +1,7 @@
+#### 6/2/26; 7:45:58 AM by DW
+
+Commented the "missing functionality" section of the history, what was listed there is no longer missing. 
+
 #### 4/18/26; 10:42:58 AM by DW
 
 Added links to demo apps up front in the main readme. 
