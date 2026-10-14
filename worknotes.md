@@ -1,3 +1,9 @@
+#### 10/11/26; 12:21:54 PM by DW -- v0.5.43
+
+In startMail, skip mail.start  when there are no SMTP settings, leaving the host app’s setup in place. 
+
+Needed for feedland.com, which can handle identity by email or wordpress.
+
 #### 6/2/26; 7:45:58 AM by DW
 
 Commented the "missing functionality" section of the history, what was listed there is no longer missing. 

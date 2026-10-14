@@ -1,4 +1,4 @@
-var myProductName = "wpidentity", myVersion = "0.5.41"; 
+var myProductName = "wpidentity", myVersion = "0.5.43"; 
 
 exports.start = start; 
 exports.handleHttpRequest = handleHttpRequest; 
@@ -1750,22 +1750,16 @@ function getMarkdownFromHtml (htmltext) { //3/28/26 by DW
 			}
 		}
 	function startMail () { //12/2/25 by DW
-		var options;
-		if (config.smtpHost === undefined) {
-			options = {
-				flUseSes: true
-				};
-			}
-		else {
-			options = {
+		if (config.smtpHost !== undefined) { //10/11/26 by DW
+			const options = {
 				flUseSes: false,
 				smtpHost: config.smtpHost,
 				port: config.smtpPort,
 				username: config.smtpUsername,
 				password: config.smtpPassword
 				};
+			mail.start (options);
 			}
-		mail.start (options);
 		}
 	function testMailsend () { //12/2/25 by DW
 		const email = "dave.winer@gmail.com";
